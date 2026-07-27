@@ -1,0 +1,607 @@
+{% extends 'base.html' %}
+{% load static humanize %}
+
+{# meta_title / meta_description / canonical / robots / rel_prev / rel_next
+   all come from the view and are rendered by base.html. #}
+
+{% block extra_css %}
+<style>
+  /* =====================================================================
+     READY PROPERTIES — light warm banner, green accent. Deliberately the
+     opposite of the off-plan page so the two never read as the same page.
+     All tokens come from base.html: no :root, no body, no * here.
+     ===================================================================== */
+  .rdy-head {
+    position: relative; overflow: hidden;
+    background: color-mix(in srgb, var(--secondary) 70%, #fff);
+    border-bottom: 1px solid var(--border);
+    padding-top: 2.5rem; padding-bottom: 5rem;
+  }
+  .rdy-head::before {
+    content: ""; position: absolute; top: -30%; right: -10%;
+    width: 26rem; height: 26rem; border-radius: 50%;
+    background: radial-gradient(circle, color-mix(in srgb, var(--primary) 9%, transparent), transparent 68%);
+    pointer-events: none;
+  }
+  .rdy-head__inner {
+    position: relative; z-index: 1;
+    display: flex; flex-wrap: wrap; align-items: flex-end;
+    justify-content: space-between; gap: 1.5rem;
+  }
+  .rdy-crumb {
+    display: flex; flex-wrap: wrap; align-items: center; gap: .375rem;
+    font-size: .6875rem; text-transform: uppercase; letter-spacing: .16em;
+    color: var(--muted-foreground);
+  }
+  .rdy-crumb a { color: var(--primary); }
+  .rdy-crumb a:hover { color: var(--gold); }
+
+  .rdy-flag {
+    display: inline-flex; align-items: center; gap: .5rem;
+    margin-top: 1rem; padding: .3125rem .75rem; border-radius: 9999px;
+    background: color-mix(in srgb, var(--primary) 10%, transparent);
+    color: var(--primary); font-size: .6875rem; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .14em;
+  }
+  .rdy-flag i {
+    width: .5rem; height: .5rem; border-radius: 9999px;
+    background: var(--primary); animation: rdyPulse 2s ease-in-out infinite;
+  }
+  @keyframes rdyPulse { 0%,100% { opacity: 1; } 50% { opacity: .3; } }
+  @media (prefers-reduced-motion: reduce) { .rdy-flag i { animation: none; } }
+
+  .rdy-head h1 {
+    margin: .875rem 0 0; font-family: var(--font-display);
+    font-size: clamp(2rem, 5vw, 3.25rem); line-height: 1.08; color: var(--foreground);
+  }
+  .rdy-head h1 em { font-style: normal; color: var(--primary); }
+  .rdy-head > .container-page p { margin: .75rem 0 0; max-width: 34rem; font-size: .9375rem; color: var(--muted-foreground); }
+
+  .rdy-count { text-align: left; }
+  .rdy-count strong {
+    display: block; font-family: var(--font-display);
+    font-size: clamp(2rem, 5vw, 2.75rem); line-height: 1; color: var(--primary);
+  }
+  .rdy-count span {
+    font-size: .6875rem; text-transform: uppercase; letter-spacing: .16em;
+    color: var(--muted-foreground);
+  }
+  @media (min-width: 768px) { .rdy-count { text-align: right; } }
+
+  /* ---- Reassurance strip, specific to ready stock ---- */
+  .rdy-trust {
+    display: grid; gap: 1px; margin-bottom: 2.5rem;
+    grid-template-columns: 1fr;
+    background: var(--border);
+    border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden;
+  }
+  @media (min-width: 700px) { .rdy-trust { grid-template-columns: repeat(3, 1fr); } }
+  .rdy-trust__item { display: flex; gap: .75rem; align-items: flex-start; background: var(--card); padding: 1.125rem 1rem; }
+  .rdy-trust__item svg { width: 1.25rem; height: 1.25rem; color: var(--gold); flex-shrink: 0; margin-top: .125rem; }
+  .rdy-trust__item strong { display: block; font-size: .875rem; color: var(--foreground); }
+  .rdy-trust__item span { display: block; margin-top: .1875rem; font-size: .8125rem; color: var(--muted-foreground); line-height: 1.5; }
+
+  .rdy-card__badge {
+    position: absolute; top: .75rem; left: .75rem;
+    padding: .25rem .625rem; border-radius: 9999px;
+    background: var(--primary); color: var(--primary-foreground);
+    font-size: .625rem; font-weight: 600; text-transform: uppercase; letter-spacing: .1em;
+  }
+
+  /* ---- Filter card ---- */
+  .rdy-filters { position: relative; z-index: 2; margin-top: -3rem; }
+  .rdy-filters__card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius); box-shadow: var(--shadow-elegant);
+    padding: 1.125rem;
+  }
+  @media (min-width: 768px) { .rdy-filters__card { padding: 1.5rem; } }
+
+  .rdy-searchrow { display: flex; gap: .625rem; }
+  .rdy-search { position: relative; flex: 1; min-width: 0; }
+  .rdy-search svg {
+    position: absolute; left: .875rem; top: 50%; translate: 0 -50%;
+    width: 1rem; height: 1rem; color: var(--muted-foreground); pointer-events: none;
+  }
+  .rdy-search input {
+    width: 100%; height: 2.75rem; padding: 0 .875rem 0 2.5rem;
+    border: 1px solid var(--border); border-radius: .625rem;
+    background: var(--secondary); color: var(--foreground);
+    font-family: inherit; font-size: .9375rem;
+  }
+  .rdy-search input:focus { outline: none; border-color: var(--primary); }
+
+  .rdy-toggle {
+    display: inline-flex; align-items: center; gap: .5rem;
+    height: 2.75rem; padding-inline: 1rem;
+    border: 1px solid var(--border); border-radius: .625rem;
+    background: var(--secondary); color: var(--foreground);
+    font-family: inherit; font-size: .875rem; font-weight: 500;
+    cursor: pointer; white-space: nowrap;
+  }
+  .rdy-toggle svg { width: 1rem; height: 1rem; }
+  @media (min-width: 1024px) { .rdy-toggle { display: none; } }
+
+  .rdy-fields { display: none; margin-top: 1rem; }
+  .rdy-fields.is-open { display: block; }
+  @media (min-width: 1024px) { .rdy-fields { display: block !important; } }
+
+  .rdy-grid { display: grid; gap: .875rem; grid-template-columns: 1fr; }
+  @media (min-width: 560px)  { .rdy-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (min-width: 1024px) { .rdy-grid { grid-template-columns: repeat(4, 1fr); } }
+
+  .rdy-field { display: flex; flex-direction: column; gap: .375rem; min-width: 0; }
+  .rdy-field > label {
+    font-size: .625rem; text-transform: uppercase; letter-spacing: .14em;
+    font-weight: 600; color: var(--muted-foreground);
+  }
+  .rdy-field select, .rdy-field input {
+    width: 100%; height: 2.625rem; padding-inline: .75rem;
+    border: 1px solid var(--border); border-radius: .5rem;
+    background: var(--card); color: var(--foreground);
+    font-family: inherit; font-size: .875rem;
+  }
+  .rdy-field select:focus, .rdy-field input:focus { outline: none; border-color: var(--primary); }
+  .rdy-field select:disabled { background: var(--secondary); color: var(--muted-foreground); }
+
+  .rdy-actions {
+    margin-top: 1.125rem; padding-top: 1.125rem;
+    border-top: 1px solid var(--border);
+    display: flex; flex-wrap: wrap; align-items: center; gap: .75rem;
+  }
+  .rdy-actions .rdy-field { margin-left: auto; flex-direction: row; align-items: center; gap: .5rem; }
+  .rdy-actions .rdy-field select { width: auto; min-width: 10rem; }
+
+  .rdy-pills { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1.25rem; }
+  .rdy-pill {
+    display: inline-flex; align-items: center; gap: .5rem;
+    padding: .3125rem .625rem .3125rem .75rem; border-radius: 9999px;
+    background: color-mix(in srgb, var(--primary) 8%, transparent);
+    border: 1px solid color-mix(in srgb, var(--primary) 22%, transparent);
+    font-size: .75rem; font-weight: 500; color: var(--primary);
+  }
+  .rdy-pill a {
+    display: grid; place-items: center; width: 1rem; height: 1rem;
+    border-radius: 9999px; background: color-mix(in srgb, var(--primary) 15%, transparent);
+    color: var(--primary); font-size: .75rem; line-height: 1;
+  }
+
+  /* ---- Results ---- */
+  .rdy-results { padding-block: 3rem 4.5rem; }
+  .rdy-cards { display: grid; gap: 1.25rem; grid-template-columns: 1fr; }
+  @media (min-width: 560px)  { .rdy-cards { grid-template-columns: repeat(2, 1fr); } }
+  @media (min-width: 1000px) { .rdy-cards { grid-template-columns: repeat(3, 1fr); } }
+  @media (min-width: 1400px) { .rdy-cards { grid-template-columns: repeat(4, 1fr); } }
+
+  .rdy-card {
+    display: flex; flex-direction: column; height: 100%;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: var(--radius); overflow: hidden;
+    transition: transform .3s ease, box-shadow .3s ease, border-color .3s ease;
+  }
+  .rdy-card:hover {
+    transform: translateY(-4px);
+    border-color: color-mix(in srgb, var(--primary) 35%, transparent);
+    box-shadow: var(--shadow-card);
+  }
+  .rdy-card__media { position: relative; aspect-ratio: 16 / 10; overflow: hidden; background: var(--secondary); }
+  .rdy-card__media img { width: 100%; height: 100%; object-fit: cover; transition: transform .7s ease; }
+  .rdy-card:hover .rdy-card__media img { transform: scale(1.05); }
+
+  .rdy-card__body { flex: 1; display: flex; flex-direction: column; padding: .9375rem .9375rem 0; }
+  .rdy-card__dev {
+    margin: 0 0 .375rem; font-size: .625rem; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .14em; color: var(--gold);
+  }
+  .rdy-card__title {
+    margin: 0; font-family: var(--font-display);
+    font-size: 1.125rem; line-height: 1.3; color: var(--foreground);
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .rdy-card__loc {
+    display: flex; align-items: center; gap: .375rem;
+    margin: .5rem 0 0; font-size: .8125rem; color: var(--muted-foreground);
+  }
+  .rdy-card__loc svg { width: .875rem; height: .875rem; flex-shrink: 0; color: var(--primary); }
+  .rdy-card__meta { display: flex; flex-wrap: wrap; gap: .3125rem; margin: .75rem 0 .9375rem; }
+  .rdy-card__meta span {
+    padding: .1875rem .5rem; border-radius: .375rem;
+    background: var(--secondary); font-size: .6875rem; color: var(--muted-foreground);
+  }
+  .rdy-card__foot {
+    margin-top: auto; display: flex; align-items: center;
+    justify-content: space-between; gap: .75rem;
+    padding: .75rem .9375rem; border-top: 1px solid var(--border);
+    background: color-mix(in srgb, var(--secondary) 45%, transparent);
+  }
+  .rdy-card__price { font-size: .875rem; font-weight: 600; color: var(--primary); }
+  .rdy-card__price small {
+    display: block; margin-top: .125rem; font-size: .625rem; font-weight: 400;
+    text-transform: uppercase; letter-spacing: .1em; color: var(--muted-foreground);
+  }
+  .rdy-card__arrow {
+    display: grid; place-items: center; flex-shrink: 0;
+    width: 2rem; height: 2rem; border-radius: 9999px;
+    border: 1px solid var(--border); color: var(--primary);
+    transition: background-color .25s ease, color .25s ease, border-color .25s ease;
+  }
+  .rdy-card__arrow svg { width: .875rem; height: .875rem; }
+  .rdy-card:hover .rdy-card__arrow { background: var(--primary); border-color: var(--primary); color: var(--primary-foreground); }
+
+  .rdy-empty {
+    grid-column: 1 / -1; text-align: center; padding: 4.5rem 1.5rem;
+    border: 1px dashed var(--border); border-radius: var(--radius);
+  }
+  .rdy-empty svg { width: 3rem; height: 3rem; margin-bottom: 1.25rem; color: var(--border); }
+  .rdy-empty h2 { margin: 0; font-family: var(--font-display); font-size: 1.5rem; }
+  .rdy-empty p { margin: .5rem 0 1.5rem; color: var(--muted-foreground); }
+
+  .rdy-pager {
+    margin-top: 3rem; display: flex; flex-wrap: wrap;
+    align-items: center; justify-content: center; gap: .375rem;
+  }
+  .rdy-pager a, .rdy-pager span {
+    min-width: 2.5rem; height: 2.5rem; padding-inline: .5rem;
+    display: grid; place-items: center;
+    border: 1px solid var(--border); border-radius: .5rem;
+    font-size: .875rem; color: var(--foreground);
+    transition: border-color .2s ease, color .2s ease, background-color .2s ease;
+  }
+  .rdy-pager a:hover { border-color: var(--primary); color: var(--primary); }
+  .rdy-pager .is-current { background: var(--primary); border-color: var(--primary); color: var(--primary-foreground); font-weight: 600; }
+  .rdy-pager .is-gap { border: 0; min-width: 1.5rem; color: var(--muted-foreground); }
+  .rdy-pager svg { width: 1rem; height: 1rem; }
+</style>
+{% endblock %}
+
+
+{% block content %}
+
+<!-- ================= BANNER ================= -->
+<section class="rdy-head">
+  <div class="container-page rdy-head__inner">
+    <div>
+      <nav class="rdy-crumb" aria-label="Breadcrumb">
+        <a href="{% url 'home' %}">Home</a> <span>/</span>
+        <a href="{% url 'properties:property_list' %}">Properties</a> <span>/</span>
+        <span>Ready</span>
+      </nav>
+
+      <span class="rdy-flag"><i></i> Available now</span>
+
+      <h1>
+        Ready <em>Properties</em>{% if page_obj.number > 1 %}
+          <span style="font-size:.4em;letter-spacing:.1em;opacity:.55;">Page {{ page_obj.number }}</span>
+        {% endif %}
+      </h1>
+      <p>Completed homes available for immediate handover &mdash; walk through them
+         this week and move in.</p>
+    </div>
+
+    <div class="rdy-count">
+      <strong>{{ total_count|intcomma }}</strong>
+      <span>Ready {{ total_count|pluralize:"home,homes" }}</span>
+    </div>
+  </div>
+</section>
+
+
+<!-- ================= FILTERS ================= -->
+<div class="container-page rdy-filters">
+
+  <form class="rdy-filters__card" method="get" action="{% url 'properties:ready_properties' %}" id="rdyForm">
+
+    <div class="rdy-searchrow">
+      <div class="rdy-search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" aria-hidden="true">
+          <circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>
+        </svg>
+        <label for="f-q" hidden>Search</label>
+        <input type="search" id="f-q" name="q" value="{{ active_search }}"
+               placeholder="Search ready homes by project, area or developer&hellip;">
+      </div>
+
+      <button type="button" class="rdy-toggle" id="rdyToggle"
+              aria-expanded="false" aria-controls="rdyFields">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
+        Filters
+      </button>
+    </div>
+
+    <div class="rdy-fields" id="rdyFields">
+      <div class="rdy-grid">
+
+        <div class="rdy-field">
+          <label for="f-city">City</label>
+          <select id="f-city" name="city">
+            <option value="">All cities</option>
+            {% for c in cities %}
+              <option value="{{ c.slug }}" {% if c.slug == active_city %}selected{% endif %}>{{ c.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="rdy-field">
+          <label for="f-district">Area</label>
+          <select id="f-district" name="district" {% if not active_city %}disabled{% endif %}>
+            <option value="">{% if active_city %}All areas{% else %}Choose a city first{% endif %}</option>
+            {% for d in districts %}
+              <option value="{{ d.slug }}" {% if d.slug == active_district %}selected{% endif %}>{{ d.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="rdy-field">
+          <label for="f-type">Property type</label>
+          <select id="f-type" name="type">
+            <option value="">All types</option>
+            {% for t in types %}
+              <option value="{{ t.slug }}" {% if t.slug == active_type %}selected{% endif %}>{{ t.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="rdy-field">
+          <label for="f-developer">Developer</label>
+          <select id="f-developer" name="developer">
+            <option value="">All developers</option>
+            {% for d in developers %}
+              <option value="{{ d.slug }}" {% if d.slug == active_developer %}selected{% endif %}>{{ d.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="rdy-field">
+          <label for="f-unit">Unit type</label>
+          <select id="f-unit" name="unit_type">
+            <option value="">All unit types</option>
+            {% for u in unit_types %}
+              <option value="{{ u }}" {% if u == active_unit_type %}selected{% endif %}>{{ u }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="rdy-field">
+          <label for="f-beds">Bedrooms</label>
+          <select id="f-beds" name="bedrooms">
+            <option value="">Any</option>
+            {% for b in "12345" %}
+              <option value="{{ b }}" {% if b == active_bedrooms %}selected{% endif %}>{{ b }}+</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="rdy-field">
+          <label for="f-pmin">Min price (AED)</label>
+          <input type="number" id="f-pmin" name="price_min" value="{{ active_price_min }}"
+                 min="0" step="50000" inputmode="numeric" placeholder="No minimum">
+        </div>
+
+        <div class="rdy-field">
+          <label for="f-pmax">Max price (AED)</label>
+          <input type="number" id="f-pmax" name="price_max" value="{{ active_price_max }}"
+                 min="0" step="50000" inputmode="numeric" placeholder="No maximum">
+        </div>
+
+      </div>
+
+      <div class="rdy-actions">
+        <button type="submit" class="btn-solid">Apply filters</button>
+        {% if has_filters %}<a href="{% url 'properties:ready_properties' %}" class="btn-ghost">Clear all</a>{% endif %}
+
+        <div class="rdy-field">
+          <label for="f-sort">Sort</label>
+          <select id="f-sort" name="sort" data-autosubmit>
+            <option value="newest"     {% if active_sort == 'newest' %}selected{% endif %}>Newest first</option>
+            <option value="price_asc"  {% if active_sort == 'price_asc' %}selected{% endif %}>Price: low to high</option>
+            <option value="price_desc" {% if active_sort == 'price_desc' %}selected{% endif %}>Price: high to low</option>
+            <option value="oldest"     {% if active_sort == 'oldest' %}selected{% endif %}>Oldest first</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </form>
+
+  {% if has_filters %}
+  <div class="rdy-pills">
+    {% if active_search %}<span class="rdy-pill">&ldquo;{{ active_search }}&rdquo; <a href="#" data-drop="q">&times;</a></span>{% endif %}
+    {% if active_city %}<span class="rdy-pill">{{ active_city|title }} <a href="#" data-drop="city,district">&times;</a></span>{% endif %}
+    {% if active_district %}<span class="rdy-pill">{{ active_district|title }} <a href="#" data-drop="district">&times;</a></span>{% endif %}
+    {% if active_type %}<span class="rdy-pill">{{ active_type|title }} <a href="#" data-drop="type">&times;</a></span>{% endif %}
+    {% if active_developer %}<span class="rdy-pill">{{ active_developer|title }} <a href="#" data-drop="developer">&times;</a></span>{% endif %}
+    {% if active_unit_type %}<span class="rdy-pill">{{ active_unit_type }} <a href="#" data-drop="unit_type">&times;</a></span>{% endif %}
+    {% if active_bedrooms %}<span class="rdy-pill">{{ active_bedrooms }}+ beds <a href="#" data-drop="bedrooms">&times;</a></span>{% endif %}
+    {% if active_price_min or active_price_max %}
+      <span class="rdy-pill">AED {{ active_price_min|default:"0" }} &ndash; {{ active_price_max|default:"any" }} <a href="#" data-drop="price_min,price_max">&times;</a></span>
+    {% endif %}
+  </div>
+  {% endif %}
+</div>
+
+
+<!-- ================= RESULTS ================= -->
+<section class="rdy-results">
+  <div class="container-page">
+
+    <div class="rdy-trust">
+      <div class="rdy-trust__item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M21 2l-2 2m-7.6 7.6a5.5 5.5 0 1 1-7.8 7.8 5.5 5.5 0 0 1 7.8-7.8zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3"/>
+        </svg>
+        <div><strong>Immediate handover</strong><span>Keys on completion of paperwork &mdash; no waiting on construction.</span></div>
+      </div>
+      <div class="rdy-trust__item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M20 13c0 5-3.5 7.5-8 9-4.5-1.5-8-4-8-9V6l8-3 8 3Z"/><path d="m9 12 2 2 4-4"/>
+        </svg>
+        <div><strong>Title deed verified</strong><span>Every listing checked against the Dubai Land Department register.</span></div>
+      </div>
+      <div class="rdy-trust__item">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M8 2v4M16 2v4"/>
+        </svg>
+        <div><strong>Viewings this week</strong><span>Walk through any of these in person &mdash; we arrange access.</span></div>
+      </div>
+    </div>
+
+    <div class="rdy-cards">
+      {% for property in properties %}
+        <a class="rdy-card" href="{% url 'properties:property_detail' property.slug %}?return={{ request.get_full_path|urlencode }}">
+          <div class="rdy-card__media">
+            <img src="{{ property.cover_image }}" alt="{{ property.title }}"
+                 loading="lazy" width="600" height="375">
+            {% if property.property_status %}
+              <span class="rdy-card__badge">{{ property.property_status.name }}</span>
+            {% endif %}
+          </div>
+
+          <div class="rdy-card__body">
+            {% if property.developer_company %}
+              <p class="rdy-card__dev">{{ property.developer_company.name }}</p>
+            {% endif %}
+            <h2 class="rdy-card__title">{{ property.title }}</h2>
+
+            <p class="rdy-card__loc">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>
+              </svg>
+              {% if property.district %}{{ property.district.name }}, {% endif %}{{ property.city.name }}
+            </p>
+
+            <div class="rdy-card__meta">
+              {% if property.compare_bedroom_options %}
+                <span>{{ property.compare_bedroom_options|truncatechars:22 }}</span>
+              {% endif %}
+              {% if property.compare_unit_size_range %}
+                <span>{{ property.compare_unit_size_range }}</span>
+              {% endif %}
+              {% if property.delivery_date %}
+                <span>Handover {{ property.delivery_date|date:"M Y" }}</span>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="rdy-card__foot">
+            <div class="rdy-card__price">
+              {% firstof property.price property.compare_starting_price as from_price %}
+              {% if from_price %}
+                AED {{ from_price|floatformat:0|intcomma }}
+                <small>Starting from</small>
+              {% else %}
+                Price on request
+                <small>Enquire for details</small>
+              {% endif %}
+            </div>
+            <span class="rdy-card__arrow" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </span>
+          </div>
+        </a>
+
+      {% empty %}
+        <div class="rdy-empty">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/>
+          </svg>
+          <h2>No ready homes match those filters</h2>
+          <p>Widen your budget or clear a filter to see more.</p>
+          <a href="{% url 'properties:ready_properties' %}" class="btn-solid">Show everything</a>
+        </div>
+      {% endfor %}
+    </div>
+
+    {% if page_obj.paginator.num_pages > 1 %}
+    <nav class="rdy-pager" aria-label="Pagination">
+      {% if page_obj.has_previous %}
+        <a href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.previous_page_number }}"
+           rel="prev" aria-label="Previous page">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+        </a>
+      {% endif %}
+
+      {% for num in page_range %}
+        {% if num == page_obj.paginator.ELLIPSIS %}
+          <span class="is-gap">{{ num }}</span>
+        {% elif num == page_obj.number %}
+          <span class="is-current" aria-current="page">{{ num }}</span>
+        {% elif num == 1 %}
+          <a href="{% url 'properties:ready_properties' %}{% if querystring %}?{{ querystring }}{% endif %}">1</a>
+        {% else %}
+          <a href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ num }}">{{ num }}</a>
+        {% endif %}
+      {% endfor %}
+
+      {% if page_obj.has_next %}
+        <a href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.next_page_number }}"
+           rel="next" aria-label="Next page">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+        </a>
+      {% endif %}
+    </nav>
+    {% endif %}
+  </div>
+</section>
+
+{% endblock %}
+
+
+{% block extra_js %}
+
+<script>
+(function () {
+  var form = document.getElementById('rdyForm');
+  if (!form) return;
+
+  var toggle = document.getElementById('rdyToggle');
+  var fields = document.getElementById('rdyFields');
+  if (toggle && fields) {
+    toggle.addEventListener('click', function () {
+      var open = fields.classList.toggle('is-open');
+      toggle.setAttribute('aria-expanded', String(open));
+    });
+    if (document.querySelector('.rdy-pills')) {
+      fields.classList.add('is-open');
+      toggle.setAttribute('aria-expanded', 'true');
+    }
+  }
+
+  /* Empty fields are stripped so the URL stays clean and canonical-friendly */
+  function submit() {
+    Array.prototype.forEach.call(form.elements, function (el) {
+      if (el.name && el.value === '') el.disabled = true;
+    });
+    form.submit();
+  }
+  form.addEventListener('submit', function (e) { e.preventDefault(); submit(); });
+
+  var sort = form.querySelector('[data-autosubmit]');
+  if (sort) sort.addEventListener('change', submit);
+
+  /* Changing city clears the area — it belongs to the previous city */
+  var city = document.getElementById('f-city');
+  var district = document.getElementById('f-district');
+  if (city && district) {
+    city.addEventListener('change', function () { district.value = ''; submit(); });
+  }
+
+  document.addEventListener('click', function (e) {
+    var pill = e.target.closest('[data-drop]');
+    if (!pill) return;
+    e.preventDefault();
+    var url = new URL(window.location.href);
+    pill.dataset.drop.split(',').forEach(function (k) { url.searchParams.delete(k); });
+    url.searchParams.delete('page');
+    window.location.href = url.pathname + (url.search || '');
+  });
+})();
+</script>
+{% endblock %}

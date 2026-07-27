@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f3f1ec;font-family:Arial,Helvetica,sans-serif;color:#0b1512;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f3f1ec;padding:28px 14px;">
+    <tr><td align="center">
+      <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border:1px solid #e5e2da;">
+
+        <!-- header -->
+        <tr><td style="background:#0b1512;padding:34px 36px;text-align:center;">
+          <div style="font-size:12px;letter-spacing:4px;text-transform:uppercase;color:#d4af37;font-weight:bold;">Spacesmith Real Estate</div>
+          <div style="font-size:24px;color:#f6f2e9;margin-top:12px;">Thank you for reaching out</div>
+        </td></tr>
+
+        <!-- body -->
+        <tr><td style="padding:36px;">
+          <p style="margin:0 0 18px;font-size:15px;color:#0b1512;line-height:1.7;">Dear {{ enquiry.name }},</p>
+          <p style="margin:0 0 18px;font-size:14px;color:#444;line-height:1.75;">
+            Thank you for contacting Spacesmith Real Estate. We've received your enquiry{% if enquiry.subject %} regarding <strong>{{ enquiry.subject }}</strong>{% endif %}, and one of our advisors will be in touch within one working day.
+          </p>
+          <p style="margin:0 0 26px;font-size:14px;color:#444;line-height:1.75;">
+            We find your space — whether that's a home to move into, a unit to invest in, or a portfolio to manage. You'll always speak with a real advisor who takes the time to understand your goals, from acquisition through to long-term support.
+          </p>
+
+          <div style="padding:22px;background:#f3f1ec;border-left:3px solid #d4af37;margin-bottom:28px;">
+            <div style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#888;margin-bottom:10px;">Need a quicker response?</div>
+            <div style="font-size:14px;color:#0b1512;line-height:1.9;">
+              📞 <a href="tel:+971556399212" style="color:#1e5138;text-decoration:none;">+971 55 639 9212</a><br>
+              💬 <a href="https://wa.me/971556399212" style="color:#1e5138;text-decoration:none;">WhatsApp us</a><br>
+              ✉️ <a href="mailto:hello@spacesmithrealestate.com" style="color:#1e5138;text-decoration:none;">hello@spacesmithrealestate.com</a>
+            </div>
+          </div>
+
+          <p style="margin:0;font-size:14px;color:#444;line-height:1.7;">
+            Warm regards,<br>
+            <strong style="color:#0b1512;">The Spacesmith Real Estate Team</strong>
+          </p>
+        </td></tr>
+
+        <!-- footer -->
+        <tr><td style="background:#0b1512;padding:24px 36px;text-align:center;">
+          <div style="font-size:12px;color:rgba(246,242,233,0.7);line-height:1.7;">
+            117, Royal Class Building<br>
+            Dubai Investment Park First, Dubai, UAE
+          </div>
+        </td></tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>

@@ -1,0 +1,53 @@
+# ====================
+# Python / Django
+# ====================
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+
+# Virtual environments
+env/
+venv/
+ENV/
+.venv/
+
+# Environment
+.env
+.env.*
+
+# Logs
+logs/
+*.log
+
+# Database
+db.sqlite3
+*.sqlite3
+
+# Media & static files
+media/
+staticfiles/
+
+# Migrations cache only (SAFE)
+**/migrations/__pycache__/
+**/migrations/*.pyc
+
+# ====================
+# IDEs
+# ====================
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# ====================
+# OS files
+# ====================
+.DS_Store
+Thumbs.db
+
+# ====================
+# Cache
+# ====================
+cache/

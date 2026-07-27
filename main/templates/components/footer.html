@@ -1,0 +1,268 @@
+{% load static %}
+
+<style>
+  /* =====================================================================
+     FOOTER — uses base.html tokens (--ink, --cream, --gold, --font-display)
+     ===================================================================== */
+  .footer { background: var(--ink); color: var(--cream); }
+
+  .footer__grid {
+    display: grid;
+    gap: 3rem;
+    padding-block: 4rem;
+    grid-template-columns: 1fr;
+  }
+  @media (min-width: 768px)  { .footer__grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (min-width: 1024px) { .footer__grid { grid-template-columns: 1.3fr 1fr 1.2fr 1.2fr; } }
+
+  /* ---- Brand ---- */
+  .footer__brand-row { display: flex; align-items: center; gap: .75rem; }
+  .footer__brand-row img { height: 3rem; width: 3rem; object-fit: contain; }
+  .footer__brand-name {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    line-height: 1;
+    color: var(--cream);
+  }
+  .footer__brand-sub {
+    margin: .25rem 0 0;
+    font-size: .6875rem;
+    text-transform: uppercase;
+    letter-spacing: .18em;
+    color: var(--gold);
+  }
+  .footer__desc {
+    margin-top: 1.5rem;
+    font-size: .875rem;
+    line-height: 1.65;
+    color: rgba(246,242,233,.7);
+    max-width: 22rem;
+  }
+  .footer__tagline {
+    margin-top: 1rem;
+    font-size: .6875rem;
+    text-transform: uppercase;
+    letter-spacing: .18em;
+    color: var(--gold);
+  }
+
+  /* ---- Column headings + links ---- */
+  .footer__heading {
+    margin: 0;
+    font-family: var(--font-body);
+    font-size: .75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .18em;
+    color: var(--gold);
+  }
+
+  .footer__links,
+  .footer__contact {
+    list-style: none;
+    margin: 1.25rem 0 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: .75rem;
+    font-size: .875rem;
+  }
+  .footer__links a { color: var(--cream); transition: color .2s ease; }
+  .footer__links a:hover { color: var(--gold); }
+
+  .footer__contact { color: rgba(246,242,233,.8); }
+  .footer__contact li { display: flex; gap: .75rem; align-items: flex-start; }
+  .footer__contact a { color: inherit; transition: color .2s ease; }
+  .footer__contact a:hover { color: var(--gold); }
+  .footer__contact svg {
+    margin-top: .2rem; flex-shrink: 0;
+    width: 1rem; height: 1rem; color: var(--gold);
+  }
+
+  /* ---- Newsletter ---- */
+  .footer__newsletter-desc {
+    margin-top: 1.25rem;
+    font-size: .875rem;
+    color: rgba(246,242,233,.7);
+  }
+  .footer__form { margin-top: 1rem; display: flex; }
+  .footer__form input {
+    flex: 1; min-width: 0;
+    border-radius: 9999px 0 0 9999px;
+    background: rgba(246,242,233,.1);
+    border: 1px solid rgba(246,242,233,.2);
+    border-right: 0;
+    padding: .625rem 1rem;
+    font-family: inherit; font-size: .875rem;
+    color: var(--cream);
+    outline: none;
+  }
+  .footer__form input::placeholder { color: rgba(246,242,233,.5); }
+  .footer__form input:focus { border-color: var(--gold); }
+  .footer__form button {
+    border-radius: 0 9999px 9999px 0;
+    background: var(--gold);
+    padding: .625rem 1.25rem;
+    font-family: inherit; font-size: .875rem; font-weight: 500;
+    color: var(--ink);
+    border: none; cursor: pointer;
+    transition: filter .2s ease;
+  }
+  .footer__form button:hover { filter: brightness(.95); }
+  .footer__form-msg { margin-top: .625rem; font-size: .8125rem; min-height: 1.2em; color: var(--gold); }
+
+  /* ---- Social ---- */
+  .footer__social { margin-top: 1.5rem; display: flex; flex-wrap: wrap; gap: .625rem; }
+  .footer__social a {
+    width: 2.25rem; height: 2.25rem;
+    border-radius: 9999px;
+    background: rgba(246,242,233,.1);
+    color: var(--cream);
+    display: inline-flex; align-items: center; justify-content: center;
+    transition: background-color .2s ease, color .2s ease;
+  }
+  .footer__social a:hover { background: var(--gold); color: var(--ink); }
+  .footer__social svg { width: 1rem; height: 1rem; }
+
+  /* ---- Bottom bar ---- */
+  .footer__bottom { border-top: 1px solid rgba(246,242,233,.1); }
+  .footer__bottom-inner {
+    padding-block: 1.5rem;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: space-between;
+    gap: .75rem;
+    font-size: .75rem;
+    color: rgba(246,242,233,.6);
+    text-align: center;
+  }
+  .footer__bottom-inner a { color: inherit; }
+  .footer__bottom-inner a:hover { color: var(--gold); }
+  .footer__legal { display: flex; gap: 1.25rem; }
+  @media (min-width: 768px) {
+    .footer__bottom-inner { flex-direction: row; text-align: left; }
+  }
+</style>
+
+<footer class="footer">
+  <div class="container-page footer__grid">
+
+    <!-- Brand -->
+    <div>
+      <a href="{% url 'home' %}" class="footer__brand-row">
+        <img src="{% static 'img/logo.png' %}" alt="Spacesmith Real Estate">
+        <div>
+          <p class="footer__brand-name">spacesmith</p>
+          <p class="footer__brand-sub">Real Estate</p>
+        </div>
+      </a>
+      <p class="footer__desc">
+        Spacesmith Real Estate LLC is a Dubai-based consultancy for residential and commercial
+        property sales, leasing, portfolio management and investment advisory across the UAE.
+      </p>
+      <p class="footer__tagline">We Find Your Space</p>
+    </div>
+
+    <!-- Explore -->
+    <div>
+      <h4 class="footer__heading">Explore</h4>
+      <ul class="footer__links">
+        <li><a href="">Home</a></li>
+        <li><a href="">About</a></li>
+        <li><a href="">Off Plan</a></li>
+        <li><a href="">Ready Properties</a></li>
+        {# TODO: swap for {% url 'blog_list' %} once confirmed #}
+        <li><a href="">Insights</a></li>
+        <li><a href="">Contact</a></li>
+      </ul>
+    </div>
+
+    <!-- Reach us -->
+    <div>
+      <h4 class="footer__heading">Reach us</h4>
+      <ul class="footer__contact">
+        <li>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+          <span>{{ contact_address }}</span>
+        </li>
+        <li>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+          <span>
+            <a href="tel:+{{ phone_number }}">{{ contact_phone }}</a><br>
+            <a href="tel:{{ contact_landline|cut:' ' }}">{{ contact_landline }}</a>
+          </span>
+        </li>
+        <li>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+          <a href="mailto:{{ contact_email }}">{{ contact_email }}</a>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Newsletter + social -->
+    <div>
+      <h4 class="footer__heading">Newsletter</h4>
+      <p class="footer__newsletter-desc">
+        Off-plan launches and market signals, straight to your inbox.
+      </p>
+
+      {# Wire the action to your subscribe view, then delete the JS handler below. #}
+      <form class="footer__form" id="newsletterForm" method="post" action="" autocomplete="off">
+        {% csrf_token %}
+        <label for="newsletterEmail" class="sr-only" hidden>Email address</label>
+        <input type="email" id="newsletterEmail" name="email" required placeholder="you@email.com">
+        <button type="submit">Join</button>
+      </form>
+      <p class="footer__form-msg" id="newsletterMsg" role="status" aria-live="polite"></p>
+
+      <div class="footer__social">
+        <a href="{{ social_links.instagram }}" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>
+        </a>
+        <a href="{{ social_links.facebook }}" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+        </a>
+        <a href="{{ social_links.linkedin }}" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect width="4" height="12" x="2" y="9"/><circle cx="4" cy="4" r="2"/></svg>
+        </a>
+        <a href="{{ social_links.youtube }}" target="_blank" rel="noopener noreferrer" aria-label="YouTube">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 17a24.12 24.12 0 0 1 0-10 2 2 0 0 1 1.4-1.4 49.56 49.56 0 0 1 16.2 0A2 2 0 0 1 21.5 7a24.12 24.12 0 0 1 0 10 2 2 0 0 1-1.4 1.4 49.55 49.55 0 0 1-16.2 0A2 2 0 0 1 2.5 17z"/><path d="m10 15 5-3-5-3z"/></svg>
+        </a>
+        <a href="{{ social_links.tiktok }}" target="_blank" rel="noopener noreferrer" aria-label="TikTok">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.6 5.82A4.28 4.28 0 0 1 15.54 3h-3.09v12.4a2.59 2.59 0 0 1-2.59 2.5 2.59 2.59 0 0 1 0-5.18c.27 0 .53.04.77.12v-3.2a5.8 5.8 0 0 0-.77-.05A5.72 5.72 0 0 0 4.14 15.3a5.72 5.72 0 0 0 5.72 5.72 5.72 5.72 0 0 0 5.72-5.72V9.4a7.35 7.35 0 0 0 4.28 1.37V7.68a4.28 4.28 0 0 1-3.26-1.86z"/></svg>
+        </a>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="footer__bottom">
+    <div class="container-page footer__bottom-inner">
+      <p id="footerCopy">&copy; Spacesmith Real Estate LLC. All rights reserved.</p>
+      <div class="footer__legal">
+        <a href="/privacy-policy/">Privacy Policy</a>
+        <a href="/faq/">FAQ</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function () {
+  var copy = document.getElementById('footerCopy');
+  if (copy) {
+    copy.textContent = '\u00A9 ' + new Date().getFullYear() +
+      ' Spacesmith Real Estate LLC. All rights reserved.';
+  }
+
+  /* Remove this block once the form posts to a real view. */
+  var form = document.getElementById('newsletterForm');
+  var msg  = document.getElementById('newsletterMsg');
+  if (form && !form.getAttribute('action')) {
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      if (msg) msg.textContent = 'Subscribe endpoint not connected yet.';
+    });
+  }
+})();
+</script>

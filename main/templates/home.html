@@ -1,0 +1,1686 @@
+{% extends 'base.html' %}
+{% load static humanize %}
+
+{% block body_class %}has-hero{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* =====================================================================
+     HERO
+     ===================================================================== */
+  .hero {
+    position: relative;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    background: var(--ink);            /* fallback while the video loads */
+    min-height: 80svh;
+    padding-top: calc(var(--nav-height) + 2rem);
+    padding-bottom: 2rem;
+  }
+  @media (min-width: 768px) {
+    .hero {
+      min-height: 85vh;
+      padding-top: calc(var(--nav-height) + 3rem);
+      padding-bottom: 2rem;
+    }
+  }
+
+  .hero__video {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+  }
+
+  /* Overlay — unchanged from the original */
+  .hero__scrim {
+    position: absolute;
+    inset: 0;
+    background:
+      linear-gradient(to top, rgba(11,21,18,.20), transparent 45%),
+      linear-gradient(135deg, rgba(11,21,18,.20), rgba(11,21,18,.10) 50%, rgba(15,61,46,.15));
+  }
+
+  .hero__inner { position: relative; z-index: 1; width: 100%; }
+  .hero__text  { max-width: 48rem; }
+
+  .hero__title {
+    font-family: var(--font-display);
+    font-size: clamp(2.25rem, 7vw, 4.5rem);
+    line-height: 1.05;
+    color: var(--cream);
+    margin: 1.25rem 0 0;
+    text-shadow: 0 2px 24px rgba(11,21,18,.35);
+  }
+  .hero__title .accent { color: var(--gold); }
+
+  .hero__copy {
+    margin: 1.25rem 0 0;
+    font-size: clamp(.95rem, 2.6vw, 1.125rem);
+    color: rgba(246,242,233,.9);
+    max-width: 34rem;
+    text-shadow: 0 1px 16px rgba(11,21,18,.35);
+  }
+
+  /* =====================================================================
+     SEARCH FILTER — submits to the property list page
+     ===================================================================== */
+  .filter {
+    margin-top: 2rem;
+    max-width: 64rem;
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: 1fr;
+    background: rgba(246,242,233,.08);
+    border: 1px solid rgba(246,242,233,.18);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-radius: 1.25rem;
+    padding: 1.125rem;
+  }
+  @media (min-width: 640px) {
+    .filter { grid-template-columns: repeat(2, 1fr); padding: 1.25rem; }
+  }
+  /* location · type · bedrooms · price · submit */
+  @media (min-width: 1100px) {
+    .filter {
+      grid-template-columns: 1.5fr 1fr 1fr 1.3fr auto;
+      align-items: end;
+      margin-top: 2.5rem;
+    }
+  }
+
+  .filter .field label {
+    font-size: .6875rem;
+    text-transform: uppercase;
+    letter-spacing: .16em;
+    color: rgba(246,242,233,.72);
+    white-space: nowrap;
+  }
+  .filter .field select,
+  .filter .field input {
+    height: 2.75rem;
+    border-radius: .625rem;
+    border: 1px solid rgba(246,242,233,.25);
+    background: rgba(11,21,18,.4);
+    color: var(--cream);
+    padding-inline: .875rem;
+    font-family: inherit;
+    font-size: .875rem;
+  }
+  .filter .field select:focus,
+  .filter .field input:focus { border-color: var(--gold); outline: none; }
+  .filter .field select option,
+  .filter .field select optgroup { color: #111827; background: #fff; }
+
+  .field--range output {
+    color: var(--gold);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0;
+  }
+  .field--range input[type="range"] {
+    height: 2.75rem;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    accent-color: var(--gold);
+    cursor: pointer;
+  }
+
+  .filter__submit {
+    height: 2.75rem;
+    width: 100%;
+    align-self: end;
+  }
+  @media (min-width: 1100px) { .filter__submit { width: auto; padding-inline: 1.75rem; } }
+
+  /* =====================================================================
+     STATS
+     ===================================================================== */
+  .stats {
+    margin-top: 2.5rem;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.25rem 1.5rem;
+    max-width: 48rem;
+  }
+  @media (min-width: 768px) { .stats { margin-top: 3rem; grid-template-columns: repeat(4, 1fr); } }
+
+  .stat { border-left: 2px solid var(--gold); padding-left: .875rem; }
+  .stat__value {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: clamp(1.5rem, 5vw, 1.875rem);
+    color: var(--cream);
+  }
+  .stat__label {
+    margin: .25rem 0 0;
+    font-size: .625rem;
+    text-transform: uppercase;
+    letter-spacing: .14em;
+    color: rgba(246,242,233,.72);
+    line-height: 1.4;
+  }
+
+  /* Staggered rise on load */
+  @keyframes heroUp { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: none; } }
+  .hero__text > *,
+  .hero .filter,
+  .hero .stats { opacity: 0; animation: heroUp .9s cubic-bezier(.2,.8,.2,1) forwards; }
+  .hero .badge  { animation-delay: .15s; }
+  .hero__title  { animation-delay: .30s; }
+  .hero__copy   { animation-delay: .45s; }
+  .hero .filter { animation-delay: .60s; }
+  .hero .stats  { animation-delay: .75s; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hero__text > *, .hero .filter, .hero .stats { opacity: 1; animation: none; }
+  }
+</style>
+{% endblock %}
+
+
+{% block content %}
+
+<!-- ================= HERO ================= -->
+<section class="hero">
+  <video class="hero__video"
+         autoplay muted loop playsinline
+         preload="metadata"
+         poster="{% static 'img/hero-poster.jpg' %}"
+         aria-hidden="true" tabindex="-1">
+    <source src="{% static 'video/video_1.mp4' %}" type="video/mp4">
+  </video>
+  <div class="hero__scrim"></div>
+
+  <div class="container-page hero__inner">
+
+    <div class="hero__text">
+      <span class="badge">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="m12 3 1.9 5.8L20 10.5l-5.4 3.1L15.5 20 12 16.9 8.5 20l.9-6.4L4 10.5l6.1-1.7L12 3Z"/>
+        </svg>
+        We find your space
+      </span>
+
+      <h1 class="hero__title">
+        Smart homes.<br>
+        <span class="accent">Strong investments.</span>
+      </h1>
+
+      <p class="hero__copy">
+        Spacesmith connects you with off-plan launches and ready homes across Dubai —
+        backed by market insight, legal due diligence and honest advice.
+      </p>
+    </div>
+
+    <!-- ---- Search: submits to the property list page ---- -->
+    <form class="filter" id="heroFilter" method="get"
+          action="{% url 'properties:property_list' %}" role="search"
+          aria-label="Search properties">
+
+      <div class="field">
+        <label for="f-location">Location</label>
+        <select id="f-location" name="district">
+          <option value="">All locations</option>
+          {% for group in locations %}
+            <optgroup label="{{ group.city.name }}">
+              {% for district in group.districts %}
+                <option value="{{ district.slug }}">{{ district.name }}</option>
+              {% endfor %}
+            </optgroup>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="f-type">Property type</label>
+        <select id="f-type" name="type">
+          <option value="">All types</option>
+          {% for type in types %}
+            <option value="{{ type.slug }}">{{ type.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="f-bedrooms">Bedrooms</label>
+        <select id="f-bedrooms" name="bedrooms">
+          <option value="">Any</option>
+          {% for b in bedroom_options %}
+            <option value="{{ b }}">{{ b }}+</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="field field--range">
+        <label for="f-price">
+          Max price &middot; <output id="priceOut" for="f-price">Any</output>
+        </label>
+        <input type="range" id="f-price" name="price_max"
+               min="{{ price_step }}" max="{{ max_price }}" step="{{ price_step }}"
+               value="{{ max_price }}"
+               data-max="{{ max_price }}">
+      </div>
+
+      <button type="submit" class="btn-gold filter__submit">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>
+        </svg>
+        Search
+      </button>
+    </form>
+
+    <!-- ---- Stats ---- -->
+    <div class="stats">
+      <div class="stat">
+        <p class="stat__value count-up">1,200+</p>
+        <p class="stat__label">Properties Curated</p>
+      </div>
+      <div class="stat">
+        <p class="stat__value count-up">850+</p>
+        <p class="stat__label">Happy Homeowners</p>
+      </div>
+      <div class="stat">
+        <p class="stat__value count-up">20+</p>
+        <p class="stat__label">Developer Partners</p>
+      </div>
+      <div class="stat">
+        <p class="stat__value count-up">3.2B</p>
+        <p class="stat__label">AED Transacted</p>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+
+
+{% block extra_js %}
+<script>
+(function () {
+  var form  = document.getElementById('heroFilter');
+  if (!form) return;
+
+  var range = document.getElementById('f-price');
+  var out   = document.getElementById('priceOut');
+
+  function aed(n) {
+    if (n >= 1000000) return 'AED ' + (n / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+    return 'AED ' + Number(n).toLocaleString('en-US');
+  }
+
+  function paintPrice() {
+    if (!range || !out) return;
+    var v   = Number(range.value);
+    var max = Number(range.dataset.max);
+    out.textContent = v >= max ? 'Any' : aed(v);
+  }
+
+  if (range) {
+    range.addEventListener('input', paintPrice);
+    paintPrice();
+  }
+
+  /* Strip empty params so the property list URL stays clean:
+     /properties/?district=dubai-marina  not  /properties/?district=&type=&... */
+  form.addEventListener('submit', function () {
+    Array.prototype.forEach.call(form.elements, function (el) {
+      if (!el.name) return;
+      if (el.value === '') { el.disabled = true; return; }
+      // slider at its ceiling means "no price limit"
+      if (el === range && Number(el.value) >= Number(el.dataset.max)) el.disabled = true;
+    });
+  });
+})();
+</script>
+{% endblock %}
+
+
+<!-- ---------------------------------------------------section 2----------------------------------------------- -->
+
+<style>
+
+  .trust {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+     padding-top: 4rem;
+    padding-bottom: 2rem;
+    /* Not flat white — a barely-there warm wash gives the white cards in
+       later sections something to sit against. */
+    background:
+      radial-gradient(120% 90% at 50% -10%, color-mix(in srgb, var(--primary) 5%, transparent), transparent 60%),
+      linear-gradient(180deg, #fffefb 0%, var(--background) 55%);
+  }
+  @media (min-width: 1024px) { 
+    .trust { 
+        padding-top: 4rem;
+        padding-bottom: 3rem;
+    }
+}
+ 
+  /* ---- Wordmark watermark ---- */
+  .trust__watermark {
+    position: absolute;
+    top: 0; left: 50%;
+    translate: -50% 0;
+    width: min(1600px, 118%);
+    height: auto;
+    opacity: 1;
+    user-select: none;
+    pointer-events: none;
+    z-index: -2;
+  }
+ 
+  /* ---- Hairline grid, bottom-right: the drafting table under the deal ---- */
+  .trust::after {
+    content: "";
+    position: absolute; right: 0; bottom: 0;
+    width: 52%; height: 60%;
+    z-index: -2;
+    pointer-events: none;
+    background-image:
+      repeating-linear-gradient(90deg, color-mix(in srgb, var(--primary) 7%, transparent) 0 1px, transparent 1px 54px),
+      repeating-linear-gradient(0deg,  color-mix(in srgb, var(--primary) 7%, transparent) 0 1px, transparent 1px 54px);
+    -webkit-mask-image: radial-gradient(75% 75% at 92% 92%, #000, transparent 72%);
+            mask-image: radial-gradient(75% 75% at 92% 92%, #000, transparent 72%);
+  }
+ 
+  .trust__grid {
+    position: relative;
+    display: grid;
+    gap: 3.5rem;
+    grid-template-columns: 1fr;
+    align-items: center;
+  }
+  @media (min-width: 1024px) {
+    .trust__grid { grid-template-columns: 1.02fr 0.98fr 0.72fr; gap: 2.5rem; }
+  }
+  @media (min-width: 1280px) { .trust__grid { gap: 4rem; } }
+ 
+  /* =====================================================================
+     COPY
+     ===================================================================== */
+  .trust__eyebrow {
+    display: flex;
+    align-items: center;
+    gap: .875rem;
+    margin: 0 0 1.5rem;
+    font-size: .6875rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: .32em;
+    color: var(--primary);
+  }
+  .trust__eyebrow::before {
+    content: "";
+    width: 2.75rem; height: 1px;
+    background: var(--gold);
+    transform-origin: left;
+    animation: ruleIn .9s cubic-bezier(.2,.8,.2,1) both;
+  }
+  @keyframes ruleIn { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+ 
+  .trust__headline {
+    margin: 0 0 1.75rem;
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: clamp(2.5rem, 5.6vw, 4rem);
+    line-height: 1.02;
+    letter-spacing: -.01em;
+    color: var(--primary);
+  }
+  /* "Opportunity" carries the gold — the one word the section is about */
+  .trust__headline em {
+    display: block;
+    font-style: normal;
+    background: linear-gradient(96deg,
+      var(--gold-dark) 0%, var(--gold) 38%, var(--gold-light) 55%,
+      var(--gold) 74%, var(--gold-dark) 100%);
+    background-size: 220% auto;
+    -webkit-background-clip: text;
+            background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: goldDrift 7s linear infinite;
+  }
+  @keyframes goldDrift { to { background-position: 220% center; } }
+ 
+  .trust__text {
+    margin: 0;
+    max-width: 40ch;
+    font-size: .9375rem;
+    line-height: 1.75;
+    color: var(--muted-foreground);
+    text-wrap: pretty;
+  }
+  .trust__text + .trust__text { margin-top: 1.25rem; }
+ 
+  /* ---- Read More: the ring fills from the centre ---- */
+  .trust__readmore {
+    position: relative;
+    display: inline-grid;
+    place-items: center;
+    margin-top: 2.5rem;
+    width: 6.5rem; height: 6.5rem;
+    border-radius: 50%;
+    color: var(--primary);
+    font-size: .75rem;
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    transition: color .4s ease;
+  }
+  .trust__readmore span { position: relative; z-index: 1; }
+  .trust__readmore::before {
+    content: "";
+    position: absolute; inset: 0;
+    border-radius: 50%;
+    border: 1px solid color-mix(in srgb, var(--primary) 30%, transparent);
+    transition: border-color .4s ease;
+  }
+  .trust__readmore::after {
+    content: "";
+    position: absolute; inset: 0;
+    border-radius: 50%;
+    background: var(--primary);
+    transform: scale(0);
+    transition: transform .45s cubic-bezier(.2,.8,.2,1);
+  }
+  .trust__readmore:hover { color: var(--primary-foreground); }
+  .trust__readmore:hover::after  { transform: scale(1); }
+  .trust__readmore:hover::before { border-color: var(--gold); }
+ 
+  /* =====================================================================
+     LOGO + ORBIT — the signature
+     ===================================================================== */
+  .trust__logo {
+    position: relative;
+    display: grid;
+    place-items: center;
+    aspect-ratio: 1;
+  }
+  .trust__logo img {
+    position: relative;
+    z-index: 1;
+    width: 74%;
+    max-width: 26rem;
+    height: auto;
+    object-fit: contain;
+    filter: drop-shadow(0 24px 48px color-mix(in srgb, var(--primary) 20%, transparent));
+  }
+ 
+  /* The orbit from the mark, redrawn full scale. Tilted to match the
+     ellipse, one turn every 40s — slow enough to read as ambient. */
+  .trust__orbit {
+    position: absolute;
+    inset: 4%;
+    border-radius: 50%;
+    border: 1px solid color-mix(in srgb, var(--gold) 42%, transparent);
+    border-bottom-color: transparent;
+    border-right-color: color-mix(in srgb, var(--gold) 14%, transparent);
+    rotate: x 62deg;
+    animation: orbitSpin 40s linear infinite;
+  }
+  .trust__orbit--outer {
+    inset: -4%;
+    border-color: color-mix(in srgb, var(--primary) 14%, transparent);
+    border-top-color: color-mix(in srgb, var(--gold) 30%, transparent);
+    animation-duration: 64s;
+    animation-direction: reverse;
+  }
+  @keyframes orbitSpin { to { rotate: x 62deg z 360deg; } }
+ 
+  /* Warm halo so the mark sits in light rather than on flat white */
+  .trust__logo::before {
+    content: "";
+    position: absolute;
+    inset: 8%;
+    z-index: 0;
+    border-radius: 50%;
+    background: radial-gradient(circle,
+      color-mix(in srgb, var(--gold) 13%, transparent) 0%,
+      color-mix(in srgb, var(--gold) 4%, transparent) 45%,
+      transparent 70%);
+  }
+ 
+  /* =====================================================================
+     FEATURES
+     ===================================================================== */
+  .trust__features { display: flex; flex-direction: column; }
+ 
+  .trust__feature {
+    position: relative;
+    padding-block: 1.5rem;
+    transition: padding-left .4s cubic-bezier(.2,.8,.2,1);
+  }
+  .trust__feature + .trust__feature { border-top: 1px solid var(--border); }
+  .trust__feature:first-child { padding-top: 0; }
+  .trust__feature:last-child  { padding-bottom: 0; }
+ 
+  /* gold marker draws down the left edge on hover */
+  .trust__feature::before {
+    content: "";
+    position: absolute;
+    left: 0; top: 1.5rem; bottom: 1.5rem;
+    width: 2px;
+    background: var(--gold);
+    transform: scaleY(0);
+    transform-origin: top;
+    transition: transform .4s cubic-bezier(.2,.8,.2,1);
+  }
+  .trust__feature:hover { padding-left: 1.25rem; }
+  .trust__feature:hover::before { transform: scaleY(1); }
+ 
+  .trust__icon {
+    width: 2.5rem; height: 2.5rem;
+    margin-bottom: 1rem;
+    color: var(--gold);
+    transition: transform .4s cubic-bezier(.2,.8,.2,1);
+  }
+  .trust__icon svg { width: 100%; height: 100%; }
+  .trust__feature:hover .trust__icon { transform: translateY(-3px); }
+ 
+  .trust__feature-title {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 1.375rem;
+    line-height: 1.25;
+    color: var(--primary);
+  }
+  .trust__feature-note {
+    margin: .5rem 0 0;
+    font-size: .8125rem;
+    line-height: 1.55;
+    color: var(--muted-foreground);
+  }
+ 
+  /* =====================================================================
+     RESPONSIVE
+     ===================================================================== */
+  /* Tablet: mark on top across both columns, features in a row below */
+  @media (min-width: 640px) and (max-width: 1023px) {
+    .trust__grid { grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    .trust__logo { order: -1; grid-column: 1 / -1; max-width: 22rem; margin-inline: auto; }
+    .trust__features {
+      grid-column: 1 / -1;
+      flex-direction: row;
+      flex-wrap: wrap;
+      gap: 0 2.5rem;
+    }
+    .trust__feature { flex: 1 1 13rem; padding-top: 1.5rem; }
+    .trust__feature + .trust__feature { border-top: 1px solid var(--border); }
+  }
+ 
+  @media (max-width: 639px) {
+    .trust { padding-block: 2rem 2.5rem; }
+    .trust__logo { order: -1; max-width: 17rem; margin-inline: auto; }
+    .trust__text { max-width: none; }
+    .trust__readmore { width: 5.5rem; height: 5.5rem; font-size: .6875rem; }
+    .trust__watermark { width: 150%; opacity: .05; }
+  }
+ 
+  @media (prefers-reduced-motion: reduce) {
+    .trust__orbit,
+    .trust__headline em,
+    .trust__eyebrow::before { animation: none; }
+    .trust__feature:hover { padding-left: 0; }
+    .trust__feature:hover .trust__icon { transform: none; }
+  }
+</style>
+ 
+ 
+{# ─────────────────────────── MARKUP ─────────────────────────── #}
+<section class="trust">
+  <img class="trust__watermark" src="{% static 'img/watermark-text.png' %}"
+       alt="" aria-hidden="true" loading="lazy">
+ 
+  <div class="container-page trust__grid">
+ 
+    <!-- ---- Copy ---- -->
+    <div class="trust__copy reveal">
+      <p class="trust__eyebrow">Spacesmith Real Estate</p>
+ 
+      <h2 class="trust__headline">
+        Where Trust Meets
+        <em>Opportunity</em>
+      </h2>
+ 
+      <p class="trust__text">
+        Choosing a property is one of life's most meaningful decisions. It isn't
+        really about buying or selling &ndash; it's about confidence, security and
+        the future you're building toward. We take the time to understand your
+        goals, then stand beside you with expert guidance and genuine care.
+      </p>
+      <p class="trust__text">
+        Driven by market insight and shaped by strong values, Spacesmith connects
+        people with homes and investments that make sense. Whether you're building
+        a life or growing a portfolio, we focus on long-term value and relationships
+        built on trust &ndash; because the right decision starts with the right partner.
+      </p>
+ 
+      <a href="{% url 'about' %}" class="trust__readmore"><span>Read More</span></a>
+    </div>
+ 
+    <!-- ---- Logo + orbit ---- -->
+    <div class="trust__logo reveal" data-delay="120">
+      <span class="trust__orbit trust__orbit--outer" aria-hidden="true"></span>
+      <span class="trust__orbit" aria-hidden="true"></span>
+      <img src="{% static 'img/logo.png' %}" alt="Spacesmith Real Estate"
+           width="520" height="520" loading="lazy">
+    </div>
+ 
+    <!-- ---- Features ---- -->
+    <div class="trust__features reveal" data-delay="200">
+ 
+      <div class="trust__feature">
+        <div class="trust__icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M2.5 17.8c1.7-1.5 3.8-2.2 6.3-2.2h3.6a1.9 1.9 0 0 1 0 3.8H9.3"/>
+            <path d="M8.6 19.4h4.8a4.2 4.2 0 0 0 2.6-.9l4.1-3.3a1.75 1.75 0 0 0-2.2-2.7l-2.7 2.1"/>
+            <path d="m12 3.2 1 2.1 2.3.3-1.7 1.6.4 2.3-2-1.1-2 1.1.4-2.3-1.7-1.6 2.3-.3 1-2.1Z"/>
+            <path d="M6.6 8.2 6 6.6M17.4 8.2l.6-1.6"/>
+          </svg>
+        </div>
+        <h3 class="trust__feature-title">Experienced Team</h3>
+        <p class="trust__feature-note">RERA-certified advisors who know the market street by street.</p>
+      </div>
+ 
+      <div class="trust__feature">
+        <div class="trust__icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3.5 20V8.4l6-2.9V20"/>
+            <path d="M9.5 20V10.2l6 2.4V20"/>
+            <path d="M2.5 20h19"/>
+            <path d="M6 10.2h1M6 13h1M6 15.8h1M12 15h1M12 17.4h1"/>
+            <path d="m18.2 4.2 1.9 1.1v2.2l-1.9 1.1-1.9-1.1V5.3l1.9-1.1Z"/>
+          </svg>
+        </div>
+        <h3 class="trust__feature-title">Tailored Property<br>Solutions</h3>
+        <p class="trust__feature-note">Shortlists built around your budget, timeline and plans.</p>
+      </div>
+ 
+      <div class="trust__feature">
+        <div class="trust__icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M2.5 20h19"/>
+            <rect x="3.8" y="12.5" width="3.2" height="5.5" rx=".6"/>
+            <rect x="9.4" y="9" width="3.2" height="9" rx=".6"/>
+            <rect x="15" y="5.5" width="3.2" height="12.5" rx=".6"/>
+            <path d="m3.5 9.6 3.4-3 2.9 1.9L15 3.6"/>
+            <path d="M12.4 3.6H15v2.6"/>
+          </svg>
+        </div>
+        <h3 class="trust__feature-title">Trusted Market Insights</h3>
+        <p class="trust__feature-note">DLD transaction data behind every price we quote.</p>
+      </div>
+ 
+    </div>
+ 
+  </div>
+</section>
+ 
+<!-- ------------------------------------------3 section-------------------------------------- -->
+<!-- ================= DEVELOPER MARQUEE ================= -->
+
+<style>
+
+.developer-section {
+    overflow: hidden;
+    background: #f4f2ed;
+    padding: 1.5rem 0;
+    border-top: 1px solid #eee;
+    border-bottom: 1px solid #eee;
+}
+
+
+.developer-marquee {
+    display: flex;
+    overflow: hidden;
+    width: 100%;
+}
+
+
+.developer-track {
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+    animation: developerMove 75s linear infinite;
+}
+
+
+.developer-track:hover {
+    animation-play-state: paused;
+}
+
+
+.developer-name {
+    font-family: "Cormorant Garamond", serif;
+    font-size: 1.45rem;
+    font-weight: 500;
+    letter-spacing: .35em;
+    text-transform: uppercase;
+    color: #315d4d;
+    margin-right: 6rem;
+}
+
+
+@keyframes developerMove {
+
+    from {
+        transform: translateX(0);
+    }
+
+    to {
+        transform: translateX(-50%);
+    }
+
+}
+
+
+@media(max-width:768px){
+
+    .developer-section{
+        padding:2rem 0;
+    }
+
+    .developer-name{
+        font-size:1rem;
+        margin-right:3rem;
+        letter-spacing:.25em;
+    }
+
+}
+
+</style>
+
+
+
+<section class="developer-section">
+
+
+<div class="developer-marquee">
+
+<div class="developer-track">
+
+
+    <!-- FIRST LOOP -->
+
+    <span class="developer-name">EMAAR</span>
+
+    <span class="developer-name">DAMAC</span>
+
+    <span class="developer-name">MERAAS</span>
+
+    <span class="developer-name">SOBHA</span>
+
+    <span class="developer-name">NAKHEEL</span>
+
+    <span class="developer-name">OMNIYAT</span>
+
+    <span class="developer-name">SELECT GROUP</span>
+
+    <span class="developer-name">BINGHATTI</span>
+
+    <span class="developer-name">AZIZI</span>
+
+    <span class="developer-name">ELLINGTON</span>
+
+    <span class="developer-name">DANUBE</span>
+
+    <span class="developer-name">ALDAR</span>
+
+    <span class="developer-name">DEYAAR</span>
+
+    <span class="developer-name">MAG</span>
+
+    <span class="developer-name">REPORTAGE</span>
+
+
+
+    <!-- DUPLICATE LOOP FOR SEAMLESS ANIMATION -->
+
+
+    <span class="developer-name">EMAAR</span>
+
+    <span class="developer-name">DAMAC</span>
+
+    <span class="developer-name">MERAAS</span>
+
+    <span class="developer-name">SOBHA</span>
+
+    <span class="developer-name">NAKHEEL</span>
+
+    <span class="developer-name">OMNIYAT</span>
+
+    <span class="developer-name">SELECT GROUP</span>
+
+    <span class="developer-name">BINGHATTI</span>
+
+    <span class="developer-name">AZIZI</span>
+
+    <span class="developer-name">ELLINGTON</span>
+</div>
+</div>
+</section>
+
+<!------------------------------------------------ 4 section----------------------------------------- -->
+<style>
+  .featured {
+    padding-block: 5rem 6rem;
+    background: var(--background);
+  }
+
+  .featured .section-head { margin-bottom: 2.5rem; }
+
+  .featured-grid {
+    display: grid; gap: 1.25rem;
+    grid-template-columns: 1fr;
+  }
+  @media (min-width: 560px)  { .featured-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (min-width: 1000px) { .featured-grid { grid-template-columns: repeat(3, 1fr); } }
+  @media (min-width: 1400px) { .featured-grid { grid-template-columns: repeat(4, 1fr); } }
+
+  .pcard {
+    display: flex; flex-direction: column; height: 100%;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    transition: transform .3s ease, box-shadow .3s ease, border-color .3s ease;
+  }
+  .pcard:hover {
+    transform: translateY(-4px);
+    border-color: color-mix(in srgb, var(--primary) 35%, transparent);
+    box-shadow: var(--shadow-card);
+  }
+
+  .pcard__media { position: relative; aspect-ratio: 16 / 10; overflow: hidden; background: var(--secondary); }
+  .pcard__media img { width: 100%; height: 100%; object-fit: cover; transition: transform .7s ease; }
+  .pcard:hover .pcard__media img { transform: scale(1.05); }
+
+  .pcard__badge {
+    position: absolute; top: .75rem; left: .75rem;
+    padding: .25rem .625rem; border-radius: 9999px;
+    background: var(--primary); color: var(--primary-foreground);
+    font-size: .625rem; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .1em;
+  }
+  .pcard__badge--offplan { background: var(--gold); color: var(--ink); }
+
+  .pcard__body { flex: 1; display: flex; flex-direction: column; padding: .9375rem .9375rem 0; }
+  .pcard__dev {
+    margin: 0 0 .375rem;
+    font-size: .625rem; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .14em;
+    color: var(--gold);
+  }
+  .pcard__title {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 1.125rem; line-height: 1.3; color: var(--foreground);
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .pcard__loc {
+    display: flex; align-items: center; gap: .375rem;
+    margin: .5rem 0 0; font-size: .8125rem; color: var(--muted-foreground);
+  }
+  .pcard__loc svg { width: .875rem; height: .875rem; flex-shrink: 0; color: var(--primary); }
+
+  .pcard__meta {
+    display: flex; flex-wrap: wrap; gap: .3125rem;
+    margin: .75rem 0 .9375rem;
+  }
+  .pcard__meta span {
+    padding: .1875rem .5rem; border-radius: .375rem;
+    background: var(--secondary);
+    font-size: .6875rem; color: var(--muted-foreground);
+  }
+
+  .pcard__foot {
+    margin-top: auto;
+    display: flex; align-items: center; justify-content: space-between; gap: .75rem;
+    padding: .75rem .9375rem;
+    border-top: 1px solid var(--border);
+    background: color-mix(in srgb, var(--secondary) 45%, transparent);
+  }
+  .pcard__price { font-size: .875rem; font-weight: 600; color: var(--primary); }
+  .pcard__price small {
+    display: block; margin-top: .125rem;
+    font-size: .625rem; font-weight: 400; text-transform: uppercase;
+    letter-spacing: .1em; color: var(--muted-foreground);
+  }
+  .pcard__arrow {
+    display: grid; place-items: center; flex-shrink: 0;
+    width: 2rem; height: 2rem; border-radius: 9999px;
+    border: 1px solid var(--border); color: var(--primary);
+    transition: background-color .25s ease, color .25s ease, border-color .25s ease;
+  }
+  .pcard__arrow svg { width: .875rem; height: .875rem; }
+  .pcard:hover .pcard__arrow {
+    background: var(--primary); border-color: var(--primary); color: var(--primary-foreground);
+  }
+</style>
+
+<!-- ================= FEATURED PROPERTIES ================= -->
+<section class="featured">
+  <div class="container-page">
+
+    <div class="section-head reveal">
+      <div>
+        <p class="eyebrow">Featured Collection</p>
+        <h2 class="section-title">Latest Properties</h2>
+      </div>
+      <a href="{% url 'properties:property_list' %}" class="link-inline">
+        View all properties
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M5 12h14M13 6l6 6-6 6"/>
+        </svg>
+      </a>
+    </div>
+
+    <div class="featured-grid">
+      {% for property in featured_properties %}
+        <a class="pcard" href="{% url 'properties:property_detail' property.slug %}">
+          <div class="pcard__media">
+            <img src="{{ property.cover_image }}" alt="{{ property.title }}"
+                 loading="lazy" width="600" height="450">
+            {% if property.property_status %}
+              <span class="pcard__badge {% if property.property_status.slug == 'off-plan' %}pcard__badge--offplan{% endif %}">
+                {{ property.property_status.name }}
+              </span>
+            {% endif %}
+          </div>
+
+          <div class="pcard__body">
+            {% if property.developer_company %}
+              <p class="pcard__dev">{{ property.developer_company.name }}</p>
+            {% endif %}
+            <h3 class="pcard__title">{{ property.title }}</h3>
+
+            <p class="pcard__loc">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>
+              </svg>
+              {% if property.district %}{{ property.district.name }}, {% endif %}{{ property.city.name }}
+            </p>
+
+            <div class="pcard__meta">
+              {% if property.compare_bedroom_options %}
+                <span>{{ property.compare_bedroom_options|truncatechars:22 }}</span>
+              {% endif %}
+              {% if property.compare_unit_size_range %}
+                <span>{{ property.compare_unit_size_range }}</span>
+              {% endif %}
+              {% if property.delivery_date %}
+                <span>Handover {{ property.delivery_date|date:"M Y" }}</span>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="pcard__foot">
+            <div class="pcard__price">
+              {% firstof property.price property.compare_starting_price as from_price %}
+              {% if from_price %}
+                AED {{ from_price|floatformat:0|intcomma }}
+                <small>Starting from</small>
+              {% else %}
+                Price on request
+                <small>Enquire for details</small>
+              {% endif %}
+            </div>
+            <span class="pcard__arrow" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round">
+                <path d="M5 12h14M13 6l6 6-6 6"/>
+              </svg>
+            </span>
+          </div>
+        </a>
+      {% empty %}
+        <div class="plist-empty" style="grid-column:1/-1;">
+          <h3>No featured properties yet</h3>
+          <p>Check back soon, or browse the full collection.</p>
+          <a href="{% url 'properties:property_list' %}" class="btn-solid">Show all properties</a>
+        </div>
+      {% endfor %}
+    </div>
+
+  </div>
+</section>
+
+
+<!------------------------------------------------ 5 section----------------------------------------- -->
+
+<style>
+  /* ===== ABOUT SECTION ===== */
+  .abt {
+    position: relative;
+    padding-block: 5rem;
+    background: color-mix(in srgb, var(--secondary) 55%, #fff);
+    overflow: hidden;
+  }
+  @media (min-width: 1024px) { .abt { padding-block: 5.5rem; } }
+
+  .abt::before {
+    content: ""; position: absolute; top: -8%; right: -6%;
+    width: 260px; height: 260px; border-radius: 50%;
+    background: radial-gradient(circle, color-mix(in srgb, var(--gold) 14%, transparent), transparent 68%);
+    pointer-events: none;
+  }
+
+  .abt__grid {
+    position: relative; z-index: 1;
+    display: grid; gap: 3rem; align-items: center;
+    grid-template-columns: 1fr;
+    max-width: 1150px;
+    margin-inline: auto;
+  }
+  @media (min-width: 1024px) { .abt__grid { grid-template-columns: 1fr 1fr; gap: 3.5rem; } }
+
+  /* ---- media side ---- */
+.abt__media {
+    position: relative;
+    max-width: 26rem;
+    margin-inline: auto;
+}  @media (min-width: 1024px) { .abt__media { max-width: none; margin-inline: 0; } }
+
+  .abt__media img {
+    width: 100%;
+    aspect-ratio: 4 / 4.4;
+    object-fit: cover;
+    border-radius: .5rem;
+    box-shadow: var(--shadow-elegant);
+    display: block;
+    background: var(--secondary);
+}
+  .abt__media::after {
+    content: ""; position: absolute; inset: 0;
+    border-radius: 1.25rem; pointer-events: none;
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ink) 6%, transparent);
+  }
+
+  .abt__badge {
+    position: absolute; left: 1rem; bottom: 1rem;
+    background: var(--primary); color: var(--primary-foreground);
+    border-radius: .75rem; padding: .8rem 1.1rem;
+    box-shadow: var(--shadow-elegant);
+    display: flex; align-items: center; gap: .75rem;
+  }
+  @media (max-width: 480px) {
+    .abt__badge { left: .625rem; bottom: .625rem; padding: .65rem .9rem; gap: .6rem; }
+  }
+  .abt__badge strong {
+    font-family: var(--font-display); font-size: 1.875rem; line-height: 1; color: var(--gold);
+  }
+  .abt__badge span {
+    font-size: .625rem; text-transform: uppercase; letter-spacing: .14em;
+    line-height: 1.35; max-width: 8rem; color: rgba(246,242,233,.85);
+  }
+
+  .abt__ribbon {
+    position: absolute; top: 1rem; right: 1rem;
+    background: var(--gold); color: var(--ink);
+    font-size: .625rem; font-weight: 600; text-transform: uppercase; letter-spacing: .12em;
+    padding: .4rem .8rem; border-radius: 9999px;
+    box-shadow: var(--shadow-card);
+  }
+
+  /* ---- content side ---- */
+  .abt__eyebrow {
+    font-size: .75rem; text-transform: uppercase; letter-spacing: .28em;
+    color: var(--gold); margin: 0 0 .875rem;
+  }
+  .abt__title {
+    font-family: var(--font-display); font-weight: 500;
+    font-size: clamp(1.875rem, 3.2vw, 2.625rem); line-height: 1.12;
+    color: var(--foreground); margin: 0 0 1.25rem;
+  }
+  .abt__lead {
+    color: var(--muted-foreground); line-height: 1.75; font-size: .9375rem; margin: 0;
+    max-width: 46ch;
+  }
+  .abt__lead + .abt__lead { margin-top: 1rem; }
+
+  .abt__list { list-style: none; margin: 1.75rem 0 0; padding: 0; display: grid; gap: .875rem; }
+  .abt__list li { display: flex; gap: .75rem; align-items: flex-start; }
+  .abt__check {
+    flex-shrink: 0; margin-top: .1rem;
+    width: 1.375rem; height: 1.375rem; border-radius: 9999px;
+    background: color-mix(in srgb, var(--primary) 12%, transparent);
+    color: var(--primary);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .abt__check svg { width: .8rem; height: .8rem; }
+  .abt__list li span:last-child { color: var(--foreground); font-size: .875rem; line-height: 1.5; }
+
+  .abt__cta { margin-top: 2rem; display: flex; flex-wrap: wrap; gap: .75rem; align-items: center; }
+
+  /* ---- stats strip ---- */
+  .abt__stats {
+    position: relative; z-index: 1;
+    max-width: 1150px; margin: 3.5rem auto 0;
+    padding-top: 2.25rem;
+    border-top: 1px solid var(--border);
+    display: grid; gap: 1.5rem;
+    grid-template-columns: repeat(2, 1fr);
+    text-align: center;
+  }
+  @media (min-width: 768px) { .abt__stats { grid-template-columns: repeat(4, 1fr); } }
+
+  .abt__stat strong {
+    display: block; font-family: var(--font-display);
+    font-size: clamp(1.5rem, 2.4vw, 2rem); line-height: 1; color: var(--primary);
+  }
+  .abt__stat span {
+    display: block; margin-top: .5rem;
+    font-size: .625rem; text-transform: uppercase; letter-spacing: .12em;
+    color: var(--muted-foreground);
+  }
+</style>
+
+<section class="abt">
+  <div class="container-page">
+
+    <div class="abt__grid">
+
+      <!-- media -->
+      <div class="abt__media reveal">
+        <span class="abt__ribbon">RERA Certified</span>
+        <img src="{% static 'img/home-about-img3.jpg' %}" alt="Waterfront residential development in the UAE"
+             width="800" height="680" loading="lazy">
+        <div class="abt__badge">
+          <strong>12+</strong>
+          <span>Years shaping UAE living</span>
+        </div>
+      </div>
+
+      <!-- content -->
+      <div class="reveal" data-delay="120">
+        <p class="abt__eyebrow">About Spacesmith</p>
+        <h2 class="abt__title">A modern brokerage,<br>built on trust.</h2>
+
+        <p class="abt__lead">
+          Founded on the belief that finding a home should be a considered, human
+          experience, Spacesmith blends deep market knowledge with a personal,
+          unhurried approach — representing buyers, investors and end-users across
+          the UAE and matching people to places they can truly call theirs.
+        </p>
+        <p class="abt__lead">
+          From your first viewing to handover and beyond, our advisors stay beside
+          you with transparent guidance, honest pricing and complete transaction
+          protection at every step.
+        </p>
+
+        <ul class="abt__list">
+          <li>
+            <span class="abt__check">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+            </span>
+            <span>RERA-certified advisors across all seven emirates</span>
+          </li>
+          <li>
+            <span class="abt__check">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+            </span>
+            <span>Priority access to unlaunched off-plan inventory</span>
+          </li>
+          <li>
+            <span class="abt__check">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+            </span>
+            <span>In-house handover, snagging &amp; interior partners</span>
+          </li>
+        </ul>
+
+        <div class="abt__cta">
+          <a href="{% url 'contact' %}" class="btn-solid">
+            Speak with an advisor
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </a>
+          <a href="" class="btn-ghost">Explore off-plan</a>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- stats strip -->
+    <div class="abt__stats reveal" data-delay="80">
+      <div class="abt__stat"><strong>1,200+</strong><span>Properties Curated</span></div>
+      <div class="abt__stat"><strong>850+</strong><span>Happy Homeowners</span></div>
+      <div class="abt__stat"><strong>3.2B</strong><span>AED Transacted</span></div>
+      <div class="abt__stat"><strong>4.9★</strong><span>Client Rating</span></div>
+    </div>
+
+  </div>
+</section>
+<script>
+(function () {
+  function animateCount(el) {
+    var raw = el.textContent.trim();
+    var m = raw.match(/([\d.,]+)/);
+    if (!m) return;
+
+    var numStr   = m[1];
+    var hasComma = numStr.indexOf(',') !== -1;
+    var decimals = (numStr.split('.')[1] || '').length;
+    var target   = parseFloat(numStr.replace(/,/g, ''));
+    if (isNaN(target)) return;
+
+    var prefix = raw.slice(0, m.index);
+    var suffix = raw.slice(m.index + numStr.length);
+    var dur = 1400, start = performance.now();
+
+    function fmt(n) {
+      var s = decimals ? n.toFixed(decimals) : Math.round(n).toString();
+      if (hasComma) {
+        s = Number(s).toLocaleString('en-US', {
+          minimumFractionDigits: decimals, maximumFractionDigits: decimals
+        });
+      }
+      return s;
+    }
+
+    function tick(now) {
+      var p = Math.min((now - start) / dur, 1);
+      var eased = 1 - Math.pow(1 - p, 3);
+      el.textContent = prefix + fmt(target * eased) + suffix;
+      if (p < 1) requestAnimationFrame(tick);
+      else el.textContent = raw; // snap back to the exact original text
+    }
+
+    requestAnimationFrame(tick);
+  }
+
+  var counters = document.querySelectorAll('.abt__stat strong');
+  var reduced  = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  if (counters.length && 'IntersectionObserver' in window && !reduced) {
+    var co = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        if (!entry.isIntersecting) return;
+        animateCount(entry.target);
+        co.unobserve(entry.target);
+      });
+    }, { threshold: 0.5 });
+
+    counters.forEach(function (el) { co.observe(el); });
+  } else {
+    // reduced motion or no observer support — just show the final numbers
+    counters.forEach(function (el) { /* already showing raw text, nothing to do */ });
+  }
+})();
+</script>
+<!------------------------------------------------ 6 section----------------------------------------- -->
+
+<!-- ================= SERVICES ================= -->
+<style>
+  .services__grid { margin-top: 3.5rem; display: grid; gap: 1.5rem; grid-template-columns: 1fr; }
+  @media (min-width: 768px)  { .services__grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (min-width: 1024px) { .services__grid { grid-template-columns: repeat(4, 1fr); } }
+
+  .service {
+    height: 100%;
+    padding: 2rem;
+    border-radius: 1rem;
+    background: var(--card);
+    border: 1px solid var(--border);
+    transition: border-color .3s ease, box-shadow .3s ease;
+  }
+  .service:hover {
+    border-color: color-mix(in srgb, var(--primary) 40%, transparent);
+    box-shadow: var(--shadow-card);
+  }
+  .service__icon {
+    width: 3rem; height: 3rem;
+    border-radius: .75rem;
+    background: color-mix(in srgb, var(--primary) 10%, transparent);
+    color: var(--primary);
+    display: flex; align-items: center; justify-content: center;
+    transition: background-color .2s ease, color .2s ease, transform .3s ease;
+  }
+  .service:hover .service__icon { background: var(--primary); color: var(--primary-foreground); transform: translateY(-4px); }
+  .service__icon svg { width: 1.5rem; height: 1.5rem; }
+  .service h3 { font-family: var(--font-display); font-size: 1.25rem; margin: 1.5rem 0 0; color: var(--foreground); }
+  .service p  { margin: .75rem 0 0; font-size: .875rem; color: var(--muted-foreground); line-height: 1.6; }
+</style>
+
+<section class="section">
+  <div class="container-page">
+
+    <div class="reveal narrow">
+      <p class="eyebrow">What we do</p>
+      <h2 class="section-title">Complete real estate, <br> handled with care.</h2>
+    </div>
+
+    <div class="services__grid">
+
+      <div class="service reveal">
+        <div class="service__icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/>
+            <path d="M10 6h.01M14 6h.01M10 10h.01M14 10h.01M10 14h.01M14 14h.01"/>
+            <path d="M10 22v-4h4v4"/>
+          </svg>
+        </div>
+        <h3>Off-Plan Launches</h3>
+        <p>Priority access to new releases from Dubai's top developers, with first-look pricing.</p>
+      </div>
+
+      <div class="service reveal" data-delay="80">
+        <div class="service__icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="8" cy="15" r="4"/>
+            <path d="m10.85 12.15 6.4-6.4M18 4l2 2-2 2-2-2Z"/>
+            <path d="m15 8 2 2"/>
+          </svg>
+        </div>
+        <h3>Ready Homes</h3>
+        <p>Move-in ready villas, apartments and penthouses across the UAE's finest addresses.</p>
+      </div>
+
+      <div class="service reveal" data-delay="160">
+        <div class="service__icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="m11 17 2 2a1 1 0 1 0 3-3"/>
+            <path d="m14 14 2.5 2.5a1 1 0 1 0 3-3l-3.9-3.9a2 2 0 0 1 0-2.8l.4-.4a2.8 2.8 0 0 1 4 0l3 3"/>
+            <path d="M21 3h-3.6a2 2 0 0 0-1.4.6L7 12.6a2 2 0 0 0 0 2.8l1.6 1.6"/>
+            <path d="M3 8h4"/>
+          </svg>
+        </div>
+        <h3>Advisory &amp; Sales</h3>
+        <p>End-to-end guidance — from viewings to Ejari, mortgage referrals and after-sales.</p>
+      </div>
+
+      <div class="service reveal" data-delay="240">
+        <div class="service__icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M20 13c0 5-3.5 7.5-8 9-4.5-1.5-8-4-8-9V6l8-3 8 3Z"/>
+            <path d="m9 12 2 2 4-4"/>
+          </svg>
+        </div>
+        <h3>Trusted Brokerage</h3>
+        <p>RERA-certified agents, transparent contracts and complete transaction protection.</p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+<!------------------------------------------------ 7 section----------------------------------------- -->
+<!-- ================= TESTIMONIALS ================= -->
+<style>
+  .testimonials { padding-block: 6rem; background: var(--ink); color: var(--cream); }
+  .testimonials .section-title { color: var(--cream); }
+
+  .rating { display: flex; align-items: center; gap: .25rem; color: var(--gold); }
+  .rating svg { width: 1.25rem; height: 1.25rem; fill: currentColor; flex-shrink: 0; }
+  .rating span { margin-left: .5rem; font-size: .875rem; color: rgba(246,242,233,.8); white-space: nowrap; }
+
+  .quotes { display: grid; gap: 1.5rem; grid-template-columns: 1fr; }
+  @media (min-width: 768px) { .quotes { grid-template-columns: repeat(3, 1fr); } }
+
+  .quote {
+    height: 100%;
+    margin: 0;
+    padding: 2rem;
+    border-radius: 1rem;
+    background: rgba(246,242,233,.04);
+    border: 1px solid rgba(246,242,233,.10);
+    backdrop-filter: blur(4px);
+  }
+  .quote .rating { margin-bottom: 1rem; }
+  .quote .rating svg { width: 1rem; height: 1rem; }
+  .quote blockquote {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 1.125rem;
+    line-height: 1.6;
+    color: rgba(246,242,233,.95);
+  }
+  .quote figcaption {
+    margin-top: 1.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba(246,242,233,.10);
+  }
+  .quote figcaption p { margin: 0; }
+  .quote figcaption .name   { color: var(--cream); font-weight: 500; }
+  .quote figcaption .detail { font-size: .875rem; color: rgba(246,242,233,.6); }
+</style>
+
+<section class="testimonials">
+  <div class="container-page">
+
+    <div class="section-head reveal">
+      <div>
+        <p class="eyebrow">Client Stories</p>
+        <h2 class="section-title">Trusted by families <br> and investors alike.</h2>
+      </div>
+      <div class="rating">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.4 6.8 19.1l1-5.8L3.5 9.2l5.9-.9L12 3Z"/></svg>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.4 6.8 19.1l1-5.8L3.5 9.2l5.9-.9L12 3Z"/></svg>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.4 6.8 19.1l1-5.8L3.5 9.2l5.9-.9L12 3Z"/></svg>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.4 6.8 19.1l1-5.8L3.5 9.2l5.9-.9L12 3Z"/></svg>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.4 6.8 19.1l1-5.8L3.5 9.2l5.9-.9L12 3Z"/></svg>
+        <span>4.9 average · 380+ reviews</span>
+      </div>
+    </div>
+
+    <div class="quotes">
+
+      <figure class="quote reveal">
+        <div class="rating">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.4 6.8 19.1l1-5.8L3.5 9.2l5.9-.9L12 3Z"/></svg>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.4 6.8 19.1l1-5.8L3.5 9.2l5.9-.9L12 3Z"/></svg>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.4 6.8 19.1l1-5.8L3.5 9.2l5.9-.9L12 3Z"/></svg>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.4 6.8 19.1l1-5.8L3.5 9.2l5.9-.9L12 3Z"/></svg>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.4 6.8 19.1l1-5.8L3.5 9.2l5.9-.9L12 3Z"/></svg>
+        </div>
+        <blockquote>Spacesmith didn't just find us an apartment — they found us a home. Their off-plan intel is unmatched.</blockquote>
+        <figcaption>
+          <p class="name">Aarav &amp; Priya S.</p>
+          <p class="detail">Purchased in Dubai Marina</p>
+        </figcaption>
+      </figure>
+
+      <figure class="quote reveal" data-delay="100">
+        <div class="rating">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.4 6.8 19.1l1-5.8L3.5 9.2l5.9-.9L12 3Z"/></svg>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.4 6.8 19.1l1-5.8L3.5 9.2l5.9-.9L12 3Z"/></svg>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.4 6.8 19.1l1-5.8L3.5 9.2l5.9-.9L12 3Z"/></svg>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.4 6.8 19.1l1-5.8L3.5 9.2l5.9-.9L12 3Z"/></svg>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.4 6.8 19.1l1-5.8L3.5 9.2l5.9-.9L12 3Z"/></svg>
+        </div>
+        <blockquote>Professional, honest and always available. The handover process was smoother than we ever imagined.</blockquote>
+        <figcaption>
+          <p class="name">Michael R.</p>
+          <p class="detail">Villa investor, Palm Jumeirah</p>
+        </figcaption>
+      </figure>
+
+      <figure class="quote reveal" data-delay="200">
+        <div class="rating">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.4 6.8 19.1l1-5.8L3.5 9.2l5.9-.9L12 3Z"/></svg>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.4 6.8 19.1l1-5.8L3.5 9.2l5.9-.9L12 3Z"/></svg>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.4 6.8 19.1l1-5.8L3.5 9.2l5.9-.9L12 3Z"/></svg>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.4 6.8 19.1l1-5.8L3.5 9.2l5.9-.9L12 3Z"/></svg>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.4 6.8 19.1l1-5.8L3.5 9.2l5.9-.9L12 3Z"/></svg>
+        </div>
+        <blockquote>From viewing to Ejari in 10 days. The team's attention to detail is what a modern brokerage should look like.</blockquote>
+        <figcaption>
+          <p class="name">Layla K.</p>
+          <p class="detail">Ready home buyer, Downtown</p>
+        </figcaption>
+      </figure>
+
+    </div>
+  </div>
+</section>
+
+<!-------------------------------------------------------- 8 section---------------------------------------------------- -->
+
+<!-- ================= BLOG ================= -->
+<style>
+  .post { text-decoration: none; display: block; }
+  .post__media { aspect-ratio: 4 / 3; overflow: hidden; border-radius: 1rem; background: var(--secondary); }
+  .post__media img {
+    width: 100%; height: 100%; object-fit: cover;
+    transition: transform .7s ease;
+  }
+  .post:hover .post__media img { transform: scale(1.05); }
+  .post__meta {
+    margin-top: 1.25rem;
+    display: flex; gap: .75rem;
+    font-size: .6875rem; text-transform: uppercase; letter-spacing: .16em;
+  }
+  .post__meta .tag  { color: var(--gold); }
+  .post__meta .date { color: var(--muted-foreground); }
+  .post h3 {
+    margin: .5rem 0 0;
+    font-family: var(--font-display);
+    font-size: 1.5rem;
+    color: var(--foreground);
+    transition: color .2s ease;
+  }
+  .post:hover h3 { color: var(--primary); }
+  .post p { margin: .5rem 0 0; font-size: .875rem; color: var(--muted-foreground); }
+</style>
+
+<section class="section">
+  <div class="container-page">
+
+    <div class="section-head reveal">
+      <div>
+        <p class="eyebrow">Insights</p>
+        <h2 class="section-title">From our journal</h2>
+      </div>
+      <a href="" class="link-inline">
+        View all articles
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M5 12h14M13 6l6 6-6 6"/>
+        </svg>
+      </a>
+    </div>
+
+    <div class="grid-3">
+
+      <a href="" class="post reveal">
+        <div class="post__media">
+          <img src="{% static 'img/blog-1.jpg' %}" alt="First-time buyer's roadmap" loading="lazy">
+        </div>
+        <div class="post__meta"><span class="tag">Buying Guide</span><span class="date">Jul 08, 2026</span></div>
+        <h3>First-time buyer's roadmap to Dubai property</h3>
+        <p>From selecting the right community to closing at Dubai Land Department — a step-by-step walkthrough.</p>
+      </a>
+
+      <a href="" class="post reveal" data-delay="80">
+        <div class="post__media">
+          <img src="{% static 'img/blog-2.jpg' %}" alt="H2 2026 market outlook" loading="lazy">
+        </div>
+        <div class="post__meta"><span class="tag">Market</span><span class="date">Jul 02, 2026</span></div>
+        <h3>H2 2026 outlook: where prices are heading</h3>
+        <p>Marina, Downtown and Palm Jumeirah trends unpacked by our research desk with data you can act on.</p>
+      </a>
+
+      <a href="" class="post reveal" data-delay="160">
+        <div class="post__media">
+          <img src="{% static 'img/blog-3.jpg' %}" alt="Evaluating an off-plan payment plan" loading="lazy">
+        </div>
+        <div class="post__meta"><span class="tag">Off Plan</span><span class="date">Jun 24, 2026</span></div>
+        <h3>How to evaluate an off-plan payment plan</h3>
+        <p>Post-handover vs construction-linked. What actually matters when comparing developer offers.</p>
+      </a>
+      
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ------------------------------------------------9 section------------------------------------------- -->
+
+<!-- ================= CTA ================= -->
+<style>
+  .cta {
+    position: relative;
+    overflow: hidden;
+    border-radius: .5rem;
+    background: var(--primary);
+    color: var(--primary-foreground);
+    padding: 2.5rem;
+  }
+  @media (min-width: 768px) { .cta { padding: 4rem; } }
+
+  .cta::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    opacity: .10;
+    background:
+      radial-gradient(circle at 20% 20%, var(--gold) 0%, transparent 50%),
+      radial-gradient(circle at 80% 80%, var(--gold) 0%, transparent 45%);
+  }
+  .cta__inner {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+    justify-content: space-between;
+  }
+  @media (min-width: 1024px) { .cta__inner { flex-direction: row; align-items: center; } }
+
+  .cta__icon { width: 2.5rem; height: 2.5rem; color: var(--gold); }
+  .cta h2 { font-family: var(--font-display); font-size: clamp(2.25rem, 4vw, 3rem); margin: 1rem 0 0; }
+  .cta p  { margin: 1rem 0 0; color: rgba(255,255,255,.8); max-width: 36rem; }
+  .cta__actions { display: flex; flex-wrap: wrap; gap: .75rem; }
+</style>
+
+<section class="section-tight">
+  <div class="container-page">
+    <div class="cta reveal">
+      <div class="cta__inner">
+        <div>
+          <svg class="cta__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="8" r="6"/>
+            <path d="m8.5 13.5-1.5 8L12 19l5 2.5-1.5-8"/>
+          </svg>
+          <h2>Ready to find your space?</h2>
+          <p>
+            Tell us what you're looking for — a family villa, a first investment or a
+            penthouse view. Our advisors reply within one working day.
+          </p>
+        </div>
+
+        <div class="cta__actions">
+          <a href="{% url 'contact' %}" class="btn-gold">
+            Book a consultation
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M5 12h14M13 6l6 6-6 6"/>
+            </svg>
+          </a>
+          <a href="" class="btn-line">Explore off-plan</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

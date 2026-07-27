@@ -1,0 +1,910 @@
+{% extends 'base.html' %}
+{% load static humanize %}
+
+{# meta_title / meta_description / canonical / robots / og_image come from the view #}
+
+{% block schema %}
+  <script type="application/ld+json">{{ schema_json|safe }}</script>
+{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+  /* =====================================================================
+     PROPERTY DETAIL — scoped under .pd*. Tokens come from base.html.
+     ===================================================================== */
+
+  .pd-top { padding-top: 1.25rem; }
+
+  .pd-crumb {
+    display: flex; flex-wrap: wrap; align-items: center; gap: .375rem;
+    font-size: .6875rem; text-transform: uppercase; letter-spacing: .14em;
+    color: var(--muted-foreground);
+  }
+  .pd-crumb a { color: var(--primary); }
+  .pd-crumb a:hover { color: var(--gold); }
+  .pd-crumb span[aria-current] { color: var(--foreground); }
+
+  .pd-back {
+    display: inline-flex; align-items: center; gap: .375rem;
+    margin-bottom: .875rem;
+    font-size: .8125rem; font-weight: 500; color: var(--muted-foreground);
+  }
+  .pd-back:hover { color: var(--primary); }
+  .pd-back svg { width: .875rem; height: .875rem; }
+
+  /* ---- Gallery ---- */
+  .pd-gallery { margin-bottom: 1.75rem; }
+  .pd-stage {
+    position: relative;
+    aspect-ratio: 4 / 3;
+    max-height: 17rem;
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: var(--secondary);
+    cursor: zoom-in;
+  }
+  @media (min-width: 768px)  { .pd-stage { aspect-ratio: 16 / 9; max-height: 24rem; } }
+  @media (min-width: 1280px) { .pd-stage { max-height: 27rem; } }
+  .pd-stage img { width: 100%; height: 100%; object-fit: cover; }
+
+  .pd-stage__nav {
+    position: absolute; top: 50%; translate: 0 -50%;
+    width: 2.5rem; height: 2.5rem; border: 0; border-radius: 9999px;
+    display: grid; place-items: center; cursor: pointer;
+    background: rgba(246,242,233,.9); color: var(--ink);
+    box-shadow: 0 4px 16px rgba(11,21,18,.2);
+    transition: background-color .2s ease;
+  }
+  .pd-stage__nav:hover { background: var(--cream); }
+  .pd-stage__nav svg { width: 1.125rem; height: 1.125rem; }
+  .pd-stage__nav--prev { left: .75rem; }
+  .pd-stage__nav--next { right: .75rem; }
+
+  .pd-stage__count {
+    position: absolute; right: .75rem; bottom: .75rem;
+    padding: .25rem .625rem; border-radius: 9999px;
+    background: rgba(11,21,18,.7); color: var(--cream);
+    font-size: .75rem; font-variant-numeric: tabular-nums;
+  }
+  .pd-stage__badge {
+    position: absolute; left: .75rem; top: .75rem;
+    padding: .3125rem .75rem; border-radius: 9999px;
+    background: var(--primary); color: var(--primary-foreground);
+    font-size: .6875rem; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .1em;
+  }
+  .pd-stage__badge--offplan { background: var(--gold); color: var(--ink); }
+
+  .pd-thumbs {
+    display: flex; gap: .5rem; margin-top: .5rem;
+    overflow-x: auto; scrollbar-width: none; scroll-snap-type: x mandatory;
+  }
+  .pd-thumbs::-webkit-scrollbar { display: none; }
+  .pd-thumb {
+    flex: 0 0 4rem; height: 3rem;
+    border: 2px solid transparent; border-radius: .5rem;
+    overflow: hidden; cursor: pointer; padding: 0; background: none;
+    scroll-snap-align: start;
+    transition: border-color .2s ease, opacity .2s ease;
+    opacity: .6;
+  }
+  .pd-thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .pd-thumb.is-active { border-color: var(--gold); opacity: 1; }
+  @media (min-width: 768px) { .pd-thumb { flex-basis: 5rem; height: 3.5rem; } }
+
+  /* ---- Layout ---- */
+  .pd-layout {
+    display: grid; gap: 2.5rem;
+    grid-template-columns: 1fr;
+    padding-block: 1.5rem 4rem;
+  }
+  @media (min-width: 1024px) {
+    .pd-layout { grid-template-columns: minmax(0, 1fr) 22rem; gap: 3rem; align-items: start; }
+  }
+
+  /* ---- Header block ---- */
+  .pd-title {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: clamp(1.75rem, 4.5vw, 2.75rem);
+    line-height: 1.1;
+    color: var(--foreground);
+  }
+  .pd-loc {
+    display: flex; align-items: center; gap: .375rem;
+    margin: .625rem 0 0; font-size: .9375rem; color: var(--muted-foreground);
+  }
+  .pd-loc svg { width: 1rem; height: 1rem; color: var(--primary); flex-shrink: 0; }
+  .pd-dev {
+    margin: 0 0 .5rem;
+    font-size: .6875rem; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .16em; color: var(--gold);
+  }
+
+  .pd-price {
+    margin-top: 1.25rem;
+    font-family: var(--font-display);
+    font-size: clamp(1.5rem, 4vw, 2rem);
+    color: var(--primary);
+  }
+  .pd-price small {
+    display: block;
+    font-family: var(--font-body);
+    font-size: .6875rem; text-transform: uppercase; letter-spacing: .14em;
+    color: var(--muted-foreground);
+  }
+
+  /* ---- Facts strip ---- */
+  .pd-facts {
+    display: grid; gap: 1px;
+    grid-template-columns: repeat(2, 1fr);
+    margin-top: 1.75rem;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  @media (min-width: 640px) { .pd-facts { grid-template-columns: repeat(4, 1fr); } }
+  .pd-fact { background: var(--card); padding: 1rem .875rem; }
+  .pd-fact dt {
+    font-size: .625rem; text-transform: uppercase; letter-spacing: .14em;
+    color: var(--muted-foreground);
+  }
+  .pd-fact dd {
+    margin: .375rem 0 0;
+    font-size: .9375rem; font-weight: 600; color: var(--foreground);
+  }
+
+  /* ---- Sections ---- */
+  .pd-section { margin-top: 3rem; }
+  .pd-section > h2 {
+    margin: 0 0 1.25rem;
+    font-family: var(--font-display);
+    font-size: clamp(1.375rem, 3vw, 1.75rem);
+    color: var(--foreground);
+  }
+  .pd-prose { color: var(--muted-foreground); line-height: 1.75; font-size: .9375rem; }
+  .pd-prose p { margin: 0 0 1rem; }
+  .pd-prose :is(h2,h3,h4) { color: var(--foreground); font-family: var(--font-display); margin: 1.5rem 0 .5rem; }
+  .pd-prose ul, .pd-prose ol { margin: 0 0 1rem 1.25rem; }
+  .pd-prose img { border-radius: .625rem; margin-block: 1rem; }
+
+  .pd-more {
+    margin-top: .5rem; padding: 0; border: 0; background: none;
+    color: var(--primary); font-family: inherit; font-size: .875rem;
+    font-weight: 500; cursor: pointer; text-decoration: underline;
+  }
+  .pd-clamp {
+    max-height: 16rem; overflow: hidden;
+    -webkit-mask-image: linear-gradient(#000 60%, transparent);
+            mask-image: linear-gradient(#000 60%, transparent);
+  }
+  .pd-clamp.is-open { max-height: none; -webkit-mask-image: none; mask-image: none; }
+
+  /* ---- Units table ---- */
+  .pd-units { width: 100%; border-collapse: collapse; font-size: .875rem; }
+  .pd-units thead th {
+    text-align: left; padding: .75rem .875rem;
+    background: var(--secondary);
+    font-size: .625rem; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .14em; color: var(--muted-foreground);
+    white-space: nowrap;
+  }
+  .pd-units tbody td { padding: .875rem; border-bottom: 1px solid var(--border); }
+  .pd-units tbody tr:last-child td { border-bottom: 0; }
+  .pd-units .u-type { font-weight: 600; color: var(--foreground); }
+  .pd-units .u-price { color: var(--primary); font-weight: 600; white-space: nowrap; }
+  .pd-tablewrap { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+
+  /* Stack the table into cards on small screens */
+  @media (max-width: 719px) {
+    .pd-units thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+    .pd-units tbody tr {
+      display: grid; grid-template-columns: auto 1fr; gap: .375rem .75rem;
+      padding: .875rem; border-bottom: 1px solid var(--border);
+    }
+    .pd-units tbody td { display: contents; border: 0; padding: 0; }
+    .pd-units tbody td::before {
+      content: attr(data-label);
+      font-size: .6875rem; text-transform: uppercase; letter-spacing: .1em;
+      color: var(--muted-foreground); align-self: center;
+    }
+  }
+
+  /* ---- Payment plan ---- */
+  .pd-plan { display: grid; gap: .75rem; grid-template-columns: repeat(2, 1fr); }
+  @media (min-width: 720px) { .pd-plan { grid-template-columns: repeat(4, 1fr); } }
+  .pd-step {
+    padding: 1.125rem 1rem;
+    border: 1px solid var(--border); border-radius: .75rem;
+    background: var(--card);
+  }
+  .pd-step strong {
+    display: block;
+    font-family: var(--font-display); font-size: 1.75rem; line-height: 1;
+    color: var(--primary);
+  }
+  .pd-step span {
+    display: block; margin-top: .5rem;
+    font-size: .75rem; color: var(--muted-foreground); line-height: 1.4;
+  }
+
+  /* ---- Amenities ---- */
+  .pd-amenities { display: grid; gap: .625rem; grid-template-columns: repeat(2, 1fr); }
+  @media (min-width: 720px) { .pd-amenities { grid-template-columns: repeat(3, 1fr); } }
+  .pd-amenity {
+    display: flex; align-items: center; gap: .625rem;
+    padding: .75rem .875rem;
+    border: 1px solid var(--border); border-radius: .625rem;
+    font-size: .875rem; color: var(--foreground);
+  }
+  .pd-amenity svg { width: 1rem; height: 1rem; color: var(--primary); flex-shrink: 0; }
+
+  /* ---- Map ---- */
+  .pd-map { height: 20rem; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border); }
+  .pd-map .leaflet-container { height: 100%; font-family: var(--font-body); }
+
+  /* ---- Sidebar ---- */
+  .pd-aside { display: flex; flex-direction: column; gap: .875rem; }
+  @media (min-width: 1024px) {
+    .pd-aside {
+      position: sticky;
+      top: calc(var(--nav-height) + 1rem);
+      /* Without a height cap a tall sidebar scrolls away before it ever
+         sticks. Capping it to the viewport keeps it genuinely fixed. */
+      max-height: calc(100vh - var(--nav-height) - 2rem);
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      padding-right: .25rem;
+    }
+    .pd-aside::-webkit-scrollbar { width: 3px; }
+    .pd-aside::-webkit-scrollbar-thumb { background: var(--border); border-radius: 9999px; }
+  }
+
+  .pd-card {
+    border: 1px solid var(--border); border-radius: var(--radius);
+    background: var(--card); box-shadow: var(--shadow-card);
+    padding: 1.25rem;
+  }
+  .pd-card h2 {
+    margin: 0 0 .25rem;
+    font-family: var(--font-display); font-size: 1.25rem; color: var(--foreground);
+  }
+  .pd-card > p { margin: 0 0 1rem; font-size: .78125rem; color: var(--muted-foreground); }
+
+  .pd-form { display: flex; flex-direction: column; gap: .6875rem; }
+  .pd-input, .pd-select, .pd-textarea {
+    width: 100%; min-width: 0;
+    border: 1px solid var(--border); border-radius: .5rem;
+    background: var(--card); color: var(--foreground);
+    font-family: inherit; font-size: .875rem;
+    padding: 0 .75rem; height: 2.5rem;
+  }
+  .pd-textarea { height: auto; min-height: 4rem; padding-block: .5rem; resize: vertical; }
+  .pd-input:focus, .pd-select:focus, .pd-textarea:focus { outline: none; border-color: var(--primary); }
+  .pd-label {
+    display: block; margin-bottom: .3125rem;
+    font-size: .625rem; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .14em; color: var(--muted-foreground);
+  }
+  .pd-tel { display: flex; gap: .375rem; }
+  .pd-tel .pd-select { flex: 0 0 6rem; padding-inline: .5rem; }
+  .pd-check {
+    display: flex; align-items: center; gap: .5rem;
+    font-size: .8125rem; color: var(--muted-foreground);
+  }
+  .pd-check input { width: 1rem; height: 1rem; accent-color: var(--primary); }
+  .pd-err { margin: .25rem 0 0; font-size: .75rem; color: #b3261e; }
+  .pd-form .btn-solid { width: 100%; margin-top: .25rem; }
+  .pd-fineprint { margin: .75rem 0 0; font-size: .6875rem; color: var(--muted-foreground); line-height: 1.5; }
+
+  .pd-contact { display: grid; gap: .5rem; }
+  .pd-contact a {
+    display: flex; align-items: center; justify-content: center; gap: .5rem;
+    height: 2.5rem; border-radius: 9999px;
+    font-size: .875rem; font-weight: 500;
+    border: 1px solid var(--border); color: var(--foreground);
+    transition: background-color .2s ease, color .2s ease, border-color .2s ease;
+  }
+  .pd-contact a:hover { border-color: var(--primary); color: var(--primary); }
+  .pd-contact a.is-whatsapp { background: #25D366; border-color: #25D366; color: #fff; }
+  .pd-contact a.is-whatsapp:hover { filter: brightness(.95); color: #fff; }
+  .pd-contact svg { width: 1rem; height: 1rem; }
+
+  /* ---- Mobile action bar ---- */
+  .pd-bar {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 950;
+    display: grid; grid-template-columns: 1fr 1fr 1.2fr; gap: .5rem;
+    padding: .625rem .75rem calc(.625rem + env(safe-area-inset-bottom));
+    background: var(--card); border-top: 1px solid var(--border);
+    box-shadow: 0 -6px 24px rgba(11,21,18,.10);
+  }
+  .pd-bar a, .pd-bar button {
+    display: flex; align-items: center; justify-content: center; gap: .375rem;
+    height: 2.75rem; border-radius: 9999px;
+    font-family: inherit; font-size: .8125rem; font-weight: 600;
+    border: 1px solid var(--border); background: var(--card); color: var(--foreground);
+    cursor: pointer;
+  }
+  .pd-bar svg { width: 1rem; height: 1rem; }
+  .pd-bar .is-whatsapp { background: #25D366; border-color: #25D366; color: #fff; }
+  .pd-bar .is-primary { background: var(--primary); border-color: var(--primary); color: var(--primary-foreground); }
+  @media (min-width: 1024px) { .pd-bar { display: none; } }
+  /* keep the float buttons clear of the bar */
+  @media (max-width: 1023px) {
+    .float-actions { bottom: 5.25rem; }
+    #scrollTopBtn { bottom: 14rem; }
+  }
+
+  /* ---- Lightbox ---- */
+  .pd-lightbox {
+    position: fixed; inset: 0; z-index: 1200;
+    display: none; place-items: center;
+    background: rgba(11,21,18,.94); padding: 1.5rem;
+  }
+  .pd-lightbox.is-open { display: grid; }
+  .pd-lightbox img { max-width: 100%; max-height: 88vh; object-fit: contain; border-radius: .5rem; }
+  .pd-lightbox button {
+    position: absolute; top: 1.25rem; right: 1.25rem;
+    width: 2.5rem; height: 2.5rem; border: 0; border-radius: 9999px;
+    background: rgba(246,242,233,.15); color: var(--cream);
+    font-size: 1.5rem; line-height: 1; cursor: pointer;
+  }
+
+  /* ---- SEO debug badge (DEBUG only) ---- */
+  .pd-seo {
+    position: fixed; left: 1rem; bottom: 1rem; z-index: 1150;
+    padding: .625rem .75rem; border-radius: .5rem;
+    background: var(--ink); color: var(--cream);
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: .6875rem; line-height: 1.6;
+    box-shadow: var(--shadow-card); opacity: .92;
+  }
+  .pd-seo b { color: var(--gold); font-weight: 600; }
+  .pd-seo .ok   { color: #7bd88f; }
+  .pd-seo .bad  { color: #ff9d8a; }
+  @media (max-width: 1023px) { .pd-seo { display: none; } }
+
+  /* ---- Related ---- */
+  .pd-related { padding-block: 3rem 4.5rem; background: var(--secondary); }
+  .pd-related .grid-3 { gap: 1.25rem; }
+  .pd-related .card__media { aspect-ratio: 16 / 10; }
+  .pd-related .card__body  { padding: .875rem .875rem 1.125rem; gap: .3125rem; }
+  .pd-related .card__title { font-size: 1.0625rem; }
+  .pd-related .card__loc   { font-size: .75rem; }
+  .pd-related .card__price { font-size: 1.0625rem; padding-top: .625rem; }
+  .pd-related .section-title { font-size: clamp(1.375rem, 3vw, 1.75rem); }
+  @media (max-width: 1023px) { .pd-related { padding-bottom: 8rem; } }
+</style>
+{% endblock %}
+
+
+{% block content %}
+
+<div class="container-page pd-top">
+
+  {% if return_url %}
+    <a class="pd-back" href="{{ return_url }}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>
+      Back to results
+    </a>
+  {% endif %}
+
+  <nav class="pd-crumb" aria-label="Breadcrumb">
+    <a href="{% url 'home' %}">Home</a> <span>/</span>
+    <a href="{% url 'properties:property_list' %}">Properties</a> <span>/</span>
+    <a href="{% url 'properties:property_list' %}?city={{ property.city.slug }}">{{ property.city.name }}</a>
+    <span>/</span>
+    <span aria-current="page">{{ property.title }}</span>
+  </nav>
+
+
+
+  <!-- ================= BODY ================= -->
+  <div class="pd-layout">
+
+    <div>
+      <!-- ---- Gallery ---- -->
+      {% if images %}
+      <div class="pd-gallery" id="pdGallery">
+        <div class="pd-stage" id="pdStage">
+          <img id="pdStageImg" src="{{ images.0 }}" alt="{{ property.title }}" width="1200" height="600">
+          {% if property.property_status %}
+            <span class="pd-stage__badge {% if property.property_status.slug == 'off-plan' %}pd-stage__badge--offplan{% endif %}">
+              {{ property.property_status.name }}
+            </span>
+          {% endif %}
+          {% if images|length > 1 %}
+            <button type="button" class="pd-stage__nav pd-stage__nav--prev" data-step="-1" aria-label="Previous image">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+            </button>
+            <button type="button" class="pd-stage__nav pd-stage__nav--next" data-step="1" aria-label="Next image">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+            </button>
+            <span class="pd-stage__count"><b id="pdIndex">1</b> / {{ images|length }}</span>
+          {% endif %}
+        </div>
+
+        {% if images|length > 1 %}
+        <div class="pd-thumbs" role="tablist" aria-label="Property images">
+          {% for src in images %}
+            <button type="button" class="pd-thumb {% if forloop.first %}is-active{% endif %}"
+                    data-index="{{ forloop.counter0 }}" aria-label="Image {{ forloop.counter }}">
+              <img src="{{ src }}" alt="" loading="lazy" width="120" height="90">
+            </button>
+          {% endfor %}
+        </div>
+        {% endif %}
+      </div>
+      {% endif %}
+
+      <p class="pd-dev">{{ property.developer_company.name }}</p>
+      <h1 class="pd-title">{{ property.title }}</h1>
+
+      <p class="pd-loc">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>
+        </svg>
+        {{ property.district.name }}, {{ property.city.name }}
+      </p>
+
+      <p class="pd-price">
+        {% if property.compare_starting_price %}
+          AED {{ property.compare_starting_price|floatformat:0|intcomma }}
+          <small>Starting price</small>
+        {% else %}
+          Price on request
+          <small>Enquire for the current price list</small>
+        {% endif %}
+      </p>
+
+      <dl class="pd-facts">
+        {% if property.compare_bedroom_options %}
+          <div class="pd-fact"><dt>Bedrooms</dt><dd>{{ property.compare_bedroom_options }}</dd></div>
+        {% endif %}
+        {% if property.compare_unit_size_range %}
+          <div class="pd-fact"><dt>Unit sizes</dt><dd>{{ property.compare_unit_size_range }}</dd></div>
+        {% endif %}
+        {% if property.delivery_date %}
+          <div class="pd-fact"><dt>Handover</dt><dd>{{ property.delivery_date|date:"M Y" }}</dd></div>
+        {% endif %}
+        {% if property.property_type %}
+          <div class="pd-fact"><dt>Type</dt><dd>{{ property.property_type.name }}</dd></div>
+        {% endif %}
+        {% if property.completion_rate %}
+          <div class="pd-fact"><dt>Construction</dt><dd>{{ property.completion_rate|floatformat:0 }}% complete</dd></div>
+        {% endif %}
+        {% if property.sales_status %}
+          <div class="pd-fact"><dt>Sales status</dt><dd>{{ property.sales_status.name }}</dd></div>
+        {% endif %}
+      </dl>
+
+      <!-- Overview -->
+      {% if property.description %}
+      <section class="pd-section">
+        <h2>About {{ property.title }}</h2>
+        <div class="pd-prose pd-clamp" id="pdDesc">{{ property.description|safe }}</div>
+        <button type="button" class="pd-more" id="pdDescMore">Read more</button>
+      </section>
+      {% endif %}
+
+      <!-- Units -->
+      {% if property.grouped_apartments.all %}
+      <section class="pd-section">
+        <h2>Units &amp; pricing</h2>
+        <div class="pd-tablewrap">
+          <table class="pd-units">
+            <thead>
+              <tr>
+                <th scope="col">Unit type</th>
+                <th scope="col">Beds</th>
+                <th scope="col">Size</th>
+                <th scope="col">Price from</th>
+                <th scope="col">Available</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for unit in property.grouped_apartments.all %}
+              <tr>
+                <td data-label="Unit type" class="u-type">{{ unit.apartment_type|default:"Residence" }}</td>
+                <td data-label="Beds">
+                  {% if unit.no_of_bedrooms == 0 %}Studio{% else %}{{ unit.no_of_bedrooms }} BR{% endif %}
+                </td>
+                <td data-label="Size">
+                  {% if unit.min_area %}
+                    {{ unit.min_area|intcomma }}{% if unit.max_area and unit.max_area != unit.min_area %} – {{ unit.max_area|intcomma }}{% endif %} sq ft
+                  {% else %}—{% endif %}
+                </td>
+                <td data-label="Price from" class="u-price">
+                  {% if unit.min_price %}AED {{ unit.min_price|floatformat:0|intcomma }}{% else %}On request{% endif %}
+                </td>
+                <td data-label="Available">
+                  {% if unit.available_count %}{{ unit.available_count }} unit{{ unit.available_count|pluralize }}{% else %}Enquire{% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </section>
+      {% endif %}
+
+      <!-- Payment plan -->
+      {% if default_plan %}
+      <section class="pd-section">
+        <h2>{{ default_plan.name }}</h2>
+        {% if default_plan.description %}
+          <p class="pd-prose">{{ default_plan.description }}</p>
+        {% endif %}
+        <div class="pd-plan">
+          {% for step in default_plan.values.all %}
+          <div class="pd-step">
+            <strong>{% if step.percentage %}{{ step.percentage|floatformat:"-2" }}%{% else %}{{ step.value|default:"—" }}{% endif %}</strong>
+            <span>{{ step.name }}{% if step.percentage and step.value %}<br>{{ step.value }}{% endif %}</span>
+          </div>
+          {% endfor %}
+        </div>
+      </section>
+      {% endif %}
+
+      <!-- Amenities -->
+      {% if property.facilities.all %}
+      <section class="pd-section">
+        <h2>Amenities</h2>
+        <div class="pd-amenities">
+          {% for facility in property.facilities.all %}
+          <div class="pd-amenity">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
+            {{ facility.name }}
+          </div>
+          {% endfor %}
+        </div>
+      </section>
+      {% endif %}
+
+      <!-- Location -->
+      <section class="pd-section">
+        <h2>Location</h2>
+        {% if property.address or property.address_text %}
+          <p class="pd-prose">{{ property.address_text|default:property.address }}</p>
+        {% endif %}
+        {% if property.latitude and property.longitude %}
+          <div class="pd-map" id="pdMap"
+               data-lat="{{ property.latitude|stringformat:'s' }}"
+               data-lng="{{ property.longitude|stringformat:'s' }}"
+               data-label="{{ property.title }}"></div>
+        {% else %}
+          <p class="pd-prose">{{ property.district.name }}, {{ property.city.name }}</p>
+        {% endif %}
+      </section>
+    </div>
+
+    <!-- ================= SIDEBAR ================= -->
+    <aside class="pd-aside">
+      <div class="pd-card" id="pdEnquire">
+        <h2>Register your interest</h2>
+        <p>Get the floor plans, full price list and payment plan.</p>
+
+        <form class="pd-form" method="post" novalidate>
+          {% csrf_token %}
+
+          <div>
+            <label class="pd-label" for="id_name">Full name</label>
+            <input class="pd-input" type="text" id="id_name" name="name" required
+                   value="{{ enquiry_form.name.value|default:'' }}" autocomplete="name">
+            {% for e in enquiry_form.name.errors %}<p class="pd-err">{{ e }}</p>{% endfor %}
+          </div>
+
+          <div>
+            <label class="pd-label" for="id_email">Email</label>
+            <input class="pd-input" type="email" id="id_email" name="email" required
+                   value="{{ enquiry_form.email.value|default:'' }}" autocomplete="email">
+            {% for e in enquiry_form.email.errors %}<p class="pd-err">{{ e }}</p>{% endfor %}
+          </div>
+
+          <div>
+            <label class="pd-label" for="phoneLocal">Phone</label>
+            <div class="pd-tel">
+              <select class="pd-select" id="phoneCode" aria-label="Country dialling code">
+                <option value="971" selected>+971</option>
+                <option value="91">+91</option>
+                <option value="44">+44</option>
+                <option value="1">+1</option>
+                <option value="966">+966</option>
+                <option value="974">+974</option>
+                <option value="965">+965</option>
+                <option value="973">+973</option>
+                <option value="968">+968</option>
+                <option value="92">+92</option>
+                <option value="880">+880</option>
+                <option value="94">+94</option>
+                <option value="20">+20</option>
+                <option value="90">+90</option>
+                <option value="7">+7</option>
+                <option value="86">+86</option>
+                <option value="33">+33</option>
+                <option value="49">+49</option>
+                <option value="61">+61</option>
+                <option value="27">+27</option>
+                <option value="234">+234</option>
+              </select>
+              <input class="pd-input" type="tel" id="phoneLocal" inputmode="tel"
+                     placeholder="50 123 4567" required autocomplete="tel-national">
+            </div>
+            <input type="hidden" name="phone" id="id_phone" value="{{ enquiry_form.phone.value|default:'' }}">
+            {% for e in enquiry_form.phone.errors %}<p class="pd-err">{{ e }}</p>{% endfor %}
+          </div>
+
+          <label class="pd-check">
+            <input type="checkbox" id="waSame" checked>
+            WhatsApp number is the same
+          </label>
+
+          <div id="waWrap" hidden>
+            <label class="pd-label" for="waLocal">WhatsApp</label>
+            <div class="pd-tel">
+              <select class="pd-select" id="waCode" aria-label="WhatsApp dialling code">
+                <option value="971" selected>+971</option>
+                <option value="91">+91</option>
+                <option value="44">+44</option>
+                <option value="1">+1</option>
+                <option value="966">+966</option>
+                <option value="92">+92</option>
+              </select>
+              <input class="pd-input" type="tel" id="waLocal" inputmode="tel" placeholder="50 123 4567">
+            </div>
+          </div>
+          <input type="hidden" name="whatsapp" id="id_whatsapp" value="{{ enquiry_form.whatsapp.value|default:'' }}">
+          {% for e in enquiry_form.whatsapp.errors %}<p class="pd-err">{{ e }}</p>{% endfor %}
+
+          <div>
+            <label class="pd-label" for="id_message">Message <span style="text-transform:none;letter-spacing:0;">(optional)</span></label>
+            <textarea class="pd-textarea" id="id_message" name="message"
+                      placeholder="I'd like the payment plan and floor plans.">{{ enquiry_form.message.value|default:'' }}</textarea>
+          </div>
+
+          <button type="submit" class="btn-solid">Request details</button>
+          <p class="pd-fineprint">
+            By submitting you agree to be contacted about this property by
+            Spacesmith Real Estate.
+          </p>
+        </form>
+      </div>
+
+      <div class="pd-card">
+        <div class="pd-contact">
+          <a href="tel:+{{ phone_number }}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+            {{ contact_phone }}
+          </a>
+          <a class="is-whatsapp" target="_blank" rel="noopener noreferrer"
+             href="https://wa.me/{{ whatsapp_number }}?text={{ property.title|urlencode }}%20%E2%80%94%20I%27d%20like%20more%20details">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.004 2c-5.514 0-9.997 4.483-9.997 9.997 0 1.762.463 3.484 1.343 5.003L2 22l5.117-1.341a9.96 9.96 0 0 0 4.887 1.246h.004c5.514 0 9.996-4.483 9.996-9.997C21.996 6.483 17.518 2 12.004 2z"/></svg>
+            WhatsApp us
+          </a>
+        </div>
+      </div>
+    </aside>
+
+  </div>
+</div>
+
+
+<!-- ================= RELATED ================= -->
+{% if related_properties %}
+<section class="pd-related">
+  <div class="container-page">
+    <h2 class="section-title" style="margin-bottom:2rem;">More in {{ property.district.name }}</h2>
+    <div class="grid-3">
+      {% for item in related_properties %}
+      <a class="card" href="{% url 'properties:property_detail' item.slug %}">
+        <div class="card__media">
+          <img src="{{ item.cover_image }}" alt="{{ item.title }}" loading="lazy" width="600" height="450">
+          {% if item.property_status %}<span class="card__tag">{{ item.property_status.name }}</span>{% endif %}
+        </div>
+        <div class="card__body">
+          <h3 class="card__title">{{ item.title }}</h3>
+          <p class="card__loc">{{ item.district.name }}, {{ item.city.name }}</p>
+          <p class="card__price">
+            {% if item.compare_starting_price %}
+              AED {{ item.compare_starting_price|floatformat:0|intcomma }}
+            {% else %}Price on request{% endif %}
+          </p>
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+
+<!-- ================= MOBILE BAR ================= -->
+<div class="pd-bar">
+  <a href="tel:+{{ phone_number }}">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+         stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+    Call
+  </a>
+  <a class="is-whatsapp" target="_blank" rel="noopener noreferrer"
+     href="https://wa.me/{{ whatsapp_number }}?text={{ property.title|urlencode }}%20%E2%80%94%20I%27d%20like%20more%20details">
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.004 2c-5.514 0-9.997 4.483-9.997 9.997 0 1.762.463 3.484 1.343 5.003L2 22l5.117-1.341a9.96 9.96 0 0 0 4.887 1.246h.004c5.514 0 9.996-4.483 9.996-9.997C21.996 6.483 17.518 2 12.004 2z"/></svg>
+    WhatsApp
+  </a>
+  <button type="button" class="is-primary" id="pdBarEnquire">Get details</button>
+</div>
+
+{% if seo_report %}
+<div class="pd-seo" title="Shown only while DEBUG is on">
+  <b>SEO</b><br>
+  title {{ seo_report.title_len }}/{{ seo_report.title_max }}
+  <span class="{% if seo_report.title_ok %}ok{% else %}bad{% endif %}">
+    {% if seo_report.title_ok %}&check;{% else %}&times;{% endif %}
+  </span><br>
+  desc {{ seo_report.description_len }}
+  ({{ seo_report.description_min }}&ndash;{{ seo_report.description_max }})
+  <span class="{% if seo_report.description_ok %}ok{% else %}bad{% endif %}">
+    {% if seo_report.description_ok %}&check;{% else %}&times;{% endif %}
+  </span>
+</div>
+{% endif %}
+
+<div class="pd-lightbox" id="pdLightbox">
+  <button type="button" aria-label="Close">&times;</button>
+  <img id="pdLightboxImg" src="" alt="">
+</div>
+
+{% endblock %}
+
+
+{% block extra_js %}
+{% if property.latitude and property.longitude %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
+{% endif %}
+<script>
+(function () {
+  /* ================= GALLERY ================= */
+  var stage = document.getElementById('pdStage');
+  if (stage) {
+    var stageImg = document.getElementById('pdStageImg');
+    var indexEl  = document.getElementById('pdIndex');
+    var thumbs   = Array.prototype.slice.call(document.querySelectorAll('.pd-thumb'));
+    var sources  = thumbs.length
+      ? thumbs.map(function (t) { return t.querySelector('img').src; })
+      : [stageImg.src];
+    var current = 0;
+
+    function show(i) {
+      current = (i + sources.length) % sources.length;
+      stageImg.src = sources[current];
+      if (indexEl) indexEl.textContent = current + 1;
+      thumbs.forEach(function (t, n) { t.classList.toggle('is-active', n === current); });
+      thumbs[current] && thumbs[current].scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    }
+
+    thumbs.forEach(function (t) {
+      t.addEventListener('click', function () { show(Number(t.dataset.index)); });
+    });
+    document.querySelectorAll('.pd-stage__nav').forEach(function (btn) {
+      btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        show(current + Number(btn.dataset.step));
+      });
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'ArrowRight') show(current + 1);
+      if (e.key === 'ArrowLeft')  show(current - 1);
+    });
+
+    /* Lightbox */
+    var box = document.getElementById('pdLightbox');
+    var boxImg = document.getElementById('pdLightboxImg');
+    stage.addEventListener('click', function () {
+      boxImg.src = sources[current];
+      box.classList.add('is-open');
+      document.body.style.overflow = 'hidden';
+    });
+    function closeBox() {
+      box.classList.remove('is-open');
+      document.body.style.overflow = '';
+    }
+    box.addEventListener('click', closeBox);
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && box.classList.contains('is-open')) closeBox();
+    });
+  }
+
+  /* ================= DESCRIPTION CLAMP ================= */
+  var desc = document.getElementById('pdDesc');
+  var more = document.getElementById('pdDescMore');
+  if (desc && more) {
+    // Short descriptions don't need the fade or the button
+    if (desc.scrollHeight <= desc.clientHeight + 8) {
+      desc.classList.remove('pd-clamp');
+      more.hidden = true;
+    }
+    more.addEventListener('click', function () {
+      var open = desc.classList.toggle('is-open');
+      more.textContent = open ? 'Show less' : 'Read more';
+    });
+  }
+
+  /* ================= PHONE FIELDS ================= */
+  var phoneCode  = document.getElementById('phoneCode');
+  var phoneLocal = document.getElementById('phoneLocal');
+  var phoneOut   = document.getElementById('id_phone');
+  var waSame     = document.getElementById('waSame');
+  var waWrap     = document.getElementById('waWrap');
+  var waCode     = document.getElementById('waCode');
+  var waLocal    = document.getElementById('waLocal');
+  var waOut      = document.getElementById('id_whatsapp');
+
+  function digits(v) { return (v || '').replace(/\D/g, '').replace(/^0+/, ''); }
+
+  function syncPhone() {
+    if (!phoneOut) return;
+    var local = digits(phoneLocal.value);
+    phoneOut.value = local ? '+' + phoneCode.value + local : '';
+    if (waSame && waSame.checked) waOut.value = phoneOut.value;
+  }
+  function syncWa() {
+    if (!waOut) return;
+    if (waSame.checked) { waOut.value = phoneOut.value; return; }
+    var local = digits(waLocal.value);
+    waOut.value = local ? '+' + waCode.value + local : '';
+  }
+
+  if (phoneLocal) {
+    ['input', 'change'].forEach(function (ev) {
+      phoneLocal.addEventListener(ev, syncPhone);
+      phoneCode.addEventListener(ev, syncPhone);
+    });
+  }
+  if (waSame) {
+    waSame.addEventListener('change', function () {
+      waWrap.hidden = waSame.checked;
+      syncWa();
+    });
+    ['input', 'change'].forEach(function (ev) {
+      waLocal.addEventListener(ev, syncWa);
+      waCode.addEventListener(ev, syncWa);
+    });
+  }
+  syncPhone();
+
+  /* Mobile bar scrolls to the form and focuses it */
+  var barBtn = document.getElementById('pdBarEnquire');
+  if (barBtn) {
+    barBtn.addEventListener('click', function () {
+      document.getElementById('pdEnquire').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setTimeout(function () { document.getElementById('id_name').focus(); }, 500);
+    });
+  }
+
+  /* ================= MAP ================= */
+  var mapEl = document.getElementById('pdMap');
+  if (mapEl) {
+    window.addEventListener('load', function () {
+      if (typeof L === 'undefined') return;
+      var lat = parseFloat(mapEl.dataset.lat);
+      var lng = parseFloat(mapEl.dataset.lng);
+      if (isNaN(lat) || isNaN(lng)) return;
+
+      var map = L.map(mapEl, { scrollWheelZoom: false }).setView([lat, lng], 14);
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; OpenStreetMap contributors'
+      }).addTo(map);
+      L.marker([lat, lng]).addTo(map).bindPopup(mapEl.dataset.label);
+    });
+  }
+})();
+</script>
+{% endblock %}

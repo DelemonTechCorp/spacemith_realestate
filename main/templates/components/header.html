@@ -1,0 +1,344 @@
+{% load static %}
+
+<style>
+  /* =====================================================================
+     HEADER — all tokens come from base.html. Nothing global is redefined
+     here: no :root, no body, no *, no .container-page.
+     ===================================================================== */
+
+  .site-header {
+    position: fixed;
+    inset: 0 0 auto 0;
+    z-index: 1000;
+    background: transparent;
+    border-bottom: 1px solid transparent;
+    transform: translateY(0);
+    transition:
+      transform .35s ease,
+      background-color .3s ease,
+      box-shadow .3s ease,
+      border-color .3s ease;
+  }
+
+  /* Scrolled state — frosted white bar */
+  .site-header.is-scrolled {
+    background: rgba(255, 255, 255, .88);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom-color: var(--border);
+    box-shadow: 0 1px 2px rgba(11, 21, 18, .06);
+    
+  }
+
+  .site-header.header-hidden  { transform: translateY(-100%); }
+  .site-header.header-visible { transform: translateY(0); }
+
+  /* Solid background whenever the mobile menu is open */
+  .site-header:has(.mobile-panel.is-open) {
+    background: var(--background);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
+  .header-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: var(--nav-height);
+  }
+
+  /* ---- Logo ---- */
+  .logo {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    margin-right: auto;
+    height: 100%;
+  }
+  .logo__img {
+    width: auto;
+    height: 300px;          /* was height:40vh — that blew the header apart */
+    max-width: 200px;
+    object-fit: contain;
+  }
+  @media (max-width: 480px) { .logo__img { height: 250px; max-width: 180px; } }
+
+  /* ---- Desktop nav ---- */
+  .nav-desktop { display: none; align-items: center; gap: .25rem; }
+
+  .nav-link {
+    position: relative;
+    padding: .5rem 1rem;
+    font-family: var(--font-body);
+    font-size: .875rem;
+    font-weight: 500;
+    color: color-mix(in srgb, var(--foreground) 78%, transparent);
+    transition: color .2s ease;
+  }
+  .nav-link:hover,
+  .nav-link.is-active { color: var(--primary); }
+
+  .nav-link::after {
+    content: "";
+    position: absolute;
+    left: 1rem; right: 1rem; bottom: .25rem;
+    height: 2px;
+    background: var(--gold);
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform .2s ease;
+  }
+  .nav-link:hover::after,
+  .nav-link.is-active::after { transform: scaleX(1); }
+
+  /* ---- Desktop actions ---- */
+  .header-actions { display: none; align-items: center; gap: 1rem; }
+
+  .phone-link {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    font-size: .875rem;
+    font-weight: 500;
+    color: color-mix(in srgb, var(--foreground) 78%, transparent);
+    transition: color .2s ease;
+    white-space: nowrap;
+  }
+  .phone-link:hover { color: var(--primary); }
+  .phone-link svg { width: 1rem; height: 1rem; }
+
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9999px;
+    background: var(--primary)!important;
+    color: var(--primary-foreground);
+    padding: .625rem 1.25rem;
+    font-family: var(--font-body);
+    font-size: .875rem;
+    font-weight: 500;
+    white-space: nowrap;
+    transition: background-color .2s ease;
+  }
+  .btn-primary:hover { background: var(--primary-dark); }
+
+  /* ---- Burger ---- */
+  .menu-toggle {
+    display: inline-flex;
+    padding: .5rem;
+    border: 0;
+    background: none;
+    color: var(--foreground)!important;
+    cursor: pointer;
+    transition: color .3s ease;
+  }
+  .menu-toggle svg { width: 1.5rem; height: 1.5rem;color: var(--foreground)!important; }
+  .menu-toggle .icon-close { display: none; }
+  .menu-toggle[aria-expanded="true"] .icon-open  { display: none; }
+  .menu-toggle[aria-expanded="true"] .icon-close { display: block; }
+
+  /* ---- Mobile panel ---- */
+  .mobile-panel {
+    display: none;
+    background: var(--background);
+    border-top: 1px solid var(--border);
+    max-height: calc(100vh - var(--nav-height));
+    overflow-y: auto;
+  }
+  .mobile-panel.is-open { display: block; }
+
+  .mobile-nav {
+    display: flex;
+    flex-direction: column;
+    gap: .25rem;
+    padding-block: 1rem;
+  }
+  .mobile-link {
+    padding: .75rem .5rem;
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--foreground);
+    border-bottom: 1px solid var(--border);
+  }
+  .mobile-link:hover,
+  .mobile-link.is-active { color: var(--primary); }
+  .mobile-link:has(+ .btn-primary) { border-bottom: 0; }
+
+  .mobile-nav .btn-primary { margin-top: .75rem; padding: .75rem 1.25rem; }
+  .mobile-nav .phone-link  { margin-top: 1rem; padding: .25rem .5rem; }
+
+  /* =====================================================================
+     OVERLAY MODE — pages with a full-bleed dark hero add
+     {% block body_class %}has-hero{% endblock %}.
+     Before scroll the bar sits on the hero in cream; after scroll it
+     flips to the normal light bar.
+     ===================================================================== */
+  body.has-hero .site-header:not(.is-scrolled) .nav-link,
+  body.has-hero .site-header:not(.is-scrolled) .phone-link,
+  body.has-hero .site-header:not(.is-scrolled) .menu-toggle {
+    color: var(--cream);
+  }
+  body.has-hero .site-header:not(.is-scrolled) .nav-link:hover,
+  body.has-hero .site-header:not(.is-scrolled) .nav-link.is-active,
+  body.has-hero .site-header:not(.is-scrolled) .phone-link:hover {
+    color: var(--gold);
+  }
+  body.has-hero .site-header:not(.is-scrolled) .btn-primary {
+    background: rgba(246, 242, 233, .12);
+    border: 1px solid rgba(246, 242, 233, .4);
+    color: var(--cream);
+    backdrop-filter: blur(8px);
+  }
+  body.has-hero .site-header:not(.is-scrolled) .btn-primary:hover {
+    background: var(--gold);
+    border-color: var(--gold);
+    color: var(--ink);
+  }
+  /* Inner pages clear the fixed header. Hero pages sit under it. */
+  body:not(.has-hero) main { padding-top: var(--nav-height); }
+
+  /* ---- Desktop breakpoint ---- */
+  @media (min-width: 1024px) {
+    .nav-desktop,
+    .header-actions { display: flex; }
+    .menu-toggle,
+    .mobile-panel  { display: none !important; }
+  }
+</style>
+
+<header class="site-header header-visible" id="siteHeader">
+  <div class="container-page header-bar">
+
+    <a href="{% url 'home' %}" class="logo" aria-label="Spacesmith Real Estate — home">
+      <img class="logo__img" src="{% static 'img/Space_smith_logo.png' %}"
+           alt="Spacesmith Real Estate" width="190" height="44">
+    </a>
+
+    <nav class="nav-desktop" aria-label="Main navigation">
+      <a href="{% url 'home' %}" class="nav-link {% if request.path == '/' %}is-active{% endif %}">Home</a>
+      <a href="{% url 'properties:offplan_properties' %}" class="nav-link {% if '/off-plan' in request.path %}is-active{% endif %}">Off Plan</a>
+      <a href="{% url 'properties:ready_properties' %}" class="nav-link {% if '/ready' in request.path %}is-active{% endif %}">Ready</a>
+      {# TODO: point at the blogs app once the url name is confirmed, e.g. {% url 'blog_list' %} #}
+      <a href="" class="nav-link {% if '/blog' in request.path %}is-active{% endif %}">Insights</a>
+      <a href="{% url 'about' %}" class="nav-link {% if '/about' in request.path %}is-active{% endif %}">About</a>
+    </nav>
+
+    <div class="header-actions">
+      <a href="tel:+{{ phone_number }}" class="phone-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/>
+        </svg>
+        {{ contact_phone }}
+      </a>
+      <a href="{% url 'contact' %}" class="btn-primary">Book a Viewing</a>
+    </div>
+
+    <button class="menu-toggle" id="menuToggle" type="button"
+            aria-label="Toggle menu" aria-expanded="false" aria-controls="mobilePanel">
+      <svg class="icon-open" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2" stroke-linecap="round" aria-hidden="true">
+        <line x1="4" y1="6"  x2="20" y2="6"/>
+        <line x1="4" y1="12" x2="20" y2="12"/>
+        <line x1="4" y1="18" x2="20" y2="18"/>
+      </svg>
+      <svg class="icon-close" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+           stroke-width="2" stroke-linecap="round" aria-hidden="true">
+        <line x1="6"  y1="6" x2="18" y2="18"/>
+        <line x1="18" y1="6" x2="6"  y2="18"/>
+      </svg>
+    </button>
+
+  </div>
+
+  <div class="mobile-panel" id="mobilePanel">
+    <nav class="container-page mobile-nav" aria-label="Mobile navigation">
+      <a href="{% url 'home' %}" class="mobile-link {% if request.path == '/' %}is-active{% endif %}">Home</a>
+      <a href="{% url 'properties:offplan_properties' %}" class="mobile-link {% if '/off-plan' in request.path %}is-active{% endif %}">Off Plan</a>
+      <a href="{% url 'properties:ready_properties' %}" class="mobile-link {% if '/ready' in request.path %}is-active{% endif %}">Ready</a>
+      <a href="" class="mobile-link {% if '/blog' in request.path %}is-active{% endif %}">Insights</a>
+      <a href="{% url 'about' %}" class="mobile-link {% if '/about' in request.path %}is-active{% endif %}">About Us</a>
+      <a href="{% url 'contact' %}" class="btn-primary">Book a Viewing</a>
+      <a href="tel:+{{ phone_number }}" class="phone-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/>
+        </svg>
+        {{ contact_phone }}
+      </a>
+    </nav>
+  </div>
+</header>
+
+<script>
+(function () {
+  var header = document.getElementById('siteHeader');
+  var toggle = document.getElementById('menuToggle');
+  var panel  = document.getElementById('mobilePanel');
+  if (!header || !toggle || !panel) return;
+
+  /* ---- Scroll: frost the bar, hide on scroll-down, reveal on scroll-up ---- */
+  var lastScroll = 0;
+  var ticking = false;
+
+  function onScroll() {
+    var y = window.pageYOffset;
+
+    header.classList.toggle('is-scrolled', y > 20);
+
+    if (y <= 20 || panel.classList.contains('is-open')) {
+      header.classList.remove('header-hidden');
+      header.classList.add('header-visible');
+      lastScroll = y;
+      ticking = false;
+      return;
+    }
+
+    // ignore tiny jitters and iOS rubber-banding
+    if (Math.abs(y - lastScroll) > 6) {
+      if (y > lastScroll) {
+        header.classList.add('header-hidden');
+        header.classList.remove('header-visible');
+      } else {
+        header.classList.remove('header-hidden');
+        header.classList.add('header-visible');
+      }
+      lastScroll = y;
+    }
+    ticking = false;
+  }
+
+  window.addEventListener('scroll', function () {
+    if (!ticking) { window.requestAnimationFrame(onScroll); ticking = true; }
+  }, { passive: true });
+
+  onScroll();   // set correct state on load / refresh mid-page
+
+  /* ---- Mobile menu ---- */
+  function setMenu(open) {
+    panel.classList.toggle('is-open', open);
+    toggle.setAttribute('aria-expanded', String(open));
+    document.body.style.overflow = open ? 'hidden' : '';
+  }
+
+  toggle.addEventListener('click', function () {
+    setMenu(!panel.classList.contains('is-open'));
+  });
+
+  panel.querySelectorAll('a').forEach(function (link) {
+    link.addEventListener('click', function () { setMenu(false); });
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && panel.classList.contains('is-open')) {
+      setMenu(false);
+      toggle.focus();
+    }
+  });
+
+  window.addEventListener('resize', function () {
+    if (window.innerWidth >= 1024 && panel.classList.contains('is-open')) setMenu(false);
+  });
+})();
+</script>

@@ -1,0 +1,675 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#1e5138">
+
+  <!-- ================= SEO ================= -->
+  <title>{% block title %}{{ meta_title|default:"Spacesmith Real Estate | We Find Your Space" }}{% endblock %}</title>
+
+  <meta name="description" content="{% block meta_description %}{{ meta_description|default:'Spacesmith Real Estate is a Dubai-based consultancy for residential and commercial property sales, leasing, portfolio management and investment advisory across the UAE.' }}{% endblock %}">
+  <meta name="keywords" content="{{ meta_keywords|default:'Dubai real estate, off plan Dubai, properties for sale Dubai, real estate investment Dubai, Spacesmith Real Estate' }}">
+  <meta name="robots" content="{{ robots|default:'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1' }}">
+  <meta name="author" content="Spacesmith Real Estate LLC">
+  <meta name="publisher" content="Spacesmith Real Estate LLC">
+
+  <link rel="canonical" href="{% block canonical %}{{ canonical|default:'https://spacesmithrealestate.com/' }}{% endblock %}">
+  {% if rel_prev %}<link rel="prev" href="{{ rel_prev }}">{% endif %}
+  {% if rel_next %}<link rel="next" href="{{ rel_next }}">{% endif %}
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="{{ og_type|default:'website' }}">
+  <meta property="og:site_name" content="Spacesmith Real Estate">
+  <meta property="og:locale" content="en_AE">
+  <meta property="og:title" content="{{ meta_title|default:'Spacesmith Real Estate | We Find Your Space' }}">
+  <meta property="og:description" content="{{ meta_description|default:'Residential and commercial property sales, leasing and investment advisory across Dubai and the UAE.' }}">
+  <meta property="og:url" content="{{ canonical|default:'https://spacesmithrealestate.com/' }}">
+  <meta property="og:image" content="{% if og_image %}{{ og_image }}{% else %}{% static 'img/og-default.jpg' %}{% endif %}">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="{{ meta_title|default:'Spacesmith Real Estate | We Find Your Space' }}">
+  <meta name="twitter:description" content="{{ meta_description|default:'Residential and commercial property sales, leasing and investment advisory across Dubai and the UAE.' }}">
+  <meta name="twitter:image" content="{% if og_image %}{{ og_image }}{% else %}{% static 'img/og-default.jpg' %}{% endif %}">
+
+  <!-- Favicons -->
+  <link rel="icon" type="image/png" sizes="32x32" href="{% static 'img/favicon.png' %}">
+  <link rel="apple-touch-icon" href="{% static 'img/logo.png' %}">
+
+  <!-- Structured data -->
+  {% block schema %}
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "RealEstateAgent",
+    "@id": "https://spacesmithrealestate.com/#organization",
+    "name": "Spacesmith Real Estate LLC",
+    "alternateName": "Spacesmith",
+    "url": "https://spacesmithrealestate.com/",
+    "logo": "{% static 'img/logo.png' %}",
+    "image": "{% static 'img/logo.png' %}",
+    "slogan": "We Find Your Space",
+    "description": "Spacesmith Real Estate LLC is a Dubai-based real estate consultancy specializing in residential and commercial property sales, leasing, portfolio management and investment advisory across the UAE.",
+    "telephone": "+971556399212",
+    "email": "hello@spacesmithrealestate.com",
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "117, Royal Class Building, Dubai Investment Park First",
+      "addressLocality": "Dubai",
+      "addressCountry": "AE"
+    },
+    "areaServed": {
+      "@type": "Country",
+      "name": "United Arab Emirates"
+    },
+    "sameAs": [
+      "https://www.facebook.com/share/1NWKKRnPZX/",
+      "https://www.instagram.com/spacesmith_realestate",
+      "https://www.linkedin.com/company/spacesmith-real-estate/",
+      "https://youtube.com/@spacesmithrealestate",
+      "https://www.tiktok.com/@spacesmithrealestate"
+    ]
+  }
+  </script>
+  {% endblock %}
+
+  <!-- ================= GOOGLE TAG MANAGER ================= -->
+  <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+  new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+  j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+  'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+  })(window,document,'script','dataLayer','GTM-WWL9XFRT');</script>
+  <!-- End Google Tag Manager -->
+
+  <!-- ================= FONTS ================= -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    /* =====================================================================
+       1. DESIGN TOKENS
+       ===================================================================== */
+    :root {
+      /* brand */
+      --ink:                 #0b1512;
+      --ink-soft:            #14211d;
+      --primary:             #0a2a20;
+      --primary-dark:        #163d2a;
+      --primary-light:       #2a6b4b;
+      --primary-foreground:  #f6f2e9;
+
+      --gold:                #d4af37;
+      --gold-dark:           #b8952c;
+      --gold-light:          #e6c65c;
+
+      /* surfaces */
+      --cream:               #f6f2e9;
+      --secondary:           #f3f1ec;
+      --card:                #ffffff;
+      --background:          #ffffff;
+      --border:              #e5e2da;
+
+      /* text */
+      --foreground:          #0b1512;
+      --muted-foreground:    #1c2723;
+
+      /* shadows */
+      --shadow-card:         0 12px 32px rgba(11, 21, 18, .10);
+      --shadow-elegant:      0 24px 60px rgba(11, 21, 18, .18);
+
+      /* type */
+      --font-display: "Cormorant Garamond", Georgia, serif;
+      --font-body:    "Inter", system-ui, -apple-system, sans-serif;
+
+      /* layout */
+      --max-width:  1320px;
+      --nav-height: 5rem;
+      --radius:     .5rem;
+    }
+
+    /* =====================================================================
+       2. RESET
+       ===================================================================== */
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+    /* overflow-x:hidden forces overflow-y to compute as `auto`, which makes
+       html/body a scroll container and silently breaks position:sticky on
+       every descendant. `clip` prevents sideways scroll without that side
+       effect; `hidden` stays as the fallback for older Safari. */
+    html, body { max-width: 100%; overflow-x: hidden; }
+    @supports (overflow-x: clip) {
+      html, body { overflow-x: clip; }
+    }
+
+    body {
+      background: var(--background);
+      color: var(--foreground);
+      font-family: var(--font-body);
+      font-weight: 400;
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a   { color: inherit; text-decoration: none; }
+    img { max-width: 100%; display: block; }
+    h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 500; line-height: 1.15; }
+
+    ::selection { background: var(--primary); color: var(--cream); }
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: var(--secondary); }
+    ::-webkit-scrollbar-thumb { background: var(--gold); }
+
+    :focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+
+    .skip-link {
+      position: absolute; left: -999px; top: 0; z-index: 10000;
+      background: var(--primary); color: var(--cream);
+      padding: .75rem 1.25rem; border-radius: 0 0 .5rem 0;
+    }
+    .skip-link:focus { left: 0; }
+
+    /* =====================================================================
+       3. LAYOUT UTILITIES
+       ===================================================================== */
+    .container-page {
+      width: 100%;
+      max-width: var(--max-width);
+      margin-inline: auto;
+      padding-inline: 1.25rem;
+    }
+    @media (min-width: 768px)  { .container-page { padding-inline: 2rem; } }
+    @media (min-width: 1280px) { .container-page { padding-inline: 3rem; } }
+
+    .section       { padding-block: 6rem; }
+    .section-tight { padding-bottom: 6rem; }
+    .narrow        { max-width: 36rem; }
+
+    .grid-2, .grid-3, .grid-4 { display: grid; gap: 2rem; grid-template-columns: 1fr; }
+    @media (min-width: 768px) {
+      .grid-2 { grid-template-columns: repeat(2, 1fr); }
+      .grid-3 { grid-template-columns: repeat(2, 1fr); }
+      .grid-4 { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (min-width: 1024px) {
+      .grid-3 { grid-template-columns: repeat(3, 1fr); }
+      .grid-4 { grid-template-columns: repeat(4, 1fr); }
+    }
+
+    .center-row { margin-top: 2.5rem; display: flex; justify-content: center; }
+
+    /* =====================================================================
+       4. TYPOGRAPHY HELPERS
+       ===================================================================== */
+    .eyebrow {
+      margin: 0;
+      font-size: .75rem;
+      text-transform: uppercase;
+      letter-spacing: .18em;
+      color: var(--gold);
+    }
+
+    .section-head {
+      display: flex; flex-direction: column; gap: 1rem; margin-bottom: 3rem;
+    }
+    @media (min-width: 768px) {
+      .section-head { flex-direction: row; align-items: flex-end; justify-content: space-between; }
+    }
+
+    .section-title {
+      font-family: var(--font-display);
+      font-size: clamp(2.25rem, 4vw, 3rem);
+      line-height: 1.1;
+      margin: .5rem 0 0;
+      color: var(--foreground);
+    }
+
+    .lead  { margin: 0; max-width: 28rem; color: var(--muted-foreground); }
+    .prose { margin-top: 2rem; line-height: 1.7; color: var(--muted-foreground); }
+
+    .badge {
+      display: inline-flex; align-items: center; gap: .5rem;
+      border-radius: 9999px;
+      background: rgba(246,242,233,.10);
+      border: 1px solid rgba(246,242,233,.20);
+      backdrop-filter: blur(10px);
+      padding: .375rem 1rem;
+      font-size: .75rem; text-transform: uppercase; letter-spacing: .18em;
+      color: var(--cream);
+    }
+    .badge svg { width: .875rem; height: .875rem; color: var(--gold); }
+
+    /* =====================================================================
+       5. BUTTONS
+       ===================================================================== */
+    .btn-solid, .btn-ghost, .btn-gold, .btn-line {
+      display: inline-flex; align-items: center; justify-content: center; gap: .5rem;
+      border-radius: 9999px;
+      padding: .75rem 1.5rem;
+      font-family: inherit; font-size: .875rem; font-weight: 500; line-height: 1;
+      white-space: nowrap; cursor: pointer;
+      border: 1px solid transparent;
+      transition: background-color .2s ease, color .2s ease, filter .2s ease, transform .2s ease;
+    }
+    .btn-solid { background: var(--primary); color: var(--primary-foreground); }
+    .btn-solid:hover { background: var(--primary-dark); }
+
+    .btn-ghost { background: transparent; color: var(--primary); border-color: var(--primary); }
+    .btn-ghost:hover { background: var(--primary); color: var(--primary-foreground); }
+
+    .btn-gold { background: var(--gold); color: var(--ink); }
+    .btn-gold:hover { filter: brightness(.95); }
+
+    .btn-line { background: transparent; color: var(--cream); border-color: rgba(246,242,233,.4); }
+    .btn-line:hover { background: rgba(246,242,233,.10); }
+
+    .btn-solid svg, .btn-ghost svg, .btn-gold svg, .btn-line svg,
+    .link-inline svg { width: 1rem; height: 1rem; transition: transform .2s ease; }
+    .btn-solid:hover svg, .btn-ghost:hover svg, .btn-gold:hover svg,
+    .btn-line:hover svg, .link-inline:hover svg { transform: translateX(3px); }
+
+    .link-inline {
+      display: inline-flex; align-items: center; gap: .25rem;
+      font-size: .875rem; font-weight: 500; color: var(--primary);
+    }
+    .link-inline:hover { color: var(--primary-dark); }
+
+    /* =====================================================================
+       6. CARDS / EMPTY STATE
+       ===================================================================== */
+    .card {
+      display: flex; flex-direction: column; height: 100%;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      transition: box-shadow .3s ease, border-color .3s ease, transform .3s ease;
+    }
+    .card:hover {
+      border-color: color-mix(in srgb, var(--primary) 40%, transparent);
+      box-shadow: var(--shadow-card);
+      transform: translateY(-4px);
+    }
+    .card__media { position: relative; aspect-ratio: 4 / 3; overflow: hidden; background: var(--secondary); }
+    .card__media img { width: 100%; height: 100%; object-fit: cover; transition: transform .7s ease; }
+    .card:hover .card__media img { transform: scale(1.05); }
+    .card__tag {
+      position: absolute; top: .75rem; left: .75rem;
+      border-radius: 9999px;
+      background: rgba(11,21,18,.75); color: var(--cream);
+      padding: .25rem .75rem;
+      font-size: .6875rem; text-transform: uppercase; letter-spacing: .12em;
+      backdrop-filter: blur(6px);
+    }
+    .card__body  { flex: 1; display: flex; flex-direction: column; gap: .5rem; padding: 1.25rem 1.25rem 1.5rem; }
+    .card__title { margin: 0; font-family: var(--font-display); font-size: 1.375rem; }
+    .card__loc   { margin: 0; font-size: .875rem; color: var(--muted-foreground); }
+    .card__meta  { display: flex; gap: 1rem; margin: .25rem 0 0; font-size: .8125rem; color: var(--muted-foreground); }
+    .card__price {
+      margin: auto 0 0; padding-top: 1rem;
+      border-top: 1px solid var(--border);
+      font-family: var(--font-display); font-size: 1.375rem; color: var(--primary);
+    }
+
+    .empty {
+      text-align: center; padding-block: 5rem;
+      border: 1px dashed var(--border); border-radius: var(--radius);
+    }
+    .empty h3 { font-family: var(--font-display); font-size: 1.5rem; margin: 0; }
+    .empty p  { margin: .5rem 0 1.5rem; color: var(--muted-foreground); }
+
+    /* =====================================================================
+       7. FORM FIELDS (light + on-dark)
+       ===================================================================== */
+    .field { display: flex; flex-direction: column; gap: .375rem; min-width: 0; }
+    .field label {
+      font-size: .6875rem; text-transform: uppercase; letter-spacing: .16em;
+      color: var(--muted-foreground); white-space: nowrap;
+    }
+    .field input, .field select, .field textarea {
+      width: 100%; height: 2.75rem;
+      border-radius: .625rem;
+      border: 1px solid var(--border);
+      background: var(--card);
+      color: var(--foreground);
+      padding-inline: .875rem;
+      font-family: inherit; font-size: .875rem;
+    }
+    .field textarea { height: auto; min-height: 8rem; padding-block: .75rem; resize: vertical; }
+    .field input:focus, .field select:focus, .field textarea:focus { border-color: var(--primary); outline: none; }
+
+    /* on dark backgrounds */
+    .field--dark label { color: rgba(246,242,233,.7); }
+    .field--dark input, .field--dark select, .field--dark textarea {
+      background: rgba(11,21,18,.35);
+      border-color: rgba(246,242,233,.25);
+      color: var(--cream);
+    }
+    .field--dark select option { color: #111827; }
+    .field--dark input::placeholder { color: rgba(246,242,233,.45); }
+
+    /* =====================================================================
+       8. SHARED ANIMATIONS
+       ===================================================================== */
+    .reveal {
+      opacity: 0; transform: translateY(24px);
+      transition: opacity .7s ease, transform .7s ease;
+    }
+    .reveal.is-visible { opacity: 1; transform: none; }
+
+    .fade-up {
+      opacity: 0; transform: translateY(28px);
+      transition: opacity .8s ease, transform .8s ease;
+    }
+    .fade-up.visible { opacity: 1; transform: none; }
+
+    @keyframes riseIn  { from { opacity: 0; transform: translateY(28px); } to { opacity: 1; transform: none; } }
+    @keyframes floatY  { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+    @keyframes spin    { to { transform: rotate(360deg); } }
+    @keyframes pulseFade { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(.92); opacity: .75; } }
+    @keyframes marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+    .anim-float { animation: floatY 5s ease-in-out infinite; }
+    .anim-rise  { animation: riseIn .9s cubic-bezier(.2,.8,.2,1) both; }
+
+    /* =====================================================================
+       9. PAGE LOADER
+       ===================================================================== */
+    .page-loader {
+      position: fixed; inset: 0; z-index: 9999;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--cream);
+      transition: transform 1.1s cubic-bezier(.7,0,.3,1), opacity 1.1s ease;
+    }
+    .page-loader.is-hidden { transform: translateY(-100%); opacity: 0; }
+
+    .page-loader__inner {
+      position: relative;
+      display: flex; align-items: center; justify-content: center;
+      width: 200px; height: 200px;
+      animation: riseIn 1.2s cubic-bezier(.2,.8,.2,1) both;
+    }
+    .page-loader__logo {
+      width: 140px; height: auto; object-fit: contain;
+      animation: pulseFade 1.4s ease-in-out infinite;
+    }
+    .page-loader__ring {
+      position: absolute; inset: 0; border-radius: 50%;
+      border: 2px solid color-mix(in srgb, var(--primary) 15%, transparent);
+      border-top-color: var(--gold);
+      animation: spin .9s linear infinite;
+    }
+
+    /* =====================================================================
+       10. FLOATING ACTIONS (call + WhatsApp)
+       ===================================================================== */
+    .float-actions {
+      position: fixed; right: 1.5rem; bottom: 1.5rem; z-index: 999;
+      display: flex; flex-direction: column-reverse; gap: .75rem;
+    }
+    .float-btn {
+      position: relative;
+      width: 3.5rem; height: 3.5rem; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 8px 24px rgba(11,21,18,.25);
+      transition: transform .2s ease, box-shadow .2s ease;
+      animation: floatPop .5s cubic-bezier(.2,.8,.2,1) both;
+    }
+    .float-btn:hover { transform: scale(1.08); box-shadow: 0 12px 32px rgba(11,21,18,.32); }
+    .float-btn svg { width: 1.65rem; height: 1.65rem; fill: #fff; }
+
+    .float-btn--whatsapp { background: #25D366; animation-delay: .8s; }
+    .float-btn--call     { background: var(--primary); animation-delay: .95s; }
+    .float-btn--call svg { fill: var(--cream); }
+
+    /* pulse ring on WhatsApp only */
+    .float-btn--whatsapp::before {
+      content: ""; position: absolute; inset: 0; z-index: -1;
+      border-radius: 50%; background: #25D366; opacity: .55;
+      animation: floatPulse 2.4s ease-out infinite;
+    }
+    @keyframes floatPop   { from { transform: scale(0); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    @keyframes floatPulse { 0% { transform: scale(1); opacity: .45; } 100% { transform: scale(1.9); opacity: 0; } }
+
+    /* =====================================================================
+       11. SCROLL TO TOP
+       ===================================================================== */
+    #scrollTopBtn {
+      position: fixed; right: 1.75rem; bottom: 10.25rem; z-index: 998;
+      width: 3rem; height: 3rem; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      background: var(--ink); border: none; cursor: pointer;
+      box-shadow: 0 8px 24px rgba(11,21,18,.25);
+      opacity: 0; visibility: hidden;
+      transition: opacity .3s ease, visibility .3s ease, transform .2s ease, background-color .2s ease;
+    }
+    #scrollTopBtn.show { opacity: 1; visibility: visible; }
+    #scrollTopBtn:hover { background: var(--primary-dark); transform: translateY(-3px); }
+    #scrollTopBtn svg  { width: 1.25rem; height: 1.25rem; fill: var(--cream); }
+
+    @media (max-width: 480px) {
+      .float-actions { right: 1rem; bottom: 1rem; gap: .625rem; }
+      .float-btn { width: 3.125rem; height: 3.125rem; }
+      .float-btn svg { width: 1.5rem; height: 1.5rem; }
+      #scrollTopBtn { right: 1.25rem; bottom: 9rem; width: 2.75rem; height: 2.75rem; }
+    }
+
+    /* =====================================================================
+       12. FLASH MESSAGES
+       ===================================================================== */
+    .flash-stack {
+      position: fixed; top: calc(var(--nav-height) + .75rem); right: 1rem; left: 1rem;
+      z-index: 1100;
+      display: flex; flex-direction: column; gap: .5rem;
+      pointer-events: none;
+    }
+    @media (min-width: 640px) { .flash-stack { left: auto; max-width: 26rem; } }
+
+    .flash {
+      pointer-events: auto;
+      display: flex; align-items: flex-start; gap: .75rem;
+      padding: .875rem 1rem;
+      border-radius: .625rem;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--primary);
+      box-shadow: var(--shadow-card);
+      font-size: .875rem; line-height: 1.5;
+      animation: riseIn .35s cubic-bezier(.2,.8,.2,1) both;
+    }
+    .flash--success { border-left-color: var(--primary); }
+    .flash--error   { border-left-color: #b3261e; }
+    .flash--warning { border-left-color: var(--gold); }
+    .flash p { margin: 0; flex: 1; }
+    .flash button {
+      flex-shrink: 0; border: 0; background: none; cursor: pointer;
+      color: var(--muted-foreground); font-size: 1.125rem; line-height: 1; padding: 0;
+    }
+    .flash button:hover { color: var(--foreground); }
+
+    /* =====================================================================
+       13. REDUCED MOTION
+       ===================================================================== */
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      .reveal, .fade-up { opacity: 1; transform: none; transition: none; }
+      .page-loader__inner, .page-loader__logo, .page-loader__ring,
+      .float-btn, .anim-float, .anim-rise { animation: none; }
+      .float-btn--whatsapp::before { display: none; }
+      .page-loader { transition: opacity .3s ease; }
+    }
+  </style>
+
+  {% block extra_css %}{% endblock %}
+</head>
+
+<body class="{% block body_class %}{% endblock %}">
+  <!-- Google Tag Manager (noscript) -->
+  <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-WWL9XFRT"
+    height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+  <!-- End Google Tag Manager (noscript) -->
+
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <!-- PAGE LOADER -->
+  <div id="page-loader" class="page-loader">
+    <div class="page-loader__inner">
+      <img src="{% static 'img/logo.png' %}" alt="Spacesmith Real Estate" class="page-loader__logo">
+      <span class="page-loader__ring" aria-hidden="true"></span>
+    </div>
+  </div>
+
+  {% include 'components/header.html' %}
+
+  {% if messages %}
+  <div class="flash-stack" id="flashStack" role="status" aria-live="polite">
+    {% for message in messages %}
+      <div class="flash flash--{{ message.tags|default:'info' }}">
+        <p>{{ message }}</p>
+        <button type="button" aria-label="Dismiss">&times;</button>
+      </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <main id="main">
+    {% block content %}{% endblock %}
+  </main>
+
+  {% include 'components/footer.html' %}
+
+  <!-- FLOATING ACTIONS — numbers come from context, defaults are the live ones -->
+  <div class="float-actions">
+    <a class="float-btn float-btn--whatsapp"
+       href="https://wa.me/{{ whatsapp_number|default:'971556399212' }}?text=Hi%2C%20I%27m%20interested%20in%20a%20property%20with%20Spacesmith"
+       target="_blank" rel="noopener noreferrer"
+       aria-label="Chat with Spacesmith on WhatsApp">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+        <path d="M12.004 2c-5.514 0-9.997 4.483-9.997 9.997 0 1.762.463 3.484 1.343 5.003L2 22l5.117-1.341a9.96 9.96 0 0 0 4.887 1.246h.004c5.514 0 9.996-4.483 9.996-9.997C21.996 6.483 17.518 2 12.004 2zm0 18.183h-.003a8.16 8.16 0 0 1-4.156-1.14l-.298-.177-3.037.796.811-2.962-.194-.304a8.152 8.152 0 0 1-1.25-4.4c0-4.508 3.668-8.176 8.181-8.176 2.186 0 4.24.851 5.786 2.397a8.13 8.13 0 0 1 2.393 5.785c0 4.508-3.668 8.181-8.233 8.181z"/>
+      </svg>
+    </a>
+
+    <a class="float-btn float-btn--call"
+       href="tel:+{{ phone_number|default:'971556399212' }}"
+       aria-label="Call Spacesmith">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M6.62 10.79a15.05 15.05 0 0 0 6.59 6.59l2.2-2.2a1 1 0 0 1 1.02-.24c1.12.37 2.33.57 3.57.57a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.24.2 2.45.57 3.57a1 1 0 0 1-.25 1.02l-2.2 2.2z"/>
+      </svg>
+    </a>
+  </div>
+
+  <!-- SCROLL TO TOP -->
+  <button id="scrollTopBtn" type="button" title="Back to top" aria-label="Back to top">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4l-8 8h16z"/></svg>
+  </button>
+
+  <!-- ================= SHARED JS ================= -->
+  <script>
+    (function () {
+      var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+      /* ---- Loader ---- */
+      window.addEventListener('load', function () {
+        var loader = document.getElementById('page-loader');
+        if (!loader) return;
+        loader.classList.add('is-hidden');
+        setTimeout(function () { loader.remove(); }, 1100);
+      });
+
+      /* ---- Reveal on scroll (.reveal + optional data-delay) ---- */
+      var reveals = document.querySelectorAll('.reveal, .fade-up');
+      if ('IntersectionObserver' in window) {
+        var io = new IntersectionObserver(function (entries) {
+          entries.forEach(function (entry) {
+            if (!entry.isIntersecting) return;
+            var el = entry.target;
+            var delay = Number(el.dataset.delay || 0);
+            setTimeout(function () {
+              el.classList.add(el.classList.contains('fade-up') ? 'visible' : 'is-visible');
+            }, delay);
+            io.unobserve(el);
+          });
+        }, { threshold: 0.12, rootMargin: '0px 0px -60px 0px' });
+        reveals.forEach(function (el) { io.observe(el); });
+      } else {
+        reveals.forEach(function (el) { el.classList.add('is-visible', 'visible'); });
+      }
+
+      /* ---- Scroll to top ---- */
+      var scrollBtn = document.getElementById('scrollTopBtn');
+      if (scrollBtn) {
+        window.addEventListener('scroll', function () {
+          scrollBtn.classList.toggle('show', window.scrollY > 300);
+        }, { passive: true });
+        scrollBtn.addEventListener('click', function () {
+          window.scrollTo({ top: 0, behavior: reduced ? 'auto' : 'smooth' });
+        });
+      }
+
+      /* ---- Count-up for any element with .count-up ---- */
+      function animateCount(el) {
+        var raw = el.textContent.trim();
+        var m = raw.match(/([\d.,]+)/);
+        if (!m) return;
+        var numStr   = m[1];
+        var hasComma = numStr.indexOf(',') !== -1;
+        var decimals = (numStr.split('.')[1] || '').length;
+        var target   = parseFloat(numStr.replace(/,/g, ''));
+        if (isNaN(target)) return;
+
+        var prefix = raw.slice(0, m.index);
+        var suffix = raw.slice(m.index + numStr.length);
+        var dur = 1400, start = performance.now();
+
+        function fmt(n) {
+          var s = decimals ? n.toFixed(decimals) : Math.round(n).toString();
+          if (hasComma) {
+            s = Number(s).toLocaleString('en-US', {
+              minimumFractionDigits: decimals, maximumFractionDigits: decimals
+            });
+          }
+          return s;
+        }
+        function tick(now) {
+          var p = Math.min((now - start) / dur, 1);
+          var eased = 1 - Math.pow(1 - p, 3);
+          el.textContent = prefix + fmt(target * eased) + suffix;
+          if (p < 1) requestAnimationFrame(tick); else el.textContent = raw;
+        }
+        requestAnimationFrame(tick);
+      }
+
+      /* ---- Flash messages: dismiss on click, auto-hide after 6s ---- */
+      var stack = document.getElementById('flashStack');
+      if (stack) {
+        stack.addEventListener('click', function (e) {
+          if (e.target.tagName === 'BUTTON') e.target.closest('.flash').remove();
+        });
+        setTimeout(function () {
+          stack.querySelectorAll('.flash').forEach(function (el) { el.remove(); });
+        }, 6000);
+      }
+
+      var counters = document.querySelectorAll('.count-up');
+      if (counters.length && 'IntersectionObserver' in window && !reduced) {
+        var co = new IntersectionObserver(function (entries) {
+          entries.forEach(function (e) {
+            if (!e.isIntersecting) return;
+            animateCount(e.target);
+            co.unobserve(e.target);
+          });
+        }, { threshold: 0.5 });
+        counters.forEach(function (el) { co.observe(el); });
+      }
+    })();
+  </script>
+
+  {% block extra_js %}{% endblock %}
+</body>
+</html>
