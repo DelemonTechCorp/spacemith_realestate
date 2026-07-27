@@ -1,0 +1,570 @@
+{% extends 'base.html' %}
+{% load static humanize %}
+
+{# meta_title / meta_description / canonical / robots / rel_prev / rel_next
+   all come from the view and are rendered by base.html — don't repeat them. #}
+
+{% block body_class %}has-hero{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* ============================================================
+     DEVELOPER DETAIL — Spacesmith Real Estate
+     Same ink/gold blueprint hero as the directory. Property cards
+     are the shared .pcard used on the listing and area pages, so a
+     visitor moving between them sees one card, not three.
+     Radius is a flat .5rem throughout.
+  ============================================================ */
+
+  .dd-hero {
+    position: relative; overflow: hidden;
+    background: linear-gradient(180deg, var(--ink), #0f231c);
+    color: var(--cream);
+    padding-block: calc(var(--nav-height) + 2.5rem) 3.5rem;
+  }
+  .dd-hero::before {
+    content: ''; position: absolute; inset: 0; pointer-events: none;
+    background-image:
+      linear-gradient(color-mix(in srgb, var(--gold) 10%, transparent) 1px, transparent 1px),
+      linear-gradient(90deg, color-mix(in srgb, var(--gold) 10%, transparent) 1px, transparent 1px);
+    background-size: 48px 48px;
+    mask-image: radial-gradient(120% 100% at 78% 0%, #000 0%, transparent 62%);
+    -webkit-mask-image: radial-gradient(120% 100% at 78% 0%, #000 0%, transparent 62%);
+  }
+  .dd-hero__inner { position: relative; z-index: 1; }
+
+  .dd-crumb {
+    display: flex; align-items: center; gap: .375rem; flex-wrap: wrap;
+    font-size: .6875rem; text-transform: uppercase; letter-spacing: .16em;
+    color: rgba(246,242,233,.55);
+  }
+  .dd-crumb a { color: rgba(246,242,233,.85); }
+  .dd-crumb a:hover { color: var(--gold); }
+  .dd-crumb span[aria-current] { color: var(--cream); }
+
+  .dd-profile {
+    display: flex; align-items: center; gap: 1.25rem;
+    flex-wrap: wrap; margin-top: 1.5rem;
+  }
+  .dd-logo, .dd-logo-initial {
+    width: 6rem; height: 4.25rem; flex-shrink: 0; border-radius: .5rem;
+    display: flex; align-items: center; justify-content: center;
+  }
+  @media (min-width: 640px) { .dd-logo, .dd-logo-initial { width: 8rem; height: 5.25rem; } }
+  .dd-logo {
+    background: var(--cream); padding: .625rem;
+    border: 1px solid rgba(246,242,233,.15);
+    box-shadow: inset 0 0 0 3px var(--cream),
+                inset 0 0 0 4px color-mix(in srgb, var(--gold) 45%, transparent);
+  }
+  .dd-logo img { max-width: 100%; max-height: 100%; object-fit: contain; }
+  .dd-logo-initial {
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    font-family: var(--font-display); font-size: 2rem; font-weight: 600; color: var(--gold);
+  }
+
+  .dd-profile__text { min-width: 0; }
+  .dd-name {
+    margin: .5rem 0 0; font-size: clamp(1.625rem, 4.5vw, 2.75rem);
+    line-height: 1.12; color: var(--cream); overflow-wrap: anywhere;
+  }
+  .dd-links { display: flex; align-items: center; gap: 1.25rem; flex-wrap: wrap; margin-top: .75rem; }
+  .dd-links a, .dd-links span {
+    display: inline-flex; align-items: center; gap: .375rem;
+    font-size: .8125rem; color: rgba(246,242,233,.7);
+  }
+  .dd-links a:hover { color: var(--gold); }
+  .dd-links svg { width: .9375rem; height: .9375rem; color: var(--gold); flex-shrink: 0; }
+
+  .dd-facts {
+    display: flex; flex-wrap: wrap; gap: 1.25rem 2.25rem;
+    margin-top: 2rem; padding-top: 1.75rem;
+    border-top: 1px solid rgba(246,242,233,.15);
+  }
+  .dd-fact { min-width: 0; }
+  .dd-fact strong {
+    display: block; font-family: var(--font-display);
+    font-size: clamp(1.5rem, 4.5vw, 2.125rem); line-height: 1; color: var(--gold);
+    overflow-wrap: anywhere;
+  }
+  .dd-fact span {
+    font-size: .625rem; text-transform: uppercase; letter-spacing: .16em;
+    color: rgba(246,242,233,.6);
+  }
+
+  /* ── ABOUT + CONTACT ── */
+  .dd-about { padding-block: 3rem 1rem; }
+  .dd-about h2 {
+    margin: 0 0 1rem; font-family: var(--font-display);
+    font-size: clamp(1.5rem, 4vw, 2.125rem); color: var(--foreground);
+  }
+  .dd-about__inner { display: grid; gap: 2rem; grid-template-columns: minmax(0, 1fr); }
+  @media (min-width: 900px) { .dd-about__inner { grid-template-columns: minmax(0, 1fr) 19rem; align-items: start; } }
+  .dd-desc p {
+    margin: 0 0 1rem; max-width: 55rem;
+    font-size: .9375rem; line-height: 1.8; color: var(--muted-foreground);
+  }
+  .dd-desc p:last-child { margin-bottom: 0; }
+
+  .dd-contact {
+    background: var(--secondary); border: 1px solid var(--border); border-radius: .5rem;
+    padding: 1.25rem; display: flex; flex-direction: column; gap: .875rem; min-width: 0;
+  }
+  .dd-contact__title {
+    font-size: .625rem; font-weight: 600; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--muted-foreground);
+  }
+  .dd-contact a {
+    display: flex; align-items: flex-start; gap: .625rem; min-width: 0;
+    font-size: .875rem; color: var(--foreground); overflow-wrap: anywhere;
+  }
+  .dd-contact a:hover { color: var(--primary); }
+  .dd-contact svg { width: .9375rem; height: .9375rem; color: var(--primary); flex-shrink: 0; margin-top: .1875rem; }
+  .dd-contact .btn-solid { width: 100%; border-radius: .5rem; }
+
+  /* ── PROPERTIES ── */
+  .dd-properties { padding-block: 2.5rem 4rem; }
+  .dd-props-head {
+    display: flex; flex-wrap: wrap; align-items: baseline;
+    justify-content: space-between; gap: .75rem; margin-bottom: 1.5rem;
+  }
+  .dd-props-head h2 {
+    margin: 0; font-family: var(--font-display);
+    font-size: clamp(1.375rem, 3.5vw, 1.875rem); color: var(--foreground);
+  }
+  .dd-props-head p { margin: 0; font-size: .8125rem; color: var(--muted-foreground); }
+
+  .dd-cards { display: grid; gap: 1rem; grid-template-columns: minmax(0, 1fr); }
+  @media (min-width: 560px)  { .dd-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.25rem; } }
+  @media (min-width: 1000px) { .dd-cards { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  @media (min-width: 1400px) { .dd-cards { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+
+  /* ---- Shared property card ---- */
+  .pcard {
+    display: flex; flex-direction: column; height: 100%; min-width: 0;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: .5rem; overflow: hidden;
+    transition: transform .3s ease, box-shadow .3s ease, border-color .3s ease;
+  }
+  .pcard:hover {
+    transform: translateY(-4px);
+    border-color: color-mix(in srgb, var(--primary) 35%, transparent);
+    box-shadow: var(--shadow-card);
+  }
+  .pcard__media { position: relative; aspect-ratio: 16 / 10; overflow: hidden; background: var(--secondary); }
+  .pcard__media img { width: 100%; height: 100%; object-fit: cover; transition: transform .7s ease; }
+  .pcard:hover .pcard__media img { transform: scale(1.05); }
+  .pcard__badge {
+    position: absolute; top: .625rem; left: .625rem;
+    padding: .25rem .5rem; border-radius: .5rem;
+    background: var(--primary); color: var(--primary-foreground);
+    font-size: .625rem; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .1em;
+  }
+  .pcard__badge--offplan { background: var(--gold); color: var(--ink); }
+
+  .pcard__body { flex: 1; display: flex; flex-direction: column; padding: .9375rem .9375rem 0; min-width: 0; }
+  .pcard__dev {
+    display: flex; align-items: center; gap: .5rem; margin: 0 0 .5rem; min-width: 0;
+    font-size: .625rem; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .14em; color: var(--gold);
+  }
+  .pcard__dev img {
+    width: 1.75rem; height: 1.75rem; object-fit: contain; flex-shrink: 0;
+    border-radius: .5rem; background: var(--secondary); padding: .125rem;
+  }
+  .pcard__dev span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+  .pcard__title {
+    margin: 0; font-family: var(--font-display);
+    font-size: 1.0625rem; line-height: 1.3; color: var(--foreground);
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .pcard__loc {
+    display: flex; align-items: center; gap: .375rem; min-width: 0;
+    margin: .5rem 0 0; font-size: .78125rem; color: var(--muted-foreground);
+  }
+  .pcard__loc svg { width: .875rem; height: .875rem; flex-shrink: 0; color: var(--primary); }
+  .pcard__loc span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pcard__meta { display: flex; flex-wrap: wrap; gap: .3125rem; margin: .75rem 0 .9375rem; }
+  .pcard__meta span {
+    padding: .1875rem .5rem; border-radius: .5rem;
+    background: var(--secondary); font-size: .6875rem; color: var(--muted-foreground);
+  }
+  .pcard__foot {
+    margin-top: auto; display: flex; align-items: center;
+    justify-content: space-between; gap: .75rem;
+    padding: .75rem .9375rem; border-top: 1px solid var(--border);
+    background: color-mix(in srgb, var(--secondary) 45%, transparent);
+  }
+  .pcard__price { font-size: .875rem; font-weight: 600; color: var(--primary); min-width: 0; }
+  .pcard__price small {
+    display: block; margin-top: .125rem; font-size: .625rem; font-weight: 400;
+    text-transform: uppercase; letter-spacing: .1em; color: var(--muted-foreground);
+  }
+  .pcard__arrow {
+    display: grid; place-items: center; flex-shrink: 0;
+    width: 2rem; height: 2rem; border-radius: .5rem;
+    border: 1px solid var(--border); color: var(--primary);
+    transition: background-color .25s ease, color .25s ease, border-color .25s ease;
+  }
+  .pcard__arrow svg { width: .875rem; height: .875rem; }
+  .pcard:hover .pcard__arrow { background: var(--primary); border-color: var(--primary); color: var(--primary-foreground); }
+
+  .dd-empty {
+    grid-column: 1 / -1; text-align: center; padding: 4rem 1.5rem;
+    border: 1px dashed var(--border); border-radius: .5rem;
+  }
+  .dd-empty h2 { margin: 0; font-family: var(--font-display); font-size: 1.375rem; }
+  .dd-empty p { margin: .5rem 0 1.5rem; color: var(--muted-foreground); }
+
+  .dd-pager {
+    margin-top: 2.5rem; display: flex; flex-wrap: wrap;
+    align-items: center; justify-content: center; gap: .375rem;
+  }
+  .dd-pager a, .dd-pager span {
+    min-width: 2.5rem; height: 2.5rem; padding-inline: .5rem;
+    display: grid; place-items: center;
+    border: 1px solid var(--border); border-radius: .5rem;
+    font-size: .875rem; color: var(--foreground);
+    transition: border-color .2s ease, color .2s ease, background-color .2s ease;
+  }
+  .dd-pager a:hover { border-color: var(--primary); color: var(--primary); }
+  .dd-pager .is-current { background: var(--primary); border-color: var(--primary); color: var(--primary-foreground); font-weight: 600; }
+  .dd-pager .is-gap { border: 0; min-width: 1.5rem; color: var(--muted-foreground); }
+  .dd-pager svg { width: 1rem; height: 1rem; }
+
+  /* ── FAQ ── */
+  .dd-faq { padding-block: 3rem; background: var(--secondary); }
+  .dd-faq h2 {
+    margin: 0 0 1.5rem; font-family: var(--font-display);
+    font-size: clamp(1.375rem, 3.5vw, 1.875rem); color: var(--foreground);
+  }
+  .dd-faq details {
+    border: 1px solid var(--border); border-radius: .5rem;
+    background: var(--card); margin-bottom: .625rem; overflow: hidden;
+  }
+  .dd-faq summary {
+    display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+    padding: .9375rem 1.125rem; cursor: pointer; list-style: none;
+    font-weight: 600; font-size: .9375rem; color: var(--foreground);
+  }
+  .dd-faq summary::-webkit-details-marker { display: none; }
+  .dd-faq summary::after {
+    content: "+"; flex-shrink: 0;
+    font-family: var(--font-display); font-size: 1.375rem; line-height: 1; color: var(--gold);
+  }
+  .dd-faq details[open] summary::after { content: "\2212"; }
+  .dd-faq p {
+    margin: 0; padding: 0 1.125rem 1.125rem;
+    font-size: .9375rem; line-height: 1.75; color: var(--muted-foreground);
+  }
+
+  /* ── LINK BLOCKS ── */
+  .dd-related { padding-block: 3rem 4rem; }
+  .dd-related h2 {
+    margin: 0 0 1rem; font-family: var(--font-display);
+    font-size: clamp(1.375rem, 3.5vw, 1.875rem); color: var(--foreground);
+  }
+  .dd-related p { margin: 0 0 1.25rem; max-width: 48rem; font-size: .9375rem; line-height: 1.8; color: var(--muted-foreground); }
+  .dd-related + .dd-related { padding-top: 0; }
+  .dd-chiprow { display: flex; flex-wrap: wrap; gap: .5rem; }
+  .dd-chiprow a {
+    display: inline-flex; align-items: center; gap: .5rem;
+    padding: .4375rem .875rem; border-radius: .5rem;
+    border: 1px solid var(--border); background: var(--card);
+    font-size: .8125rem; color: var(--foreground);
+    transition: border-color .2s ease, color .2s ease;
+  }
+  .dd-chiprow a:hover { border-color: var(--primary); color: var(--primary); }
+  .dd-chiprow b { color: var(--gold); font-weight: 600; }
+</style>
+{% endblock %}
+
+
+{% block content %}
+
+<script type="application/ld+json">{{ schema_json|safe }}</script>
+
+<!-- ── HERO ── -->
+<section class="dd-hero">
+  <div class="container-page dd-hero__inner">
+
+    <nav class="dd-crumb" aria-label="Breadcrumb">
+      <a href="{% url 'home' %}">Home</a> <span>/</span>
+      <a href="{% url 'properties:property_list' %}">Properties</a> <span>/</span>
+      <a href="{% url 'properties:developer_list' %}">Developers</a> <span>/</span>
+      <span aria-current="page">{{ developer.name }}</span>
+    </nav>
+
+    <div class="dd-profile">
+      {% if logo_url %}
+        <div class="dd-logo"><img src="{{ logo_url }}" alt="{{ developer.name }} logo" width="128" height="84"></div>
+      {% else %}
+        <div class="dd-logo-initial">{{ developer.name|slice:":1" }}</div>
+      {% endif %}
+
+      <div class="dd-profile__text">
+        <p class="eyebrow">Verified developer</p>
+        <h1 class="dd-name">
+          {{ developer.name }}{% if page_obj.number > 1 %}
+            <span style="font-size:.4em;letter-spacing:.1em;opacity:.55;">Page {{ page_obj.number }}</span>
+          {% endif %}
+        </h1>
+
+        <div class="dd-links">
+          {% if developer.address %}
+          <span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+            {{ developer.address }}
+          </span>
+          {% endif %}
+          {% if developer.website %}
+          <a href="{{ developer.website }}" target="_blank" rel="noopener nofollow">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20M12 2a15 15 0 0 0 0 20"/></svg>
+            Official website
+          </a>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <div class="dd-facts">
+      <div class="dd-fact">
+        <strong>{{ total_count|intcomma }}</strong>
+        <span>{{ total_count|pluralize:"Project,Projects" }}</span>
+      </div>
+      {% if offplan_count %}
+      <div class="dd-fact"><strong>{{ offplan_count|intcomma }}</strong><span>Off-plan</span></div>
+      {% endif %}
+      {% if ready_count %}
+      <div class="dd-fact"><strong>{{ ready_count|intcomma }}</strong><span>Ready</span></div>
+      {% endif %}
+      {% if low_price %}
+      <div class="dd-fact">
+        <strong>AED {{ low_price|floatformat:0|intcomma }}</strong>
+        <span>From</span>
+      </div>
+      {% endif %}
+      {% if area_count %}
+      <div class="dd-fact">
+        <strong>{{ area_count }}</strong>
+        <span>{{ area_count|pluralize:"Community,Communities" }}</span>
+      </div>
+      {% endif %}
+    </div>
+
+  </div>
+</section>
+
+
+<!-- ── ABOUT + CONTACT ── -->
+<section class="container-page dd-about">
+  <h2>About {{ developer.name }}</h2>
+  <div class="dd-about__inner">
+    <div class="dd-desc">
+      {% for para in dev_paragraphs %}
+        <p>{{ para }}</p>
+      {% endfor %}
+    </div>
+
+    <div class="dd-contact">
+      <p class="dd-contact__title">Talk to us about {{ developer.name }}</p>
+      {% if developer.phone %}
+      <a href="tel:{{ developer.phone }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92Z"/></svg>
+        {{ developer.phone }}
+      </a>
+      {% endif %}
+      {% if developer.email %}
+      <a href="mailto:{{ developer.email }}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+        {{ developer.email }}
+      </a>
+      {% endif %}
+      <a class="btn-solid" href="https://wa.me/{{ whatsapp_number|default:'971556399212' }}?text={{ developer.name|urlencode }}%20%E2%80%94%20I%27d%20like%20the%20price%20list"
+         target="_blank" rel="noopener noreferrer">Request the price list</a>
+    </div>
+  </div>
+</section>
+
+
+<!-- ── PROPERTIES ── -->
+<section class="dd-properties">
+  <div class="container-page">
+
+    <div class="dd-props-head">
+      <h2>{{ developer.name }} properties</h2>
+      <p>
+        {{ total_count|intcomma }} propert{{ total_count|pluralize:"y,ies" }}
+        {% if page_obj.paginator.num_pages > 1 %}
+          &middot; page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+        {% endif %}
+      </p>
+    </div>
+
+    <div class="dd-cards">
+      {% for property in properties %}
+        <a class="pcard" href="{% url 'properties:property_detail' property.slug %}?return={{ request.get_full_path|urlencode }}">
+          <div class="pcard__media">
+            <img src="{{ property.cover_image }}" alt="{{ property.title }}"
+                 loading="lazy" width="600" height="375">
+            {% if property.property_status %}
+              <span class="pcard__badge {% if property.property_status.slug == 'off-plan' %}pcard__badge--offplan{% endif %}">
+                {{ property.property_status.name }}
+              </span>
+            {% endif %}
+          </div>
+
+          <div class="pcard__body">
+            {# On a developer's own page the developer name on every card is #}
+            {# noise, so the eyebrow carries the property type instead.      #}
+            {% if property.property_type %}
+              <p class="pcard__dev"><span>{{ property.property_type.name }}</span></p>
+            {% elif property.sales_status %}
+              <p class="pcard__dev"><span>{{ property.sales_status.name }}</span></p>
+            {% endif %}
+
+            <h3 class="pcard__title">{{ property.title }}</h3>
+
+            <p class="pcard__loc">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>
+              </svg>
+              <span>{% if property.district %}{{ property.district.name }}, {% endif %}{{ property.city.name }}</span>
+            </p>
+
+            <div class="pcard__meta">
+              {% if property.compare_bedroom_options %}
+                <span>{{ property.compare_bedroom_options|truncatechars:22 }}</span>
+              {% endif %}
+              {% if property.compare_unit_size_range %}
+                <span>{{ property.compare_unit_size_range }}</span>
+              {% endif %}
+              {% if property.delivery_date %}
+                <span>Handover {{ property.delivery_date|date:"M Y" }}</span>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="pcard__foot">
+            <div class="pcard__price">
+              {% firstof property.price property.compare_starting_price as from_price %}
+              {% if from_price %}
+                AED {{ from_price|floatformat:0|intcomma }}
+                <small>Starting from</small>
+              {% else %}
+                Price on request
+                <small>Enquire for details</small>
+              {% endif %}
+            </div>
+            <span class="pcard__arrow" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </span>
+          </div>
+        </a>
+
+      {% empty %}
+        <div class="dd-empty">
+          <h2>Nothing listed from {{ developer.name }} right now</h2>
+          <p>New releases are added as they launch. In the meantime, browse the rest of the market.</p>
+          <a href="{% url 'properties:property_list' %}" class="btn-solid">Browse all properties</a>
+        </div>
+      {% endfor %}
+    </div>
+
+    {% if page_obj.paginator.num_pages > 1 %}
+    <nav class="dd-pager" aria-label="Pagination">
+      {% if page_obj.has_previous %}
+        <a href="{% if page_obj.previous_page_number == 1 %}{% url 'properties:developer_detail' developer.slug %}{% else %}?page={{ page_obj.previous_page_number }}{% endif %}"
+           rel="prev" aria-label="Previous page">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+        </a>
+      {% endif %}
+
+      {% for num in page_range %}
+        {% if num == page_obj.paginator.ELLIPSIS %}
+          <span class="is-gap">{{ num }}</span>
+        {% elif num == page_obj.number %}
+          <span class="is-current" aria-current="page">{{ num }}</span>
+        {% elif num == 1 %}
+          <a href="{% url 'properties:developer_detail' developer.slug %}">1</a>
+        {% else %}
+          <a href="?page={{ num }}">{{ num }}</a>
+        {% endif %}
+      {% endfor %}
+
+      {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}" rel="next" aria-label="Next page">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+        </a>
+      {% endif %}
+    </nav>
+    {% endif %}
+  </div>
+</section>
+
+
+<!-- ── FAQ ── -->
+{% if faqs %}
+<section class="dd-faq">
+  <div class="container-page">
+    <h2>{{ developer.name }} questions, answered</h2>
+    {% for item in faqs %}
+      <details {% if forloop.first %}open{% endif %}>
+        <summary>{{ item.q }}</summary>
+        <p>{{ item.a }}</p>
+      </details>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+
+<!-- ── WHERE THEY BUILD ── -->
+{% if areas %}
+<section class="dd-related">
+  <div class="container-page">
+    <h2>Where {{ developer.name }} is building</h2>
+    <p>
+      The community sets the price band, the service charge and the rental
+      profile, so it is worth comparing the same developer across areas before
+      settling on a unit.
+    </p>
+    <div class="dd-chiprow">
+      {% for area in areas %}
+        <a href="{% url 'properties:district_detail' area.slug %}">
+          {{ area.name }} <b>{{ area.prop_count }}</b>
+        </a>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+
+<!-- ── OTHER DEVELOPERS ── -->
+{% if siblings %}
+<section class="dd-related">
+  <div class="container-page">
+    <h2>Compare other developers</h2>
+    <div class="dd-chiprow">
+      {% for dev in siblings %}
+        <a href="{% url 'properties:developer_detail' dev.slug %}">
+          {{ dev.name }} <b>{{ dev.prop_count }}</b>
+        </a>
+      {% endfor %}
+      <a href="{% url 'properties:developer_list' %}">All developers</a>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+{% endblock %}

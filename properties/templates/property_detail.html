@@ -12,14 +12,20 @@
 <style>
   /* =====================================================================
      PROPERTY DETAIL — scoped under .pd*. Tokens come from base.html.
+     Radius is fixed at .5rem across the page for a flatter, uniform look.
      ===================================================================== */
 
   .pd-top { padding-top: 1.25rem; }
+
+  /* Nothing inside a grid cell may set its own intrinsic width, or the
+     whole row blows past the viewport on small screens. */
+  .pd-layout > *, .pd-aside > * { min-width: 0; }
 
   .pd-crumb {
     display: flex; flex-wrap: wrap; align-items: center; gap: .375rem;
     font-size: .6875rem; text-transform: uppercase; letter-spacing: .14em;
     color: var(--muted-foreground);
+    overflow-wrap: anywhere;
   }
   .pd-crumb a { color: var(--primary); }
   .pd-crumb a:hover { color: var(--gold); }
@@ -38,19 +44,19 @@
   .pd-stage {
     position: relative;
     aspect-ratio: 4 / 3;
-    max-height: 17rem;
-    border-radius: var(--radius);
+    max-height: 15rem;
+    border-radius: .5rem;
     overflow: hidden;
     background: var(--secondary);
     cursor: zoom-in;
   }
   @media (min-width: 768px)  { .pd-stage { aspect-ratio: 16 / 9; max-height: 24rem; } }
   @media (min-width: 1280px) { .pd-stage { max-height: 27rem; } }
-  .pd-stage img { width: 100%; height: 100%; object-fit: cover; }
+  .pd-stage img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
   .pd-stage__nav {
     position: absolute; top: 50%; translate: 0 -50%;
-    width: 2.5rem; height: 2.5rem; border: 0; border-radius: 9999px;
+    width: 2.25rem; height: 2.25rem; border: 0; border-radius: .5rem;
     display: grid; place-items: center; cursor: pointer;
     background: rgba(246,242,233,.9); color: var(--ink);
     box-shadow: 0 4px 16px rgba(11,21,18,.2);
@@ -58,20 +64,21 @@
   }
   .pd-stage__nav:hover { background: var(--cream); }
   .pd-stage__nav svg { width: 1.125rem; height: 1.125rem; }
-  .pd-stage__nav--prev { left: .75rem; }
-  .pd-stage__nav--next { right: .75rem; }
+  .pd-stage__nav--prev { left: .625rem; }
+  .pd-stage__nav--next { right: .625rem; }
+  @media (min-width: 768px) { .pd-stage__nav { width: 2.5rem; height: 2.5rem; } }
 
   .pd-stage__count {
-    position: absolute; right: .75rem; bottom: .75rem;
-    padding: .25rem .625rem; border-radius: 9999px;
+    position: absolute; right: .625rem; bottom: .625rem;
+    padding: .25rem .5rem; border-radius: .5rem;
     background: rgba(11,21,18,.7); color: var(--cream);
-    font-size: .75rem; font-variant-numeric: tabular-nums;
+    font-size: .6875rem; font-variant-numeric: tabular-nums;
   }
   .pd-stage__badge {
-    position: absolute; left: .75rem; top: .75rem;
-    padding: .3125rem .75rem; border-radius: 9999px;
+    position: absolute; left: .625rem; top: .625rem;
+    padding: .3125rem .625rem; border-radius: 9999px;
     background: var(--primary); color: var(--primary-foreground);
-    font-size: .6875rem; font-weight: 600;
+    font-size: .625rem; font-weight: 600;
     text-transform: uppercase; letter-spacing: .1em;
   }
   .pd-stage__badge--offplan { background: var(--gold); color: var(--ink); }
@@ -79,6 +86,7 @@
   .pd-thumbs {
     display: flex; gap: .5rem; margin-top: .5rem;
     overflow-x: auto; scrollbar-width: none; scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
   }
   .pd-thumbs::-webkit-scrollbar { display: none; }
   .pd-thumb {
@@ -95,8 +103,8 @@
 
   /* ---- Layout ---- */
   .pd-layout {
-    display: grid; gap: 2.5rem;
-    grid-template-columns: 1fr;
+    display: grid; gap: 2rem;
+    grid-template-columns: minmax(0, 1fr);
     padding-block: 1.5rem 4rem;
   }
   @media (min-width: 1024px) {
@@ -107,79 +115,116 @@
   .pd-title {
     margin: 0;
     font-family: var(--font-display);
-    font-size: clamp(1.75rem, 4.5vw, 2.75rem);
-    line-height: 1.1;
+    font-size: clamp(1.5rem, 6vw, 2.75rem);
+    line-height: 1.15;
     color: var(--foreground);
+    overflow-wrap: anywhere;
   }
   .pd-loc {
-    display: flex; align-items: center; gap: .375rem;
-    margin: .625rem 0 0; font-size: .9375rem; color: var(--muted-foreground);
+    display: flex; align-items: flex-start; gap: .375rem;
+    margin: .625rem 0 0; font-size: .875rem; color: var(--muted-foreground);
   }
-  .pd-loc svg { width: 1rem; height: 1rem; color: var(--primary); flex-shrink: 0; }
+  .pd-loc svg { width: 1rem; height: 1rem; color: var(--primary); flex-shrink: 0; margin-top: .125rem; }
   .pd-dev {
     margin: 0 0 .5rem;
-    font-size: .6875rem; font-weight: 600;
+    font-size: .625rem; font-weight: 600;
     text-transform: uppercase; letter-spacing: .16em; color: var(--gold);
   }
 
   .pd-price {
     margin-top: 1.25rem;
     font-family: var(--font-display);
-    font-size: clamp(1.5rem, 4vw, 2rem);
+    font-size: clamp(1.375rem, 5vw, 2rem);
     color: var(--primary);
   }
   .pd-price small {
     display: block;
     font-family: var(--font-body);
-    font-size: .6875rem; text-transform: uppercase; letter-spacing: .14em;
+    font-size: .625rem; text-transform: uppercase; letter-spacing: .14em;
     color: var(--muted-foreground);
   }
 
   /* ---- Facts strip ---- */
   .pd-facts {
     display: grid; gap: 1px;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     margin-top: 1.75rem;
     background: var(--border);
     border: 1px solid var(--border);
-    border-radius: var(--radius);
+    border-radius: .5rem;
     overflow: hidden;
   }
-  @media (min-width: 640px) { .pd-facts { grid-template-columns: repeat(4, 1fr); } }
-  .pd-fact { background: var(--card); padding: 1rem .875rem; }
+  @media (min-width: 640px) { .pd-facts { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+  .pd-fact { background: var(--card); padding: .875rem .75rem; min-width: 0; }
   .pd-fact dt {
-    font-size: .625rem; text-transform: uppercase; letter-spacing: .14em;
+    font-size: .5625rem; text-transform: uppercase; letter-spacing: .12em;
     color: var(--muted-foreground);
   }
   .pd-fact dd {
     margin: .375rem 0 0;
-    font-size: .9375rem; font-weight: 600; color: var(--foreground);
+    font-size: .8125rem; font-weight: 600; color: var(--foreground);
+    overflow-wrap: anywhere;
+  }
+  @media (min-width: 640px) {
+    .pd-fact { padding: 1rem .875rem; }
+    .pd-fact dt { font-size: .625rem; }
+    .pd-fact dd { font-size: .9375rem; }
   }
 
   /* ---- Sections ---- */
-  .pd-section { margin-top: 3rem; }
+  .pd-section { margin-top: 2.5rem; }
+  @media (min-width: 768px) { .pd-section { margin-top: 3rem; } }
   .pd-section > h2 {
     margin: 0 0 1.25rem;
     font-family: var(--font-display);
-    font-size: clamp(1.375rem, 3vw, 1.75rem);
+    font-size: clamp(1.25rem, 4vw, 1.75rem);
     color: var(--foreground);
+    overflow-wrap: anywhere;
   }
   .pd-prose { color: var(--muted-foreground); line-height: 1.75; font-size: .9375rem; }
   .pd-prose p { margin: 0 0 1rem; }
   .pd-prose :is(h2,h3,h4) { color: var(--foreground); font-family: var(--font-display); margin: 1.5rem 0 .5rem; }
   .pd-prose ul, .pd-prose ol { margin: 0 0 1rem 1.25rem; }
-  .pd-prose img { border-radius: .625rem; margin-block: 1rem; }
+  .pd-prose img { border-radius: .5rem; margin-block: 1rem; }
+
+  /* Descriptions are pasted in from feeds and carry their own inline widths,
+     fonts and background colours. Neutralise them or mobile breaks. */
+  #pdDesc { overflow-x: hidden; }
+  #pdDesc, #pdDesc * {
+    max-width: 100% !important;
+    background: transparent !important;
+    background-color: transparent !important;
+    font-family: var(--font-body) !important;
+    line-height: 1.75 !important;
+    letter-spacing: normal !important;
+    text-align: left !important;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+  #pdDesc :is(h1,h2,h3,h4) { font-family: var(--font-display) !important; color: var(--foreground) !important; }
+  #pdDesc p, #pdDesc li, #pdDesc span, #pdDesc div {
+    font-size: .9375rem !important; color: var(--muted-foreground) !important;
+  }
+  #pdDesc p { margin: 0 0 1rem !important; padding: 0 !important; }
+  #pdDesc p:last-child { margin-bottom: 0 !important; }
+  #pdDesc strong, #pdDesc b { font-weight: 600 !important; }
+  #pdDesc a { color: var(--primary) !important; text-decoration: underline; }
+  #pdDesc ul, #pdDesc ol { padding-left: 1.25rem !important; margin: 0 0 1rem !important; }
+  #pdDesc img { height: auto !important; width: auto !important; max-width: 100% !important; }
+  #pdDesc table { display: block; width: 100% !important; overflow-x: auto; border-collapse: collapse; }
+  #pdDesc iframe, #pdDesc video { max-width: 100% !important; }
 
   .pd-more {
-    margin-top: .5rem; padding: 0; border: 0; background: none;
+    margin-top: .75rem; padding: 0; border: 0; background: none;
     color: var(--primary); font-family: inherit; font-size: .875rem;
     font-weight: 500; cursor: pointer; text-decoration: underline;
   }
   .pd-clamp {
-    max-height: 16rem; overflow: hidden;
-    -webkit-mask-image: linear-gradient(#000 60%, transparent);
-            mask-image: linear-gradient(#000 60%, transparent);
+    max-height: 13rem; overflow: hidden;
+    -webkit-mask-image: linear-gradient(#000 58%, transparent);
+            mask-image: linear-gradient(#000 58%, transparent);
   }
+  @media (min-width: 768px) { .pd-clamp { max-height: 18rem; } }
   .pd-clamp.is-open { max-height: none; -webkit-mask-image: none; mask-image: none; }
 
   /* ---- Units table ---- */
@@ -195,54 +240,62 @@
   .pd-units tbody tr:last-child td { border-bottom: 0; }
   .pd-units .u-type { font-weight: 600; color: var(--foreground); }
   .pd-units .u-price { color: var(--primary); font-weight: 600; white-space: nowrap; }
-  .pd-tablewrap { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  .pd-tablewrap { border: 1px solid var(--border); border-radius: .5rem; overflow: hidden; }
 
   /* Stack the table into cards on small screens */
   @media (max-width: 719px) {
     .pd-units thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }
+    .pd-units, .pd-units tbody, .pd-units tr { display: block; width: 100%; }
     .pd-units tbody tr {
-      display: grid; grid-template-columns: auto 1fr; gap: .375rem .75rem;
+      display: grid; grid-template-columns: 7.5rem minmax(0, 1fr); gap: .375rem .75rem;
       padding: .875rem; border-bottom: 1px solid var(--border);
     }
+    .pd-units tbody tr:last-child { border-bottom: 0; }
     .pd-units tbody td { display: contents; border: 0; padding: 0; }
     .pd-units tbody td::before {
       content: attr(data-label);
-      font-size: .6875rem; text-transform: uppercase; letter-spacing: .1em;
+      font-size: .625rem; text-transform: uppercase; letter-spacing: .1em;
       color: var(--muted-foreground); align-self: center;
     }
+    .pd-units .u-price { white-space: normal; }
   }
 
   /* ---- Payment plan ---- */
-  .pd-plan { display: grid; gap: .75rem; grid-template-columns: repeat(2, 1fr); }
-  @media (min-width: 720px) { .pd-plan { grid-template-columns: repeat(4, 1fr); } }
+  .pd-plan { display: grid; gap: .625rem; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  @media (min-width: 720px) { .pd-plan { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: .75rem; } }
   .pd-step {
-    padding: 1.125rem 1rem;
-    border: 1px solid var(--border); border-radius: .75rem;
-    background: var(--card);
+    padding: 1rem .875rem;
+    border: 1px solid var(--border); border-radius: .5rem;
+    background: var(--card); min-width: 0;
   }
   .pd-step strong {
     display: block;
-    font-family: var(--font-display); font-size: 1.75rem; line-height: 1;
-    color: var(--primary);
+    font-family: var(--font-display); font-size: 1.375rem; line-height: 1;
+    color: var(--primary); overflow-wrap: anywhere;
   }
+  @media (min-width: 720px) { .pd-step strong { font-size: 1.75rem; } }
   .pd-step span {
     display: block; margin-top: .5rem;
-    font-size: .75rem; color: var(--muted-foreground); line-height: 1.4;
+    font-size: .6875rem; color: var(--muted-foreground); line-height: 1.4;
+    overflow-wrap: anywhere;
   }
 
   /* ---- Amenities ---- */
-  .pd-amenities { display: grid; gap: .625rem; grid-template-columns: repeat(2, 1fr); }
-  @media (min-width: 720px) { .pd-amenities { grid-template-columns: repeat(3, 1fr); } }
+  .pd-amenities { display: grid; gap: .5rem; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  @media (min-width: 720px) { .pd-amenities { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .625rem; } }
   .pd-amenity {
-    display: flex; align-items: center; gap: .625rem;
-    padding: .75rem .875rem;
-    border: 1px solid var(--border); border-radius: .625rem;
-    font-size: .875rem; color: var(--foreground);
+    display: flex; align-items: center; gap: .5rem;
+    padding: .625rem .75rem;
+    border: 1px solid var(--border); border-radius: .5rem;
+    font-size: .8125rem; color: var(--foreground); min-width: 0;
+    overflow-wrap: anywhere;
   }
+  @media (min-width: 720px) { .pd-amenity { font-size: .875rem; padding: .75rem .875rem; } }
   .pd-amenity svg { width: 1rem; height: 1rem; color: var(--primary); flex-shrink: 0; }
 
   /* ---- Map ---- */
-  .pd-map { height: 20rem; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--border); }
+  .pd-map { height: 15rem; border-radius: .5rem; overflow: hidden; border: 1px solid var(--border); }
+  @media (min-width: 768px) { .pd-map { height: 20rem; } }
   .pd-map .leaflet-container { height: 100%; font-family: var(--font-body); }
 
   /* ---- Sidebar ---- */
@@ -259,75 +312,111 @@
       padding-right: .25rem;
     }
     .pd-aside::-webkit-scrollbar { width: 3px; }
-    .pd-aside::-webkit-scrollbar-thumb { background: var(--border); border-radius: 9999px; }
+    .pd-aside::-webkit-scrollbar-thumb { background: var(--border); border-radius: .5rem; }
   }
 
   .pd-card {
-    border: 1px solid var(--border); border-radius: var(--radius);
+    border: 1px solid var(--border); border-radius: .5rem;
     background: var(--card); box-shadow: var(--shadow-card);
-    padding: 1.25rem;
+    padding: 1rem;
   }
+  @media (min-width: 480px) { .pd-card { padding: 1.25rem; } }
   .pd-card h2 {
     margin: 0 0 .25rem;
     font-family: var(--font-display); font-size: 1.25rem; color: var(--foreground);
   }
   .pd-card > p { margin: 0 0 1rem; font-size: .78125rem; color: var(--muted-foreground); }
 
-  .pd-form { display: flex; flex-direction: column; gap: .6875rem; }
+  .pd-form { display: flex; flex-direction: column; gap: .6875rem; min-width: 0; }
+  .pd-form > div { min-width: 0; }
   .pd-input, .pd-select, .pd-textarea {
-    width: 100%; min-width: 0;
+    width: 100%; min-width: 0; box-sizing: border-box;
     border: 1px solid var(--border); border-radius: .5rem;
     background: var(--card); color: var(--foreground);
-    font-family: inherit; font-size: .875rem;
-    padding: 0 .75rem; height: 2.5rem;
+    font-family: inherit;
+    /* 16px stops iOS Safari zooming the page when a field is focused */
+    font-size: 1rem;
+    padding: 0 .75rem; height: 2.75rem;
   }
-  .pd-textarea { height: auto; min-height: 4rem; padding-block: .5rem; resize: vertical; }
+  @media (min-width: 1024px) {
+    .pd-input, .pd-select, .pd-textarea { font-size: .875rem; height: 2.5rem; }
+  }
+  .pd-textarea { height: auto; min-height: 4.5rem; padding-block: .625rem; resize: vertical; }
   .pd-input:focus, .pd-select:focus, .pd-textarea:focus { outline: none; border-color: var(--primary); }
   .pd-label {
     display: block; margin-bottom: .3125rem;
     font-size: .625rem; font-weight: 600;
     text-transform: uppercase; letter-spacing: .14em; color: var(--muted-foreground);
   }
-  .pd-tel { display: flex; gap: .375rem; }
-  .pd-tel .pd-select { flex: 0 0 6rem; padding-inline: .5rem; }
+  .pd-tel { display: flex; gap: .375rem; min-width: 0; }
+  .pd-tel .pd-select { flex: 0 0 5.25rem; width: 5.25rem; padding-inline: .375rem; }
+  .pd-tel .pd-input { flex: 1 1 auto; min-width: 0; }
+  @media (min-width: 360px) { .pd-tel .pd-select { flex-basis: 5.75rem; width: 5.75rem; } }
   .pd-check {
     display: flex; align-items: center; gap: .5rem;
     font-size: .8125rem; color: var(--muted-foreground);
   }
-  .pd-check input { width: 1rem; height: 1rem; accent-color: var(--primary); }
+  .pd-check input { width: 1rem; height: 1rem; accent-color: var(--primary); flex-shrink: 0; }
   .pd-err { margin: .25rem 0 0; font-size: .75rem; color: #b3261e; }
-  .pd-form .btn-solid { width: 100%; margin-top: .25rem; }
+  .pd-form .btn-solid { width: 100%; margin-top: .25rem; border-radius: 9999px; }
   .pd-fineprint { margin: .75rem 0 0; font-size: .6875rem; color: var(--muted-foreground); line-height: 1.5; }
 
-  .pd-contact { display: grid; gap: .5rem; }
+  .pd-contact { display: grid; gap: .5rem; grid-template-columns: minmax(0, 1fr); }
+  @media (min-width: 480px) and (max-width: 1023px) {
+    .pd-contact { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  }
   .pd-contact a {
     display: flex; align-items: center; justify-content: center; gap: .5rem;
-    height: 2.5rem; border-radius: 9999px;
-    font-size: .875rem; font-weight: 500;
+    height: 2.75rem; border-radius: 9999px; min-width: 0;
+    font-size: .875rem; font-weight: 500; white-space: nowrap;
     border: 1px solid var(--border); color: var(--foreground);
     transition: background-color .2s ease, color .2s ease, border-color .2s ease;
   }
   .pd-contact a:hover { border-color: var(--primary); color: var(--primary); }
   .pd-contact a.is-whatsapp { background: #25D366; border-color: #25D366; color: #fff; }
   .pd-contact a.is-whatsapp:hover { filter: brightness(.95); color: #fff; }
-  .pd-contact svg { width: 1rem; height: 1rem; }
+  .pd-contact svg { width: 1rem; height: 1rem; flex-shrink: 0; }
+
+  /* ---- Developer card ---- */
+  .pd-devcard { display: flex; align-items: center; gap: 1rem; }
+  .pd-devcard__logo {
+    width: 4.5rem; height: 3rem; object-fit: contain; flex-shrink: 0;
+    border-radius: .5rem; background: var(--secondary); padding: .25rem;
+  }
+  .pd-devcard__label {
+    display: block; font-size: .5625rem; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .18em; color: var(--muted-foreground);
+  }
+  .pd-devcard__name {
+    display: block; margin-top: .25rem;
+    font-family: var(--font-display); font-size: 1.0625rem; color: var(--foreground);
+    overflow-wrap: anywhere;
+  }
+  .pd-devcard__link {
+    display: inline-flex; align-items: center; gap: .375rem; margin-top: .5rem;
+    font-size: .6875rem; font-weight: 600; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--primary);
+  }
+  .pd-devcard__link:hover { color: var(--gold); }
+  .pd-devcard__link svg { width: .75rem; height: .75rem; }
 
   /* ---- Mobile action bar ---- */
   .pd-bar {
     position: fixed; left: 0; right: 0; bottom: 0; z-index: 950;
-    display: grid; grid-template-columns: 1fr 1fr 1.2fr; gap: .5rem;
-    padding: .625rem .75rem calc(.625rem + env(safe-area-inset-bottom));
+    display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .375rem;
+    padding: .5rem .625rem calc(.5rem + env(safe-area-inset-bottom));
     background: var(--card); border-top: 1px solid var(--border);
     box-shadow: 0 -6px 24px rgba(11,21,18,.10);
   }
   .pd-bar a, .pd-bar button {
-    display: flex; align-items: center; justify-content: center; gap: .375rem;
-    height: 2.75rem; border-radius: 9999px;
-    font-family: inherit; font-size: .8125rem; font-weight: 600;
+    display: flex; align-items: center; justify-content: center; gap: .3125rem;
+    height: 2.625rem; border-radius: 9999px; min-width: 0;
+    font-family: inherit; font-size: .75rem; font-weight: 600; white-space: nowrap;
     border: 1px solid var(--border); background: var(--card); color: var(--foreground);
     cursor: pointer;
   }
-  .pd-bar svg { width: 1rem; height: 1rem; }
+  @media (min-width: 400px) { .pd-bar a, .pd-bar button { font-size: .8125rem; } }
+  .pd-bar svg { width: .9375rem; height: .9375rem; flex-shrink: 0; }
   .pd-bar .is-whatsapp { background: #25D366; border-color: #25D366; color: #fff; }
   .pd-bar .is-primary { background: var(--primary); border-color: var(--primary); color: var(--primary-foreground); }
   @media (min-width: 1024px) { .pd-bar { display: none; } }
@@ -341,15 +430,16 @@
   .pd-lightbox {
     position: fixed; inset: 0; z-index: 1200;
     display: none; place-items: center;
-    background: rgba(11,21,18,.94); padding: 1.5rem;
+    background: rgba(11,21,18,.94); padding: 1rem;
   }
+  @media (min-width: 768px) { .pd-lightbox { padding: 1.5rem; } }
   .pd-lightbox.is-open { display: grid; }
-  .pd-lightbox img { max-width: 100%; max-height: 88vh; object-fit: contain; border-radius: .5rem; }
+  .pd-lightbox img { max-width: 100%; max-height: 82vh; object-fit: contain; border-radius: .5rem; }
   .pd-lightbox button {
-    position: absolute; top: 1.25rem; right: 1.25rem;
-    width: 2.5rem; height: 2.5rem; border: 0; border-radius: 9999px;
+    position: absolute; top: 1rem; right: 1rem;
+    width: 2.25rem; height: 2.25rem; border: 0; border-radius: .5rem;
     background: rgba(246,242,233,.15); color: var(--cream);
-    font-size: 1.5rem; line-height: 1; cursor: pointer;
+    font-size: 1.375rem; line-height: 1; cursor: pointer;
   }
 
   /* ---- SEO debug badge (DEBUG only) ---- */
@@ -366,16 +456,89 @@
   .pd-seo .bad  { color: #ff9d8a; }
   @media (max-width: 1023px) { .pd-seo { display: none; } }
 
-  /* ---- Related ---- */
+  /* =====================================================================
+     RELATED — same card as the listing / off-plan pages, so a visitor
+     moving between pages sees one card, not three.
+     ===================================================================== */
   .pd-related { padding-block: 3rem 4.5rem; background: var(--secondary); }
-  .pd-related .grid-3 { gap: 1.25rem; }
-  .pd-related .card__media { aspect-ratio: 16 / 10; }
-  .pd-related .card__body  { padding: .875rem .875rem 1.125rem; gap: .3125rem; }
-  .pd-related .card__title { font-size: 1.0625rem; }
-  .pd-related .card__loc   { font-size: .75rem; }
-  .pd-related .card__price { font-size: 1.0625rem; padding-top: .625rem; }
-  .pd-related .section-title { font-size: clamp(1.375rem, 3vw, 1.75rem); }
+  .pd-related .section-title { font-size: clamp(1.375rem, 4vw, 1.75rem); }
   @media (max-width: 1023px) { .pd-related { padding-bottom: 8rem; } }
+
+  .pd-relgrid { display: grid; gap: 1rem; grid-template-columns: minmax(0, 1fr); }
+  @media (min-width: 560px)  { .pd-relgrid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.25rem; } }
+  @media (min-width: 1000px) { .pd-relgrid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+
+  .opl-card {
+    display: flex; flex-direction: column; height: 100%; min-width: 0;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: .5rem; overflow: hidden;
+    transition: transform .3s ease, box-shadow .3s ease, border-color .3s ease;
+  }
+  .opl-card:hover {
+    transform: translateY(-4px);
+    border-color: color-mix(in srgb, var(--primary) 35%, transparent);
+    box-shadow: var(--shadow-card);
+  }
+  .opl-card__media { position: relative; aspect-ratio: 16 / 10; overflow: hidden; background: var(--secondary); }
+  .opl-card__media img { width: 100%; height: 100%; object-fit: cover; transition: transform .7s ease; }
+  .opl-card:hover .opl-card__media img { transform: scale(1.05); }
+  .opl-card__badge {
+    position: absolute; top: .625rem; left: .625rem;
+    padding: .25rem .5rem; border-radius: .5rem;
+    background: var(--gold); color: var(--ink);
+    font-size: .625rem; font-weight: 600; text-transform: uppercase; letter-spacing: .1em;
+  }
+
+  .opl-card__body { flex: 1; display: flex; flex-direction: column; padding: .9375rem .9375rem 0; min-width: 0; }
+  .opl-card__dev {
+    display: flex; align-items: center; gap: .5rem;
+    margin: 0 0 .5rem; font-size: .625rem; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .14em; color: var(--gold);
+    min-width: 0;
+  }
+  .opl-card__dev img {
+    width: 1.75rem; height: 1.75rem; object-fit: contain; flex-shrink: 0;
+    border-radius: .5rem; background: var(--secondary); padding: .125rem;
+  }
+  .opl-card__dev span {
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0;
+  }
+  .opl-card__title {
+    margin: 0; font-family: var(--font-display);
+    font-size: 1.0625rem; line-height: 1.3; color: var(--foreground);
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .opl-card__loc {
+    display: flex; align-items: center; gap: .375rem;
+    margin: .5rem 0 0; font-size: .78125rem; color: var(--muted-foreground);
+    min-width: 0;
+  }
+  .opl-card__loc svg { width: .875rem; height: .875rem; flex-shrink: 0; color: var(--primary); }
+  .opl-card__loc span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .opl-card__meta { display: flex; flex-wrap: wrap; gap: .3125rem; margin: .75rem 0 .9375rem; }
+  .opl-card__meta span {
+    padding: .1875rem .5rem; border-radius: .5rem;
+    background: var(--secondary); font-size: .6875rem; color: var(--muted-foreground);
+  }
+  .opl-card__foot {
+    margin-top: auto; display: flex; align-items: center;
+    justify-content: space-between; gap: .75rem;
+    padding: .75rem .9375rem; border-top: 1px solid var(--border);
+    background: color-mix(in srgb, var(--secondary) 45%, transparent);
+  }
+  .opl-card__price { font-size: .875rem; font-weight: 600; color: var(--primary); min-width: 0; }
+  .opl-card__price small {
+    display: block; margin-top: .125rem; font-size: .625rem; font-weight: 400;
+    text-transform: uppercase; letter-spacing: .1em; color: var(--muted-foreground);
+  }
+  .opl-card__arrow {
+    display: grid; place-items: center; flex-shrink: 0;
+    width: 2rem; height: 2rem; border-radius: .5rem;
+    border: 1px solid var(--border); color: var(--primary);
+    transition: background-color .25s ease, color .25s ease, border-color .25s ease;
+  }
+  .opl-card__arrow svg { width: .875rem; height: .875rem; }
+  .opl-card:hover .opl-card__arrow { background: var(--primary); border-color: var(--primary); color: var(--primary-foreground); }
 </style>
 {% endblock %}
 
@@ -691,6 +854,27 @@
           </a>
         </div>
       </div>
+
+      <!-- ---- Developer ---- -->
+      {% if property.developer_company %}
+      <div class="pd-card pd-devcard">
+        {% if property.developer_company.logo %}
+          <img class="pd-devcard__logo"
+               src="{% if property.developer_company.logo|stringformat:'s'|slice:':4' == 'http' %}{{ property.developer_company.logo }}{% else %}{{ property.developer_company.logo.url }}{% endif %}"
+               alt="{{ property.developer_company.name }} logo" loading="lazy" width="72" height="48">
+        {% endif %}
+        <div>
+          <span class="pd-devcard__label">Developer</span>
+          <span class="pd-devcard__name">{{ property.developer_company.name }}</span>
+          <a class="pd-devcard__link"
+             href="{% url 'properties:property_list' %}?developer={{ property.developer_company.slug }}">
+            View projects
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </a>
+        </div>
+      </div>
+      {% endif %}
     </aside>
 
   </div>
@@ -702,21 +886,65 @@
 <section class="pd-related">
   <div class="container-page">
     <h2 class="section-title" style="margin-bottom:2rem;">More in {{ property.district.name }}</h2>
-    <div class="grid-3">
+    <div class="pd-relgrid">
       {% for item in related_properties %}
-      <a class="card" href="{% url 'properties:property_detail' item.slug %}">
-        <div class="card__media">
-          <img src="{{ item.cover_image }}" alt="{{ item.title }}" loading="lazy" width="600" height="450">
-          {% if item.property_status %}<span class="card__tag">{{ item.property_status.name }}</span>{% endif %}
+      <a class="opl-card" href="{% url 'properties:property_detail' item.slug %}">
+        <div class="opl-card__media">
+          <img src="{{ item.cover_image }}" alt="{{ item.title }}" loading="lazy" width="600" height="375">
+          {% if item.property_status %}
+            <span class="opl-card__badge">{{ item.property_status.name }}</span>
+          {% endif %}
         </div>
-        <div class="card__body">
-          <h3 class="card__title">{{ item.title }}</h3>
-          <p class="card__loc">{{ item.district.name }}, {{ item.city.name }}</p>
-          <p class="card__price">
-            {% if item.compare_starting_price %}
-              AED {{ item.compare_starting_price|floatformat:0|intcomma }}
-            {% else %}Price on request{% endif %}
+
+        <div class="opl-card__body">
+          {% if item.developer_company %}
+            <p class="opl-card__dev">
+              {% if item.developer_company.logo %}
+                <img src="{% if item.developer_company.logo|stringformat:'s'|slice:':4' == 'http' %}{{ item.developer_company.logo }}{% else %}{{ item.developer_company.logo.url }}{% endif %}"
+                     alt="{{ item.developer_company.name }} logo" loading="lazy" width="28" height="28">
+              {% endif %}
+              <span>{{ item.developer_company.name }}</span>
+            </p>
+          {% endif %}
+
+          <h3 class="opl-card__title">{{ item.title }}</h3>
+
+          <p class="opl-card__loc">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>
+            </svg>
+            <span>{% if item.district %}{{ item.district.name }}, {% endif %}{{ item.city.name }}</span>
           </p>
+
+          <div class="opl-card__meta">
+            {% if item.compare_bedroom_options %}
+              <span>{{ item.compare_bedroom_options|truncatechars:22 }}</span>
+            {% endif %}
+            {% if item.compare_unit_size_range %}
+              <span>{{ item.compare_unit_size_range }}</span>
+            {% endif %}
+            {% if item.delivery_date %}
+              <span>Handover {{ item.delivery_date|date:"M Y" }}</span>
+            {% endif %}
+          </div>
+        </div>
+
+        <div class="opl-card__foot">
+          <div class="opl-card__price">
+            {% firstof item.price item.compare_starting_price as from_price %}
+            {% if from_price %}
+              AED {{ from_price|floatformat:0|intcomma }}
+              <small>Starting from</small>
+            {% else %}
+              Price on request
+              <small>Enquire for details</small>
+            {% endif %}
+          </div>
+          <span class="opl-card__arrow" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </span>
         </div>
       </a>
       {% endfor %}
@@ -803,6 +1031,16 @@
       if (e.key === 'ArrowLeft')  show(current - 1);
     });
 
+    /* Swipe on touch devices — the arrows are small targets on a phone */
+    var touchX = null;
+    stage.addEventListener('touchstart', function (e) { touchX = e.changedTouches[0].clientX; }, { passive: true });
+    stage.addEventListener('touchend', function (e) {
+      if (touchX === null) return;
+      var dx = e.changedTouches[0].clientX - touchX;
+      if (Math.abs(dx) > 45) show(current + (dx < 0 ? 1 : -1));
+      touchX = null;
+    }, { passive: true });
+
     /* Lightbox */
     var box = document.getElementById('pdLightbox');
     var boxImg = document.getElementById('pdLightboxImg');
@@ -825,11 +1063,22 @@
   var desc = document.getElementById('pdDesc');
   var more = document.getElementById('pdDescMore');
   if (desc && more) {
-    // Short descriptions don't need the fade or the button
-    if (desc.scrollHeight <= desc.clientHeight + 8) {
-      desc.classList.remove('pd-clamp');
-      more.hidden = true;
+    function measure() {
+      if (desc.classList.contains('is-open')) return;
+      // Short descriptions don't need the fade or the button
+      if (desc.scrollHeight <= desc.clientHeight + 8) {
+        desc.classList.remove('pd-clamp');
+        more.hidden = true;
+      } else {
+        desc.classList.add('pd-clamp');
+        more.hidden = false;
+      }
     }
+    measure();
+    // Images inside the description change its height once they load
+    window.addEventListener('load', measure);
+    window.addEventListener('resize', measure);
+
     more.addEventListener('click', function () {
       var open = desc.classList.toggle('is-open');
       more.textContent = open ? 'Show less' : 'Read more';

@@ -12,7 +12,7 @@ from urllib.parse import urlencode
 
 from django.conf import settings
 from django.core.paginator import Paginator
-from django.db.models import Prefetch, Q
+from django.db.models import Prefetch, Q, Count
 from django.shortcuts import redirect, render
 
 from properties.models import (
@@ -556,9 +556,9 @@ def property_detail(request, slug):
                      to_attr='prefetched_images'),
             'grouped_apartments',
         )
-        .order_by('-created_at')[:3]
+        .order_by('-created_at')[:4]
     )
-    if len(related_properties) < 3:      # widen to the city if the area is thin
+    if len(related_properties) < 4:      # widen to the city if the area is thin
         related_properties = (
             Property.objects
             .filter(is_active=True, city=property_obj.city)
@@ -569,7 +569,7 @@ def property_detail(request, slug):
                          to_attr='prefetched_images'),
                 'grouped_apartments',
             )
-            .order_by('-created_at')[:3]
+            .order_by('-created_at')[:4]
         )
 
     images = _gallery(property_obj)
@@ -844,4 +844,912 @@ def offplan_properties(request):
                   'index, follow, max-image-preview:large, max-snippet:-1',
         'rel_prev': url_for(page_obj.previous_page_number()) if page_obj.has_previous() else None,
         'rel_next': url_for(page_obj.next_page_number()) if page_obj.has_next() else None,
+    })
+    
+    #-------------------------------------------------- developer list and detail----------------------------------------------------------
+
+"""
+properties/views.py — DEVELOPERS
+
+Drop-in replacement for the existing developer_list / developer_detail /
+developer_detail_redirect block. Reuses SITE_URL, BRAND, PAGE_SIZE, _pick and
+_describe from the top of views.py — don't redefine them.
+
+Needs at the top of views.py (the areas section already adds most of these):
+
+    import json
+    from django.db.models import Min
+    from django.db.models.functions import ExtractYear
+    from django.utils.html import strip_tags
+"""
+
+import json
+
+from django.core.paginator import Paginator
+from django.db.models import Count, Min, Prefetch, Q
+from django.db.models.functions import ExtractYear
+from django.shortcuts import get_object_or_404, redirect, render
+from django.utils.html import strip_tags
+
+from properties.models import (
+    DeveloperCompany,
+    District,
+    GroupedApartment,
+    Property,
+    PropertyImage,
+)
+
+DEVELOPERS_URL = f'{SITE_URL}/properties/developers/'
+
+
+# ─────────────────────────────────────────
+# HELPERS
+# ─────────────────────────────────────────
+def _dev_json_ld(payload):
+    """Serialise in Python. A developer name with an apostrophe silently
+    breaks template-written JSON-LD; json.dumps escapes it correctly."""
+    return json.dumps(payload, ensure_ascii=False).replace('</', r'<\/')
+
+
+def _logo_url(developer):
+    """The logo field holds either an upload or a full URL, depending on how
+    the record was created — handle both rather than assuming."""
+    if not developer.logo:
+        return None
+    raw = str(developer.logo)
+    return raw if raw.startswith('http') else developer.logo.url
+
+
+def _developer_copy(developer, count, area_names, low_price, offplan, ready):
+    """
+    Fallback body copy when a developer has no admin-written description.
+
+    A developer page with a logo, a grid and two sentences is the classic thin
+    page — nothing for Google to rank on and nothing for a buyer to read. These
+    paragraphs are assembled from this developer's real inventory, so two
+    developer pages never read identically; boilerplate repeated across forty
+    profiles is its own duplicate-content problem.
+    """
+    name = developer.name
+
+    mix = []
+    if offplan:
+        mix.append(f'{offplan} off-plan project{"" if offplan == 1 else "s"}')
+    if ready:
+        mix.append(f'{ready} ready propert{"y" if ready == 1 else "ies"}')
+    mix_line = ' and '.join(mix) if mix else f'{count} active listings'
+
+    if area_names:
+        shown = ', '.join(area_names[:4])
+        area_line = (
+            f'Their current portfolio with us spans {shown}'
+            + (f' and {len(area_names) - 4} other communities' if len(area_names) > 4 else '')
+        )
+    else:
+        area_line = 'Their current portfolio with us spans several Dubai communities'
+
+    price_line = (
+        f'Entry pricing across their live projects starts from '
+        f'AED {int(low_price):,}'
+        if low_price else
+        'Pricing is quoted per project and moves with launch phase and unit availability'
+    )
+
+    return [
+        f'{name} is one of the developers {BRAND} works with across Dubai and the '
+        f'wider UAE. We currently list {count} propert'
+        f'{"y" if count == 1 else "ies"} from this developer, covering {mix_line}.',
+
+        f'{area_line}. {price_line}, though the figure that matters is the one on '
+        f'the specific unit — floor, view, layout and payment structure move the '
+        f'final number more than the headline does.',
+
+        f'Off-plan releases from {name} are sold on construction-linked payment '
+        f'plans, with buyer funds held in a RERA-supervised escrow account and '
+        f'released against verified build milestones. Ready units can be viewed, '
+        f'valued and transferred at the Dubai Land Department without waiting for '
+        f'a completion date. Speak to a {BRAND} advisor for the live price list, '
+        f'floor plans and payment plan on any project below.',
+    ]
+
+
+def _developer_faqs(developer, count, area_names, low_price, years):
+    name = developer.name
+
+    faqs = [{
+        'q': f'How many {name} properties are available right now?',
+        'a': (f'We currently list {count} active {name} propert'
+              f'{"y" if count == 1 else "ies"}. The grid below updates as new '
+              f'phases release and units sell, so it always reflects live '
+              f'availability rather than a fixed brochure.'),
+    }]
+
+    faqs.append({
+        'q': f'What do {name} properties cost?',
+        'a': (f'{name} listings start from AED {int(low_price):,} with us. Final '
+              f'pricing depends on unit size, floor, view and the payment plan you '
+              f'take, so ask an advisor for the current price list on a specific '
+              f'project.'
+              if low_price else
+              f'{name} prices are quoted per project and per release phase. Contact '
+              f'a {BRAND} advisor for the current price list on any of their '
+              f'developments.'),
+    })
+
+    if area_names:
+        faqs.append({
+            'q': f'Where in Dubai does {name} build?',
+            'a': (f'The {name} projects we list sit in {", ".join(area_names[:5])}. '
+                  f'Each community carries its own price band, service charge and '
+                  f'rental profile, so the area matters as much as the developer '
+                  f'when you compare options.'),
+        })
+
+    if years:
+        span = f'{years[0]}' if len(years) == 1 else f'{years[0]} and {years[-1]}'
+        faqs.append({
+            'q': f'When do {name} projects hand over?',
+            'a': (f'Handovers on the {name} projects we list are scheduled between '
+                  f'{span}. Dates are set by the developer and registered with the '
+                  f'Dubai Land Department; we confirm the current schedule before '
+                  f'you reserve.'),
+        })
+
+    faqs.append({
+        'q': f'Is buying off-plan from {name} safe?',
+        'a': (f'Off-plan sales in Dubai are regulated by RERA. Payments go into a '
+              f'project escrow account rather than to the developer directly, and '
+              f'are released against construction milestones verified by an '
+              f'appointed consultant. We check a project\u2019s escrow registration '
+              f'and current build progress before recommending it.'),
+    })
+
+    return faqs
+
+
+# ─────────────────────────────────────────
+# DEVELOPERS — directory
+# ─────────────────────────────────────────
+def developer_list(request):
+    """
+    Directory of partner developers with a live, active-property count.
+
+    Unpaginated on purpose — a developer directory rarely runs past a couple
+    of screens, and a single grid keeps every partner one click from both a
+    visitor and a crawler.
+    """
+    search = request.GET.get('q', '').strip()
+
+    developers = (
+        DeveloperCompany.objects
+        .filter(is_active=True)
+        .annotate(prop_count=Count('properties', filter=Q(properties__is_active=True)))
+        .order_by('-prop_count', 'name')
+    )
+    if search:
+        developers = developers.filter(name__icontains=search)
+
+    developers = list(developers)
+    count = len(developers)
+    total_properties = sum(d.prop_count for d in developers)
+    with_stock = sum(1 for d in developers if d.prop_count)
+
+    # ── SEO ──
+    if search:
+        meta_title = _pick([
+            f'\u201c{search}\u201d Developers in Dubai | {BRAND}',
+            f'\u201c{search}\u201d Developers in Dubai | Spacesmith',
+            f'\u201c{search}\u201d Developers | Spacesmith',
+        ])
+        meta_description = _describe(
+            f'{count} developer{"" if count == 1 else "s"} matching '
+            f'\u201c{search}\u201d in Dubai and the UAE, with '
+            f'{total_properties} live project'
+            f'{"" if total_properties == 1 else "s"} listed.',
+            filler=f'Compare payment plans and handover dates with {BRAND}.',
+        )
+    else:
+        meta_title = _pick([
+            f'Property Developers in Dubai & the UAE | {BRAND}',
+            f'Property Developers in Dubai | {BRAND}',
+            f'Dubai Property Developers | {BRAND}',
+            f'Property Developers in Dubai | Spacesmith',
+        ])
+        meta_description = _describe(
+            f'Browse {count} property developers building across Dubai and the '
+            f'UAE, with {total_properties} live projects listed.',
+            filler=f'Compare delivery records, payment plans and handover dates.',
+        )
+
+    schema = [
+        {
+            '@context': 'https://schema.org',
+            '@type': 'BreadcrumbList',
+            'itemListElement': [
+                {'@type': 'ListItem', 'position': 1, 'name': 'Home', 'item': f'{SITE_URL}/'},
+                {'@type': 'ListItem', 'position': 2, 'name': 'Properties',
+                 'item': f'{SITE_URL}/properties/'},
+                {'@type': 'ListItem', 'position': 3, 'name': 'Developers',
+                 'item': DEVELOPERS_URL},
+            ],
+        },
+        {
+            '@context': 'https://schema.org',
+            '@type': 'ItemList',
+            'name': 'Property developers in Dubai and the UAE',
+            'numberOfItems': count,
+            'itemListElement': [
+                {'@type': 'ListItem', 'position': i, 'name': d.name,
+                 'url': f'{DEVELOPERS_URL}{d.slug}/'}
+                for i, d in enumerate(developers[:50], start=1)
+            ],
+        },
+    ]
+
+    # Search permutations canonicalise back to the clean directory and stay
+    # noindex — the same pattern property_list / areas / off-plan already use.
+    return render(request, 'developer_list.html', {
+        'developers': developers,
+        'total_count': count,
+        'total_properties': total_properties,
+        'with_stock': with_stock,
+        'active_search': search,
+
+        'meta_title': meta_title,
+        'meta_description': meta_description,
+        'canonical': DEVELOPERS_URL,
+        'robots': ('noindex, follow' if search else
+                   'index, follow, max-image-preview:large, max-snippet:-1'),
+        'schema_json': _dev_json_ld(schema),
+    })
+
+
+# ─────────────────────────────────────────
+# DEVELOPERS — profile + their properties
+# ─────────────────────────────────────────
+def developer_detail(request, slug):
+    """
+    A developer's profile plus a paginated grid of their active properties.
+
+    Page 1 stays indexable; page 2+ goes noindex and the canonical points at
+    the un-paginated profile. Pagination is a navigation aid, not a set of
+    distinct landing pages.
+    """
+    developer = get_object_or_404(DeveloperCompany, slug=slug, is_active=True)
+
+    qs = (
+        Property.objects
+        .filter(is_active=True, developer_company=developer)
+        .select_related('city', 'district', 'property_status', 'sales_status',
+                        'property_type')
+        .prefetch_related(
+            Prefetch('images', queryset=PropertyImage.objects.order_by('order'),
+                     to_attr='prefetched_images'),
+            Prefetch('grouped_apartments',
+                     queryset=GroupedApartment.objects.filter(is_active=True)),
+        )
+        .order_by('-created_at')
+    )
+
+    paginator = Paginator(qs, PAGE_SIZE)
+    page_obj = paginator.get_page(request.GET.get('page', 1))
+    page = page_obj.number
+
+    # ── Portfolio stats — these drive the copy, the FAQs and the schema ──
+    total = paginator.count
+    low_price = qs.aggregate(low=Min('price'))['low']
+    offplan_count = qs.filter(property_status__slug='off-plan').count()
+    ready_count = qs.filter(property_status__slug='ready').count()
+
+    areas = list(
+        District.objects
+        .filter(is_active=True, properties__in=qs.values('pk'))
+        .annotate(prop_count=Count('properties',
+                                   filter=Q(properties__developer_company=developer,
+                                            properties__is_active=True)))
+        .order_by('-prop_count', 'name').distinct()[:8]
+    )
+    area_names = [a.name for a in areas]
+
+    years = list(
+        qs.exclude(delivery_date__isnull=True)
+        .annotate(_y=ExtractYear('delivery_date'))
+        .values_list('_y', flat=True).order_by('_y').distinct()
+    )
+
+    admin_copy = (developer.description or '').strip()
+    dev_paragraphs = (
+        [p.strip() for p in strip_tags(admin_copy).split('\n') if p.strip()]
+        if admin_copy else
+        _developer_copy(developer, total, area_names, low_price,
+                        offplan_count, ready_count)
+    )
+    faqs = _developer_faqs(developer, total, area_names, low_price, years)
+
+    # Other developers — internal links so the page passes authority on
+    # instead of dead-ending at the pagination.
+    siblings = (
+        DeveloperCompany.objects
+        .filter(is_active=True)
+        .exclude(pk=developer.pk)
+        .annotate(prop_count=Count('properties', filter=Q(properties__is_active=True)))
+        .filter(prop_count__gt=0)
+        .order_by('-prop_count', 'name')[:8]
+    )
+
+    base_url = f'{DEVELOPERS_URL}{developer.slug}/'
+    page_tag = f' | Page {page}' if page > 1 else ''
+
+    # ── SEO ──
+    meta_title = _pick([
+        f'{developer.name} Properties for Sale in Dubai{page_tag} | {BRAND}',
+        f'{developer.name} Properties in Dubai{page_tag} | {BRAND}',
+        f'{developer.name} Properties in Dubai{page_tag} | Spacesmith',
+        f'{developer.name} Properties{page_tag} | Spacesmith',
+        f'{developer.name} Properties for Sale{page_tag}',
+    ])
+
+    price_bit = f' from AED {int(low_price):,}' if low_price else ''
+    meta_description = _describe(
+        strip_tags(admin_copy) or (
+            f'Browse {total} propert{"y" if total == 1 else "ies"} by '
+            f'{developer.name} in Dubai{price_bit} — off-plan and ready homes '
+            f'with payment plans.'
+        ),
+        filler=f'Floor plans, pricing and availability from {BRAND}.',
+    )
+    if page > 1:
+        meta_description = _describe(f'Page {page} \u2014 {meta_description}')
+
+    canonical = base_url + (f'?page={page}' if page > 1 else '')
+
+    def url_for(target_page):
+        return base_url + (f'?page={target_page}' if target_page > 1 else '')
+
+    schema = [
+        {
+            '@context': 'https://schema.org',
+            '@type': 'BreadcrumbList',
+            'itemListElement': [
+                {'@type': 'ListItem', 'position': 1, 'name': 'Home', 'item': f'{SITE_URL}/'},
+                {'@type': 'ListItem', 'position': 2, 'name': 'Properties',
+                 'item': f'{SITE_URL}/properties/'},
+                {'@type': 'ListItem', 'position': 3, 'name': 'Developers',
+                 'item': DEVELOPERS_URL},
+                {'@type': 'ListItem', 'position': 4, 'name': developer.name,
+                 'item': base_url},
+            ],
+        },
+        {
+            '@context': 'https://schema.org',
+            '@type': 'Organization',
+            'name': developer.name,
+            'url': base_url,
+            'description': strip_tags(dev_paragraphs[0])[:300],
+            **({'logo': _logo_url(developer)} if _logo_url(developer) else {}),
+            **({'sameAs': [developer.website]} if getattr(developer, 'website', '') else {}),
+            'areaServed': {'@type': 'Country', 'name': 'United Arab Emirates'},
+        },
+        {
+            '@context': 'https://schema.org',
+            '@type': 'FAQPage',
+            'mainEntity': [
+                {'@type': 'Question', 'name': f['q'],
+                 'acceptedAnswer': {'@type': 'Answer', 'text': f['a']}}
+                for f in faqs
+            ],
+        },
+    ]
+
+    return render(request, 'developer_detail.html', {
+        'developer': developer,
+        'logo_url': _logo_url(developer),
+        'dev_paragraphs': dev_paragraphs,
+        'faqs': faqs,
+        'areas': areas,
+        'siblings': siblings,
+
+        'page_obj': page_obj,
+        'properties': page_obj.object_list,
+        'total_count': total,
+        'offplan_count': offplan_count,
+        'ready_count': ready_count,
+        'low_price': low_price,
+        'area_count': len(areas),
+        'page_range': paginator.get_elided_page_range(page, on_each_side=1, on_ends=1),
+
+        'meta_title': meta_title,
+        'meta_description': meta_description,
+        'canonical': canonical,
+        'robots': ('index, follow, max-image-preview:large, max-snippet:-1'
+                   if page == 1 else 'noindex, follow'),
+        'rel_prev': url_for(page_obj.previous_page_number()) if page_obj.has_previous() else None,
+        'rel_next': url_for(page_obj.next_page_number()) if page_obj.has_next() else None,
+        'schema_json': _dev_json_ld(schema),
+    })
+
+
+def developer_detail_redirect(request, slug):
+    """Permanently redirect legacy /developers/<slug>/N/A/ URLs to the profile."""
+    return redirect('properties:developer_detail', slug=slug, permanent=True)
+
+# ----------------------------------------------------------area------------------------------------------------------
+
+import json
+ 
+from django.core.paginator import Paginator
+from django.db.models import Count, Min, Prefetch, Q
+from django.db.models.functions import ExtractYear
+from django.shortcuts import get_object_or_404, render
+from django.utils.html import strip_tags
+from urllib.parse import urlencode
+ 
+from properties.models import District, Property, PropertyImage, PropertyStatus
+ 
+AREAS_URL = f'{SITE_URL}/properties/areas/'
+ 
+ 
+# ─────────────────────────────────────────
+# HELPERS
+# ─────────────────────────────────────────
+def _json_ld(payload):
+    """
+    Serialise in Python, never in the template. An area name or description
+    containing an apostrophe or a quote silently breaks hand-written JSON-LD;
+    json.dumps escapes it. The `</` swap stops a description containing
+    "</script>" from closing the tag early.
+    """
+    return json.dumps(payload, ensure_ascii=False).replace('</', r'<\/')
+ 
+ 
+def _cover_map(district_ids):
+    """
+    One query for the whole directory instead of one per card.
+ 
+    Ordered by district then newest, so the first row seen for each district
+    is its newest property — we stop as soon as every district has a cover.
+    """
+    covers = {}
+    if not district_ids:
+        return covers
+ 
+    qs = (
+        Property.objects
+        .filter(is_active=True, district_id__in=district_ids)
+        .prefetch_related(
+            Prefetch('images', queryset=PropertyImage.objects.order_by('order'),
+                     to_attr='prefetched_images')
+        )
+        .order_by('district_id', '-created_at')
+    )
+    target = len(district_ids)
+    for prop in qs:
+        if prop.district_id not in covers:
+            covers[prop.district_id] = prop.cover_image
+            if len(covers) == target:
+                break
+    return covers
+ 
+ 
+def _area_copy(district, count, low_price, developer_count, offplan, ready):
+    """
+    Fallback body copy when an area has no admin-written description.
+ 
+    Thin-content pages are the single most common reason an area page never
+    ranks: a heading, a grid of cards and nothing else gives Google almost
+    nothing to index. These paragraphs are built from real data for THIS
+    area, so no two area pages read identically — boilerplate repeated across
+    fifty areas is its own duplicate-content problem.
+    """
+    city = district.city.name
+    name = district.name
+ 
+    price_line = (
+        f'Prices in {name} currently start from AED {int(low_price):,}'
+        if low_price else
+        f'Pricing in {name} varies by developer, unit type and handover date'
+    )
+ 
+    mix = []
+    if offplan:
+        mix.append(f'{offplan} off-plan project{"" if offplan == 1 else "s"}')
+    if ready:
+        mix.append(f'{ready} ready propert{"y" if ready == 1 else "ies"}')
+    mix_line = ' and '.join(mix) if mix else f'{count} active listings'
+ 
+    return [
+        f'{name} is one of {city}\u2019s established residential addresses, with '
+        f'{count} propert{"y" if count == 1 else "ies"} currently listed through '
+        f'{BRAND}. The area covers {mix_line}, giving both investors and end-users '
+        f'a choice between immediate handover and construction-linked payment plans.',
+ 
+        f'{price_line}, and the area is served by '
+        f'{developer_count} developer{"" if developer_count == 1 else "s"} on our '
+        f'books. Off-plan releases in {name} are typically sold on staged plans '
+        f'tied to construction milestones, with the balance due at handover, while '
+        f'ready units can be viewed, valued and transferred at the Dubai Land '
+        f'Department without waiting for completion.',
+ 
+        f'Use the filters below to narrow listings in {name} by property type, '
+        f'developer, bedroom count, price and handover, or speak to a {BRAND} '
+        f'advisor for the current price list, floor plans and payment plans on any '
+        f'project in the area.',
+    ]
+ 
+ 
+def _area_faqs(district, count, low_price, developer_names, years):
+    city = district.city.name
+    name = district.name
+ 
+    faqs = [{
+        'q': f'How many properties are available in {name}?',
+        'a': (f'There {"is" if count == 1 else "are"} currently {count} active '
+              f'propert{"y" if count == 1 else "ies"} listed in {name}, {city}, '
+              f'covering both off-plan launches and ready units. The list below '
+              f'updates as new releases and resale units come to market.'),
+    }]
+ 
+    faqs.append({
+        'q': f'What do properties in {name} cost?',
+        'a': (f'Listings in {name} start from AED {int(low_price):,}. The final '
+              f'figure depends on unit size, floor, view and payment structure — '
+              f'ask a {BRAND} advisor for the live price list on a specific project.'
+              if low_price else
+              f'Pricing in {name} is quoted per project and moves with launch '
+              f'phase and unit availability. Contact a {BRAND} advisor for the '
+              f'current price list on any development in the area.'),
+    })
+ 
+    if developer_names:
+        names = ', '.join(developer_names[:5])
+        faqs.append({
+            'q': f'Which developers are building in {name}?',
+            'a': (f'Projects currently listed in {name} come from {names}. '
+                  f'Each developer sets its own payment plan and handover '
+                  f'schedule, so terms differ from one project to the next.'),
+        })
+ 
+    if years:
+        span = f'{years[0]}' if len(years) == 1 else f'{years[0]} and {years[-1]}'
+        faqs.append({
+            'q': f'When do off-plan projects in {name} hand over?',
+            'a': (f'Off-plan handovers in {name} are scheduled between {span}. '
+                  f'Handover dates are set by the developer and registered with '
+                  f'the Dubai Land Department; we confirm the current schedule on '
+                  f'each project before you reserve.'),
+        })
+ 
+    faqs.append({
+        'q': f'Can a foreign buyer own property in {name}?',
+        'a': (f'Freehold ownership in {city} is open to all nationalities in '
+              f'designated areas. We confirm the ownership status of any {name} '
+              f'project before reservation, along with the DLD fees, service '
+              f'charges and registration steps that apply to your purchase.'),
+    })
+ 
+    return faqs
+ 
+ 
+# ─────────────────────────────────────────
+# AREAS — directory
+# ─────────────────────────────────────────
+def district_list(request):
+    """
+    Directory of every area that actually holds stock.
+ 
+    Areas with zero active properties are excluded on purpose: linking to an
+    empty area page hands Google a thin page to index and hands a visitor a
+    dead end. When inventory returns, the area reappears automatically.
+    """
+    bounce = _clean_url(request)
+    if bounce:
+        return bounce
+ 
+    search = request.GET.get('q', '').strip()
+ 
+    districts = (
+        District.objects
+        .filter(is_active=True)
+        .select_related('city')
+        .annotate(prop_count=Count('properties', filter=Q(properties__is_active=True)))
+        .filter(prop_count__gt=0)
+        .order_by('-prop_count', 'name')
+    )
+    if search:
+        districts = districts.filter(
+            Q(name__icontains=search) | Q(city__name__icontains=search)
+        )
+ 
+    districts = list(districts)
+    count = len(districts)
+    total_properties = sum(d.prop_count for d in districts)
+ 
+    covers = _cover_map([d.pk for d in districts])
+    for d in districts:
+        d.cover = covers.get(d.pk)
+ 
+    top_areas = [d.name for d in districts[:6]]
+ 
+    # ── SEO ──
+    if search:
+        meta_title = _pick([
+            f'\u201c{search}\u201d Areas in Dubai | {BRAND}',
+            f'\u201c{search}\u201d Areas in Dubai | Spacesmith',
+            f'\u201c{search}\u201d Areas | Spacesmith',
+        ])
+        meta_description = _describe(
+            f'{count} area{"" if count == 1 else "s"} matching \u201c{search}\u201d '
+            f'across Dubai, with {total_properties} propert'
+            f'{"y" if total_properties == 1 else "ies"} currently listed.',
+            filler=f'Browse by location with {BRAND}.',
+        )
+    else:
+        meta_title = _pick([
+            f'Dubai Areas & Communities for Property Buyers | {BRAND}',
+            f'Dubai Areas & Communities | {BRAND}',
+            f'Dubai Areas & Communities | Spacesmith',
+        ])
+        meta_description = _describe(
+            f'Browse {total_properties} properties across {count} Dubai areas — '
+            f'from {", ".join(top_areas[:6])} and beyond.'
+            if top_areas else
+            f'Browse Dubai property by area and community.',
+            filler=f'Compare communities, prices and handover dates with {BRAND}.',
+        )
+ 
+    # Search permutations canonicalise back to the clean directory and stay
+    # noindex — the same pattern property_list / ready / off-plan already use,
+    # so "?q=marina" never gets indexed as a separate thin page.
+    schema = [
+        {
+            '@context': 'https://schema.org',
+            '@type': 'BreadcrumbList',
+            'itemListElement': [
+                {'@type': 'ListItem', 'position': 1, 'name': 'Home', 'item': f'{SITE_URL}/'},
+                {'@type': 'ListItem', 'position': 2, 'name': 'Properties',
+                 'item': f'{SITE_URL}/properties/'},
+                {'@type': 'ListItem', 'position': 3, 'name': 'Areas', 'item': AREAS_URL},
+            ],
+        },
+        {
+            '@context': 'https://schema.org',
+            '@type': 'ItemList',
+            'name': 'Property areas and communities in Dubai',
+            'numberOfItems': count,
+            'itemListElement': [
+                {'@type': 'ListItem', 'position': i, 'name': d.name,
+                 'url': f'{AREAS_URL}{d.slug}/'}
+                for i, d in enumerate(districts[:50], start=1)
+            ],
+        },
+    ]
+ 
+    return render(request, 'district_list.html', {
+        'districts': districts,
+        'total_count': count,
+        'total_properties': total_properties,
+        'top_areas': top_areas,
+        'active_search': search,
+ 
+        'meta_title': meta_title,
+        'meta_description': meta_description,
+        'canonical': AREAS_URL,
+        'robots': ('noindex, follow' if search else
+                   'index, follow, max-image-preview:large, max-snippet:-1'),
+        'schema_json': _json_ld(schema),
+    })
+ 
+ 
+# ─────────────────────────────────────────
+# AREAS — one area + its properties
+# ─────────────────────────────────────────
+def district_detail(request, slug):
+    """
+    A single area's profile plus a paginated, filterable grid of its stock.
+ 
+    City and district are deliberately NOT exposed as filters — the URL has
+    already locked the area in, so re-exposing them would only let someone
+    filter themselves off the page they are on.
+ 
+    SEO: any active filter, or page > 1, flips the page to `noindex, follow`,
+    and the canonical always points back at the clean area URL (page param
+    only). Filter and sort permutations therefore never get indexed as thin
+    duplicates of each other.
+    """
+    bounce = _clean_url(request)
+    if bounce:
+        return bounce
+ 
+    district = get_object_or_404(
+        District.objects.select_related('city'), slug=slug, is_active=True
+    )
+ 
+    scope = _base_qs().filter(district=district)
+ 
+    active = _read(request)
+    active['city'] = ''        # locked by the URL — ignore if someone hand-types it
+    active['district'] = ''
+ 
+    status = request.GET.get('status', '').strip()
+ 
+    qs = _filtered(scope, active)
+    if status:
+        qs = qs.filter(property_status__slug=status)
+ 
+    has_filters = bool(status) or any(active.values())
+ 
+    paginator = Paginator(qs, PAGE_SIZE)
+    page_obj = paginator.get_page(request.GET.get('page', 1))
+    page = page_obj.number
+ 
+    # ── Facets, scoped to this area only ──
+    # A dropdown that offers a developer with no stock here just leads to an
+    # empty result set, so every option is drawn from the area's own inventory.
+    facets = _facets(scope, active)
+    facets.pop('cities', None)
+    facets.pop('districts', None)
+ 
+    statuses = (
+        PropertyStatus.objects
+        .filter(is_active=True, properties__in=scope.values('pk'))
+        .order_by('name').distinct()
+    )
+ 
+    # ── Area stats (drive the copy, the FAQs and the schema) ──
+    area_total = scope.count()
+    low_price = scope.aggregate(low=Min('price'))['low']
+    developer_names = list(facets['developers'].values_list('name', flat=True)[:6])
+    offplan_count = scope.filter(property_status__slug='off-plan').count()
+    ready_count = scope.filter(property_status__slug='ready').count()
+ 
+    years = list(
+        scope.exclude(delivery_date__isnull=True)
+        .annotate(_y=ExtractYear('delivery_date'))
+        .values_list('_y', flat=True).order_by('_y').distinct()
+    )
+ 
+    cover_image = _cover_map([district.pk]).get(district.pk)
+ 
+    # ── Body copy ──
+    # An admin-written description always wins; the generated paragraphs are
+    # the floor, not the ceiling, and exist so a brand-new area still ships
+    # with enough indexable copy to stand on its own.
+    admin_copy = (getattr(district, 'description', '') or '').strip()
+    area_paragraphs = (
+        [p.strip() for p in admin_copy.split('\n') if p.strip()]
+        if admin_copy else
+        _area_copy(district, area_total, low_price, len(developer_names),
+                   offplan_count, ready_count)
+    )
+    faqs = _area_faqs(district, area_total, low_price, developer_names, years)
+ 
+    # Other areas in the same city — internal links that give this page
+    # somewhere to pass authority instead of dead-ending.
+    siblings = (
+        District.objects
+        .filter(is_active=True, city=district.city)
+        .exclude(pk=district.pk)
+        .annotate(prop_count=Count('properties', filter=Q(properties__is_active=True)))
+        .filter(prop_count__gt=0)
+        .order_by('-prop_count', 'name')[:8]
+    )
+ 
+    # ── SEO ──
+    city = district.city.name
+    name = district.name
+    page_tag = f' | Page {page}' if page > 1 else ''
+ 
+    meta_title = _pick([
+        f'Property for Sale in {name}, {city}{page_tag} | {BRAND}',
+        f'Property for Sale in {name}, {city}{page_tag} | Spacesmith',
+        f'{name} Properties for Sale{page_tag} | Spacesmith',
+        f'{name}, {city} Property{page_tag} | Spacesmith',
+        f'{name} Property for Sale{page_tag}',
+    ])
+ 
+    price_bit = (f' from AED {int(low_price):,}' if low_price else '')
+    base_description = admin_copy or (
+        f'Browse {area_total} propert{"y" if area_total == 1 else "ies"} for sale '
+        f'in {name}, {city}{price_bit} — off-plan and ready homes with payment plans.'
+    )
+    meta_description = _describe(
+        strip_tags(base_description),
+        filler=f'Floor plans and pricing from {BRAND}.',
+    )
+    if page > 1:
+        meta_description = _describe(
+            f'Page {page} \u2014 {meta_description}',
+            filler=None,
+        )
+ 
+    canonical = AREAS_URL + f'{district.slug}/' + (f'?page={page}' if page > 1 else '')
+ 
+    def url_for(target_page):
+        return AREAS_URL + f'{district.slug}/' + (
+            f'?page={target_page}' if target_page > 1 else ''
+        )
+ 
+    schema = [
+        {
+            '@context': 'https://schema.org',
+            '@type': 'BreadcrumbList',
+            'itemListElement': [
+                {'@type': 'ListItem', 'position': 1, 'name': 'Home', 'item': f'{SITE_URL}/'},
+                {'@type': 'ListItem', 'position': 2, 'name': 'Properties',
+                 'item': f'{SITE_URL}/properties/'},
+                {'@type': 'ListItem', 'position': 3, 'name': 'Areas', 'item': AREAS_URL},
+                {'@type': 'ListItem', 'position': 4, 'name': name,
+                 'item': f'{AREAS_URL}{district.slug}/'},
+            ],
+        },
+        {
+            '@context': 'https://schema.org',
+            '@type': 'Place',
+            'name': f'{name}, {city}',
+            'url': f'{AREAS_URL}{district.slug}/',
+            'description': strip_tags(area_paragraphs[0])[:300],
+            'address': {
+                '@type': 'PostalAddress',
+                'addressLocality': name,
+                'addressRegion': city,
+                'addressCountry': 'AE',
+            },
+        },
+        {
+            '@context': 'https://schema.org',
+            '@type': 'FAQPage',
+            'mainEntity': [
+                {'@type': 'Question', 'name': f['q'],
+                 'acceptedAnswer': {'@type': 'Answer', 'text': f['a']}}
+                for f in faqs
+            ],
+        },
+    ]
+ 
+    # Filters are never written into the canonical, so the pagination
+    # querystring is kept separate from it.
+    querystring_parts = {k: v for k, v in active.items() if v}
+    if status:
+        querystring_parts['status'] = status
+ 
+    return render(request, 'district_detail.html', {
+        'district': district,
+        'cover_image': cover_image,
+        'area_paragraphs': area_paragraphs,
+        'faqs': faqs,
+        'siblings': siblings,
+ 
+        'page_obj': page_obj,
+        'properties': page_obj.object_list,
+        'total_count': paginator.count,
+        'area_total': area_total,
+        'offplan_count': offplan_count,
+        'ready_count': ready_count,
+        'low_price': low_price,
+        'developer_count': len(developer_names),
+        'page_range': paginator.get_elided_page_range(page, on_each_side=1, on_ends=1),
+        'querystring': urlencode(querystring_parts),
+ 
+        'statuses': statuses,
+        **facets,
+ 
+        'active_status': status,
+        'active_type': active['type'],
+        'active_developer': active['developer'],
+        'active_unit_type': active['unit_type'],
+        'active_bedrooms': active['bedrooms'],
+        'active_price_min': active['price_min'],
+        'active_price_max': active['price_max'],
+        'active_sort': active['sort'] or 'newest',
+        'active_search': active['q'],
+        'has_filters': has_filters,
+ 
+        'meta_title': meta_title,
+        'meta_description': meta_description,
+        'canonical': canonical,
+        'robots': ('noindex, follow' if (has_filters or page > 1) else
+                   'index, follow, max-image-preview:large, max-snippet:-1'),
+        'rel_prev': url_for(page_obj.previous_page_number()) if page_obj.has_previous() else None,
+        'rel_next': url_for(page_obj.next_page_number()) if page_obj.has_next() else None,
+        'schema_json': _json_ld(schema),
     })

@@ -216,9 +216,11 @@
     </a>
 
     <nav class="nav-desktop" aria-label="Main navigation">
-      <a href="{% url 'home' %}" class="nav-link {% if request.path == '/' %}is-active{% endif %}">Home</a>
+      <!-- <a href="{% url 'home' %}" class="nav-link {% if request.path == '/' %}is-active{% endif %}">Home</a> -->
       <a href="{% url 'properties:offplan_properties' %}" class="nav-link {% if '/off-plan' in request.path %}is-active{% endif %}">Off Plan</a>
       <a href="{% url 'properties:ready_properties' %}" class="nav-link {% if '/ready' in request.path %}is-active{% endif %}">Ready</a>
+      <a href="{% url 'properties:developer_list' %}" class="nav-link {% if '/developer_list' in request.path %}is-active{% endif %}">Developers</a>
+      <a href="{% url 'properties:district_list' %}" class="nav-link {% if '/district_list' in request.path %}is-active{% endif %}">Areas</a>
       {# TODO: point at the blogs app once the url name is confirmed, e.g. {% url 'blog_list' %} #}
       <a href="" class="nav-link {% if '/blog' in request.path %}is-active{% endif %}">Insights</a>
       <a href="{% url 'about' %}" class="nav-link {% if '/about' in request.path %}is-active{% endif %}">About</a>
@@ -257,6 +259,8 @@
       <a href="{% url 'home' %}" class="mobile-link {% if request.path == '/' %}is-active{% endif %}">Home</a>
       <a href="{% url 'properties:offplan_properties' %}" class="mobile-link {% if '/off-plan' in request.path %}is-active{% endif %}">Off Plan</a>
       <a href="{% url 'properties:ready_properties' %}" class="mobile-link {% if '/ready' in request.path %}is-active{% endif %}">Ready</a>
+      <a href="{% url 'properties:developer_list' %}" class="mobile-link {% if '/developer_list' in request.path %}is-active{% endif %}">Developers</a>
+      <a href="{% url 'properties:district_list' %}" class="mobile-link {% if '/district_list' in request.path %}is-active{% endif %}">Areas</a>
       <a href="" class="mobile-link {% if '/blog' in request.path %}is-active{% endif %}">Insights</a>
       <a href="{% url 'about' %}" class="mobile-link {% if '/about' in request.path %}is-active{% endif %}">About Us</a>
       <a href="{% url 'contact' %}" class="btn-primary">Book a Viewing</a>

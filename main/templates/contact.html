@@ -5,7 +5,7 @@
 {% block meta_description %}Get in touch with Spacesmith Real Estate — book a viewing, ask about off-plan launches, or speak with an advisor today.{% endblock %}
 {% block canonical %}https://spacesmithrealestate.com/contact/{% endblock %}
 
-{% block content %}
+{% block extra_css %}
 <style>
   /* This page only adds contact-specific rules. All colors, fonts and
      spacing come from the :root tokens already defined in base.html —
@@ -13,30 +13,74 @@
      the rest of the site. */
 
   /* ================= HERO ================= */
-  .contact-hero {
+  .ct-hero {
     position: relative;
     background:
       radial-gradient(120% 140% at 82% -10%, color-mix(in srgb, var(--gold) 16%, transparent), transparent 58%),
       linear-gradient(180deg, var(--ink), #0f231c);
     color: var(--cream);
-    padding-block: 5rem 4.5rem;
+    padding: calc(var(--nav-height) + 3rem) 0 4rem;
     overflow: hidden;
   }
-  .contact-hero__text { max-width: 42rem; }
-  .contact-hero h1 {
-    font-size: clamp(2.25rem, 5vw, 4rem);
-    line-height: 1.06; margin: 1rem 0 0; color: var(--cream);
+  .ct-hero::after {
+    content: '';
+    position: absolute;
+    right: -220px; top: 50%;
+    transform: translateY(-50%);
+    width: 620px; height: 620px;
+    border-radius: 50%;
+    border: 1px solid rgba(246,242,233,.08);
+    pointer-events: none;
   }
-  .contact-hero h1 .accent { color: var(--gold); }
-  .contact-hero__copy { margin: 1.25rem 0 0; font-size: 1.0625rem; color: rgba(246,242,233,.82); max-width: 34rem; }
+  .ct-hero-inner { display: grid; gap: 3rem; grid-template-columns: 1fr; }
+  @media (min-width: 1024px) { .ct-hero-inner { grid-template-columns: 1.05fr 1fr; align-items: center; gap: 4rem; } }
 
-  @media (min-width: 768px) {
-    .contact-hero { padding-block: 6.5rem 5.5rem; }
+  .ct-breadcrumb {
+    display: flex; align-items: center; gap: .5rem; flex-wrap: wrap;
+    font-size: .75rem; color: rgba(246,242,233,.45); margin-bottom: 1.25rem;
   }
+  .ct-breadcrumb a { color: rgba(246,242,233,.45); transition: color .2s ease; }
+  .ct-breadcrumb a:hover { color: var(--gold); }
+  .ct-breadcrumb span { color: rgba(246,242,233,.25); }
+
+  .ct-hero h1 {
+    font-size: clamp(2.25rem, 5vw, 4rem);
+    line-height: 1.06; margin: .5rem 0 0; color: var(--cream);
+  }
+  .ct-hero h1 .accent { color: var(--gold); }
+  .ct-hero-copy { margin: 1.25rem 0 0; font-size: 1.0625rem; color: rgba(246,242,233,.82); max-width: 34rem; }
+
+  /* hero contact cards */
+  .ct-hero-cards { display: flex; flex-direction: column; gap: .875rem; }
+  @media (min-width: 640px) and (max-width: 1023px) { .ct-hero-cards { display: grid; grid-template-columns: 1fr 1fr; } }
+
+  .ct-info-card {
+    display: flex; align-items: center; gap: 1rem;
+    background: rgba(246,242,233,.05);
+    border: 1px solid rgba(246,242,233,.12);
+    backdrop-filter: blur(10px);
+    border-radius: .75rem;
+    padding: 1.1rem 1.25rem;
+    text-decoration: none;
+    transition: background-color .25s ease, border-color .25s ease, transform .25s ease;
+  }
+  .ct-info-card:hover { background: rgba(212,175,55,.08); border-color: rgba(212,175,55,.35); transform: translateY(-2px); }
+
+  .ct-info-icon {
+    width: 2.75rem; height: 2.75rem; border-radius: 50%; flex-shrink: 0;
+    background: linear-gradient(135deg, var(--primary), var(--gold-dark));
+    display: flex; align-items: center; justify-content: center;
+  }
+  .ct-info-icon svg { width: 1.15rem; height: 1.15rem; stroke: var(--cream); fill: none; stroke-width: 1.8; }
+  .ct-info-icon svg.fill-icon { stroke: none; fill: var(--cream); }
+
+  .ct-info-label { display: block; font-size: .625rem; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: rgba(246,242,233,.45); margin-bottom: .25rem; }
+  .ct-info-value { display: block; font-size: .9375rem; font-weight: 600; color: var(--cream); word-break: break-word; transition: color .2s ease; }
+  .ct-info-card:hover .ct-info-value { color: var(--gold-light); }
 
   /* ================= MAIN LAYOUT ================= */
-  .contact-body { padding-block: 4rem 6rem; background: color-mix(in srgb, var(--secondary) 45%, #fff); }
-  @media (min-width: 768px) { .contact-body { padding-block: 5rem 6rem; } }
+  .contact-body { padding-block: 4rem 5rem; background: color-mix(in srgb, var(--secondary) 45%, #fff); }
+  @media (min-width: 768px) { .contact-body { padding-block: 5rem 5.5rem; } }
 
   .contact-layout { display: grid; gap: 2rem; grid-template-columns: 1fr; }
   @media (min-width: 1024px) { .contact-layout { grid-template-columns: 1.3fr 1fr; align-items: start; gap: 2.5rem; } }
@@ -53,17 +97,36 @@
   .form-card .sub { color: var(--muted-foreground); font-size: .9375rem; margin: 0 0 2rem; }
 
   .alert-success, .alert-warning, .alert-error {
-    display: flex; align-items: flex-start; gap: .6rem;
+    display: flex; align-items: flex-start; gap: .75rem;
     border-radius: .75rem; padding: 1rem 1.25rem; font-size: .9rem;
     margin-bottom: 1.5rem; line-height: 1.5;
   }
-  .alert-success svg, .alert-warning svg, .alert-error svg { width: 1.1rem; height: 1.1rem; flex-shrink: 0; margin-top: .1rem; }
-  .alert-success { background: color-mix(in srgb, var(--primary) 10%, transparent); border: 1px solid color-mix(in srgb, var(--primary) 30%, transparent); color: var(--primary); }
-  .alert-warning { background: color-mix(in srgb, var(--gold) 12%, transparent); border: 1px solid color-mix(in srgb, var(--gold) 35%, transparent); color: var(--gold-dark); }
-  .alert-error   { background: rgba(179,38,30,.08); border: 1px solid rgba(179,38,30,.3); color: #b3261e; }
+  .alert-success svg, .alert-warning svg, .alert-error svg { width: 1.3rem; height: 1.3rem; flex-shrink: 0; margin-top: .05rem; }
+  .alert-success {
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    color: var(--cream); border: 1px solid transparent; border-left: 4px solid var(--gold);
+  }
+  .alert-success svg { stroke: var(--cream); }
+  .alert-warning {
+    background: linear-gradient(135deg, #8a6d1d, var(--gold-dark));
+    color: var(--cream); border-left: 4px solid var(--gold-light);
+  }
+  .alert-warning svg { stroke: var(--cream); }
+  .alert-error { background: rgba(179,38,30,.08); border: 1px solid rgba(179,38,30,.3); border-left: 4px solid #b3261e; color: #8f1f19; }
+  .alert-error svg { stroke: #b3261e; }
+  .alert-success strong, .alert-warning strong, .alert-error strong { display: block; margin-bottom: .15rem; }
 
   /* honeypot — never shown to real visitors */
   .hp-field { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+
+  /* input hidden by real Django field, mirrored by the flag widget below */
+  .real-input-mirror {
+    position: absolute !important;
+    width: 1px !important; height: 1px !important;
+    padding: 0 !important; margin: -1px !important;
+    overflow: hidden !important; opacity: 0 !important;
+    pointer-events: none !important;
+  }
 
   .form-grid { display: grid; gap: 1.25rem; grid-template-columns: 1fr; }
   @media (min-width: 640px) { .form-grid { grid-template-columns: repeat(2, 1fr); } }
@@ -78,17 +141,91 @@
     width: 100%; border-radius: .625rem; border: 1px solid var(--border);
     background: var(--secondary); color: var(--foreground);
     padding: .75rem .9rem; font-size: .9375rem; font-family: inherit;
-    transition: border-color .2s ease;
+    transition: border-color .2s ease, box-shadow .2s ease;
     box-sizing: border-box;
   }
-  .form-field input:focus, .form-field select:focus, .form-field textarea:focus { outline: none; border-color: var(--primary); }
+  .form-field input:focus, .form-field select:focus, .form-field textarea:focus {
+    outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 12%, transparent);
+  }
   .form-field textarea { resize: vertical; min-height: 8rem; }
 
   .field-error { color: #b3261e; font-size: .8125rem; margin-top: -.15rem; }
+  .form-field input.is-invalid,
+  .phone-field-wrap.is-invalid { border-color: #b3261e !important; box-shadow: 0 0 0 3px rgba(179,38,30,.08) !important; }
 
   .form-submit { margin-top: 1.5rem; }
   .form-submit .btn-solid { width: 100%; }
   @media (min-width: 640px) { .form-submit .btn-solid { width: auto; } }
+  .btn-solid:disabled { opacity: .7; cursor: not-allowed; }
+  @keyframes ct-spin { to { transform: rotate(360deg); } }
+
+  /* ---- phone / whatsapp country-code widget ---- */
+  .phone-field-wrap {
+    position: relative; display: flex; align-items: stretch;
+    border-radius: .625rem; border: 1px solid var(--border); background: var(--secondary);
+    transition: border-color .2s ease, box-shadow .2s ease;
+  }
+  .phone-field-wrap:focus-within {
+    border-color: var(--primary); box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 12%, transparent);
+  }
+  .phone-flag-btn {
+    display: flex; align-items: center; gap: .4rem;
+    padding: 0 .65rem; border: none; border-right: 1px solid var(--border);
+    background: transparent; cursor: pointer; font-family: inherit; font-size: .875rem;
+    color: var(--foreground); white-space: nowrap; flex-shrink: 0; border-radius: .625rem 0 0 .625rem;
+  }
+  .phone-flag-btn:hover { background: color-mix(in srgb, var(--primary) 6%, transparent); }
+  .phone-flag-btn .flag-emoji { font-size: 1.05rem; line-height: 1; }
+  .phone-flag-btn .dial-code { font-size: .75rem; font-weight: 600; color: var(--gold-dark); }
+  .phone-flag-btn .chevron {
+    width: .5rem; height: .5rem;
+    border-right: 1.5px solid var(--muted-foreground); border-bottom: 1.5px solid var(--muted-foreground);
+    transform: rotate(45deg) translateY(-2px); flex-shrink: 0; transition: transform .2s ease;
+  }
+  .phone-flag-btn.open .chevron { transform: rotate(-135deg) translateY(-2px); }
+
+  .phone-number-input {
+    flex: 1; min-width: 0; border: none; background: transparent;
+    padding: .75rem .9rem; font-family: inherit; font-size: .9375rem; color: var(--foreground); outline: none;
+  }
+
+  .phone-dropdown {
+    position: absolute; top: calc(100% + 6px); left: 0; width: 19rem; max-width: calc(100vw - 3rem);
+    background: var(--card); border: 1px solid var(--border); border-radius: .625rem;
+    box-shadow: var(--shadow-elegant); z-index: 60; display: none; flex-direction: column; max-height: 20rem;
+  }
+  .phone-dropdown.open { display: flex; }
+  .phone-dropdown__search { padding: .625rem .75rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: .5rem; }
+  .phone-dropdown__search svg { width: .875rem; height: .875rem; stroke: var(--muted-foreground); fill: none; stroke-width: 2; flex-shrink: 0; }
+  .phone-dropdown__search input { flex: 1; border: none; background: transparent; font-family: inherit; font-size: .8125rem; color: var(--foreground); outline: none; }
+  .phone-dropdown__list { overflow-y: auto; flex: 1; }
+  .phone-dropdown__item { display: flex; align-items: center; gap: .625rem; padding: .625rem .875rem; cursor: pointer; font-size: .8125rem; color: var(--foreground); transition: background-color .15s ease; }
+  .phone-dropdown__item:hover { background: var(--secondary); }
+  .phone-dropdown__item.selected { background: color-mix(in srgb, var(--primary) 8%, transparent); color: var(--primary); font-weight: 600; }
+  .phone-dropdown__item .di-flag { font-size: 1.05rem; flex-shrink: 0; }
+  .phone-dropdown__item .di-name { flex: 1; }
+  .phone-dropdown__item .di-code { font-size: .6875rem; color: var(--muted-foreground); font-weight: 600; }
+
+  .form-field.same-as-phone {
+    margin-top: -.4rem; flex-direction: row; align-items: center; justify-content: flex-start; gap: .55rem;
+  }
+  .same-as-phone input[type="checkbox"] {
+    -webkit-appearance: none; appearance: none;
+    width: 1.05rem; height: 1.05rem; flex-shrink: 0; margin: 0;
+    border: 1.5px solid var(--border); border-radius: .3rem; background: var(--secondary);
+    display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
+    transition: background-color .15s ease, border-color .15s ease;
+  }
+  .same-as-phone input[type="checkbox"]:checked { background: var(--primary); border-color: var(--primary); }
+  .same-as-phone input[type="checkbox"]:checked::after {
+    content: ''; width: .3rem; height: .55rem;
+    border-right: 2px solid var(--cream); border-bottom: 2px solid var(--cream);
+    transform: rotate(45deg) translate(-1px, -1px);
+  }
+  .same-as-phone label {
+    font-size: .8125rem; line-height: 1; color: var(--muted-foreground); cursor: pointer;
+    text-transform: none; letter-spacing: 0; margin: 0;
+  }
 
   /* ---- info panel ---- */
   .info-card {
@@ -98,6 +235,18 @@
   @media (min-width: 640px) { .info-card { padding: 2.5rem; } }
   .info-card h3 { font-size: 1.375rem; margin: 0; color: var(--cream); }
   @media (min-width: 640px) { .info-card h3 { font-size: 1.5rem; } }
+  .info-card .sub { font-size: .875rem; color: rgba(246,242,233,.65); line-height: 1.7; margin-top: -1.25rem; }
+
+  .trust-list { display: flex; flex-direction: column; gap: 1.1rem; }
+  .trust-item { display: flex; gap: .85rem; align-items: flex-start; }
+  .trust-icon {
+    width: 2.25rem; height: 2.25rem; border-radius: 50%; flex-shrink: 0; margin-top: .1rem;
+    background: rgba(246,242,233,.08); border: 1px solid rgba(246,242,233,.15);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .trust-icon svg { width: .95rem; height: .95rem; stroke: var(--gold); fill: none; stroke-width: 2; }
+  .trust-heading { display: block; font-size: .8125rem; font-weight: 700; color: var(--cream); margin-bottom: .2rem; }
+  .trust-desc { font-size: .8125rem; color: rgba(246,242,233,.65); line-height: 1.6; }
 
   .info-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 1.1rem; }
   .info-list li { display: flex; gap: .85rem; align-items: flex-start; font-size: .9rem; color: rgba(246,242,233,.85); }
@@ -119,22 +268,91 @@
   .social-row a:hover { background: var(--gold); color: var(--ink); }
   .social-row svg { width: 1rem; height: 1rem; }
 
-  /* ---- map ---- */
-  .map-card { border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow-card); border: 1px solid var(--border); }
-  .map-card iframe { width: 100%; height: 260px; border: 0; display: block; }
-  @media (min-width: 640px) { .map-card iframe { height: 300px; } }
+  /* ---- map section (side panel + embed, like a landmark card) ---- */
+  .map-section { background: var(--card); border-top: 1px solid var(--border); }
+  .map-inner { display: grid; grid-template-columns: 1fr; min-height: 22rem; }
+  @media (min-width: 900px) { .map-inner { grid-template-columns: 22rem 1fr; min-height: 26rem; } }
+
+  .map-info {
+    background: var(--ink); color: var(--cream);
+    padding: 3rem 2.25rem; display: flex; flex-direction: column; justify-content: center; gap: 2rem;
+    position: relative; overflow: hidden;
+  }
+  .map-info::before {
+    content: ''; position: absolute; inset: 0;
+    background: radial-gradient(120% 100% at 0% 0%, color-mix(in srgb, var(--gold) 14%, transparent), transparent 60%);
+    pointer-events: none;
+  }
+  .map-info-title { font-family: var(--font-display); font-size: 1.5rem; font-weight: 500; color: var(--cream); line-height: 1.3; position: relative; }
+  .map-info-title span { color: var(--gold); }
+
+  .map-addr-item { display: flex; align-items: flex-start; gap: .875rem; position: relative; }
+  .map-addr-item svg { width: 1.15rem; height: 1.15rem; stroke: var(--gold); fill: none; stroke-width: 1.8; flex-shrink: 0; margin-top: .15rem; }
+  .map-addr-label { font-size: .625rem; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: rgba(246,242,233,.45); display: block; margin-bottom: .25rem; }
+  .map-addr-value { font-size: .875rem; color: rgba(246,242,233,.85); line-height: 1.6; }
+
+  .map-hours { display: flex; flex-direction: column; gap: .5rem; position: relative; padding-top: 1.5rem; border-top: 1px solid rgba(246,242,233,.12); }
+  .map-hours-title { font-size: .625rem; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--gold); margin-bottom: .25rem; }
+  .map-hours-row { display: flex; justify-content: space-between; font-size: .8125rem; color: rgba(246,242,233,.65); gap: .5rem; }
+  .map-hours-row span:last-child { color: rgba(246,242,233,.92); font-weight: 500; text-align: right; }
+
+  .map-embed { position: relative; }
+  .map-embed iframe { width: 100%; height: 100%; border: none; display: block; min-height: 22rem; }
+  @media (min-width: 900px) { .map-embed iframe { min-height: 26rem; } }
 </style>
+{% endblock %}
+
+{% block content %}
 
 <!-- ================= HERO ================= -->
-<section class="contact-hero">
+<section class="ct-hero">
   <div class="container-page">
-    <div class="contact-hero__text">
-      <p class="eyebrow">Contact</p>
-      <h1>Let's find your <span class="accent">space.</span></h1>
-      <p class="contact-hero__copy">
-        Whether you're buying, selling, leasing or exploring off-plan opportunities across
-        Dubai — tell us what you need and a Spacesmith advisor will reply within one working day.
-      </p>
+    <div class="ct-hero-inner">
+
+      <div>
+        <nav class="ct-breadcrumb">
+          <a href="{% url 'home' %}">Home</a>
+          <span>›</span>
+          <span>Contact</span>
+        </nav>
+        <p class="eyebrow">Get In Touch</p>
+        <h1>Let's find your <span class="accent">space.</span></h1>
+        <p class="ct-hero-copy">
+          Whether you're buying, selling, leasing or exploring off-plan opportunities across
+          Dubai — tell us what you need and a Spacesmith advisor will reply within one working day.
+        </p>
+      </div>
+
+      <div class="ct-hero-cards reveal">
+        <a href="tel:+971556399212" class="ct-info-card">
+          <div class="ct-info-icon">
+            <svg viewBox="0 0 24 24"><path d="M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233 14 14 0 0 0 6.392 6.384"/></svg>
+          </div>
+          <div><span class="ct-info-label">Call Us</span><span class="ct-info-value">+971 55 639 9212</span></div>
+        </a>
+
+        <a href="mailto:hello@spacesmithrealestate.com" class="ct-info-card">
+          <div class="ct-info-icon">
+            <svg viewBox="0 0 24 24"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+          </div>
+          <div><span class="ct-info-label">Email Us</span><span class="ct-info-value">hello@spacesmithrealestate.com</span></div>
+        </a>
+
+        <a href="https://wa.me/971556399212" target="_blank" rel="noopener noreferrer" class="ct-info-card">
+          <div class="ct-info-icon">
+            <svg viewBox="0 0 24 24" class="fill-icon"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884M20.885 3.488A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413"/></svg>
+          </div>
+          <div><span class="ct-info-label">WhatsApp</span><span class="ct-info-value">+971 55 639 9212</span></div>
+        </a>
+
+        <div class="ct-info-card" style="cursor:default;">
+          <div class="ct-info-icon">
+            <svg viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+          </div>
+          <div><span class="ct-info-label">Office</span><span class="ct-info-value">Royal Class Building, DIP First</span></div>
+        </div>
+      </div>
+
     </div>
   </div>
 </section>
@@ -147,18 +365,30 @@
       <!-- ---- form ---- -->
       <div class="form-card reveal">
         <h2>Send us a message</h2>
-        <p class="sub">Fields marked with an asterisk are required.</p>
+        <p class="sub">Fields marked with an asterisk are required. Our team replies within one working day.</p>
 
         {% if messages %}
           {% for message in messages %}
-            <div class="alert-{{ message.tags|default:'success' }}">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4 12 14.01l-3-3"/></svg>
-              <span>{{ message }}</span>
+            {% if message.tags == 'error' %}
+            <div class="alert-error">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              <div><strong>Something went wrong</strong>{{ message }}</div>
             </div>
+            {% elif message.tags == 'warning' %}
+            <div class="alert-warning">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              <div><strong>Enquiry saved</strong>{{ message }}</div>
+            </div>
+            {% else %}
+            <div class="alert-success">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4 12 14.01l-3-3"/></svg>
+              <div><strong>Thank you</strong>{{ message }}</div>
+            </div>
+            {% endif %}
           {% endfor %}
         {% endif %}
 
-        <form method="post" novalidate>
+        <form method="post" novalidate id="contactForm">
           {% csrf_token %}
 
           <!-- honeypot: real users never see or fill this -->
@@ -171,27 +401,63 @@
             <div class="form-field">
               <label for="{{ form.name.id_for_label }}">Full name *</label>
               {{ form.name }}
-              {% if form.name.errors %}<span class="field-error">{{ form.name.errors.0 }}</span>{% endif %}
+              <span class="field-error" id="nameError">{% if form.name.errors %}{{ form.name.errors.0 }}{% endif %}</span>
             </div>
 
             <div class="form-field">
               <label for="{{ form.email.id_for_label }}">Email *</label>
               {{ form.email }}
-              {% if form.email.errors %}<span class="field-error">{{ form.email.errors.0 }}</span>{% endif %}
+              <span class="field-error" id="emailError">{% if form.email.errors %}{{ form.email.errors.0 }}{% endif %}</span>
             </div>
 
+            <!-- PHONE — flag + dial-code widget, mirrors into the real Django field -->
             <div class="form-field">
-              <label for="{{ form.phone.id_for_label }}">Phone *</label>
-              {{ form.phone }}
-              <span class="hint">Include country code, e.g. +971 50 123 4567</span>
-              {% if form.phone.errors %}<span class="field-error">{{ form.phone.errors.0 }}</span>{% endif %}
+              <label>Phone *</label>
+              <div class="phone-field-wrap{% if form.phone.errors %} is-invalid{% endif %}" id="phoneWrap" data-target="{{ form.phone.id_for_label }}">
+                <button type="button" class="phone-flag-btn" id="phoneBtn" aria-label="Select country code">
+                  <span class="flag-emoji" id="phoneFlag">🇦🇪</span>
+                  <span class="dial-code" id="phoneDial">+971</span>
+                  <span class="chevron"></span>
+                </button>
+                <input type="text" class="phone-number-input" id="phoneNumberInput" placeholder="50 123 4567" inputmode="numeric" autocomplete="tel-national">
+                <span class="real-input-mirror">{{ form.phone }}</span>
+                <div class="phone-dropdown" id="phoneDropdown">
+                  <div class="phone-dropdown__search">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    <input type="text" placeholder="Search country…" id="phoneSearch" autocomplete="off">
+                  </div>
+                  <div class="phone-dropdown__list" id="phoneList"></div>
+                </div>
+              </div>
+              <span class="field-error" id="phoneError">{% if form.phone.errors %}{{ form.phone.errors.0 }}{% endif %}</span>
             </div>
 
+            <!-- WHATSAPP — same widget, optional -->
             <div class="form-field">
-              <label for="{{ form.whatsapp.id_for_label }}">WhatsApp</label>
-              {{ form.whatsapp }}
+              <label>WhatsApp</label>
+              <div class="phone-field-wrap{% if form.whatsapp.errors %} is-invalid{% endif %}" id="waWrap" data-target="{{ form.whatsapp.id_for_label }}">
+                <button type="button" class="phone-flag-btn" id="waBtn" aria-label="Select country code">
+                  <span class="flag-emoji" id="waFlag">🇦🇪</span>
+                  <span class="dial-code" id="waDial">+971</span>
+                  <span class="chevron"></span>
+                </button>
+                <input type="text" class="phone-number-input" id="waNumberInput" placeholder="50 123 4567" inputmode="numeric" autocomplete="off">
+                <span class="real-input-mirror">{{ form.whatsapp }}</span>
+                <div class="phone-dropdown" id="waDropdown">
+                  <div class="phone-dropdown__search">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    <input type="text" placeholder="Search country…" id="waSearch" autocomplete="off">
+                  </div>
+                  <div class="phone-dropdown__list" id="waList"></div>
+                </div>
+              </div>
               <span class="hint">Optional, if different from your phone</span>
-              {% if form.whatsapp.errors %}<span class="field-error">{{ form.whatsapp.errors.0 }}</span>{% endif %}
+              <span class="field-error" id="waError">{% if form.whatsapp.errors %}{{ form.whatsapp.errors.0 }}{% endif %}</span>
+            </div>
+
+            <div class="form-field full same-as-phone">
+              <input type="checkbox" id="sameAsPhone">
+              <label for="sameAsPhone">WhatsApp number is the same as my phone number</label>
             </div>
 
             <!-- <div class="form-field full">
@@ -203,12 +469,12 @@
             <div class="form-field full">
               <label for="{{ form.message.id_for_label }}">Message *</label>
               {{ form.message }}
-              {% if form.message.errors %}<span class="field-error">{{ form.message.errors.0 }}</span>{% endif %}
+              <span class="field-error" id="messageError">{% if form.message.errors %}{{ form.message.errors.0 }}{% endif %}</span>
             </div>
           </div>
 
           <div class="form-submit">
-            <button type="submit" class="btn-solid">
+            <button type="submit" class="btn-solid" id="submitBtn">
               Send message
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
             </button>
@@ -218,7 +484,26 @@
 
       <!-- ---- info panel ---- -->
       <div style="display:flex; flex-direction:column; gap:1.5rem;">
+
         <div class="info-card reveal" data-delay="80">
+          <h3>Why work with Spacesmith</h3>
+          <div class="trust-list">
+            <div class="trust-item">
+              <div class="trust-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg></div>
+              <div><span class="trust-heading">Reply within one working day</span><span class="trust-desc">Every enquiry reaches a real advisor — no automated hand-offs.</span></div>
+            </div>
+            <div class="trust-item">
+              <div class="trust-icon"><svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z"/></svg></div>
+              <div><span class="trust-heading">Local, on-the-ground expertise</span><span class="trust-desc">Deep familiarity with Dubai's communities, off-plan launches and pricing trends.</span></div>
+            </div>
+            <div class="trust-item">
+              <div class="trust-icon"><svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+              <div><span class="trust-heading">One dedicated advisor</span><span class="trust-desc">The same person guides you from first enquiry to keys in hand.</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="info-card reveal" data-delay="140">
           <h3>Get in touch directly</h3>
           <ul class="info-list">
             <li>
@@ -260,16 +545,262 @@
           </div>
         </div>
 
-        <div class="map-card reveal" data-delay="160">
-          <iframe
-            src="https://www.google.com/maps?q=Dubai+Investment+Park+First,+Dubai,+UAE&output=embed"
-            loading="lazy"
-            referrerpolicy="no-referrer-when-downgrade"
-            title="Spacesmith Real Estate office location"></iframe>
-        </div>
       </div>
 
     </div>
   </div>
 </section>
+
+<!-- ================= MAP ================= -->
+<section class="map-section">
+  <div class="map-inner">
+    <div class="map-info reveal">
+      <h3 class="map-info-title">Find us at<br><span>Dubai Investment Park</span></h3>
+
+      <div class="map-addr-item">
+        <svg viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+        <div>
+          <span class="map-addr-label">Address</span>
+          <span class="map-addr-value">117, Royal Class Building,<br>Dubai Investment Park First, Dubai, UAE</span>
+        </div>
+      </div>
+
+      <div class="map-hours">
+        <span class="map-hours-title">Working Hours</span>
+        <div class="map-hours-row"><span>Sunday – Thursday</span><span>9:00 AM – 7:00 PM</span></div>
+        <div class="map-hours-row"><span>Friday</span><span>2:00 PM – 7:00 PM</span></div>
+        <div class="map-hours-row"><span>Saturday</span><span>By appointment</span></div>
+      </div>
+    </div>
+
+    <div class="map-embed">
+      <iframe
+        src="https://www.google.com/maps?q=Dubai+Investment+Park+First,+Dubai,+UAE&output=embed"
+        loading="lazy"
+        referrerpolicy="no-referrer-when-downgrade"
+        title="Spacesmith Real Estate office location"></iframe>
+    </div>
+  </div>
+</section>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function () {
+  'use strict';
+
+  var COUNTRIES = [
+    { name: 'United Arab Emirates', code: 'AE', dial: '+971', flag: '🇦🇪' },
+    { name: 'Saudi Arabia',         code: 'SA', dial: '+966', flag: '🇸🇦' },
+    { name: 'Qatar',                code: 'QA', dial: '+974', flag: '🇶🇦' },
+    { name: 'Kuwait',               code: 'KW', dial: '+965', flag: '🇰🇼' },
+    { name: 'Bahrain',              code: 'BH', dial: '+973', flag: '🇧🇭' },
+    { name: 'Oman',                 code: 'OM', dial: '+968', flag: '🇴🇲' },
+    { name: 'India',                code: 'IN', dial: '+91',  flag: '🇮🇳' },
+    { name: 'Pakistan',             code: 'PK', dial: '+92',  flag: '🇵🇰' },
+    { name: 'United Kingdom',       code: 'GB', dial: '+44',  flag: '🇬🇧' },
+    { name: 'United States',        code: 'US', dial: '+1',   flag: '🇺🇸' },
+    { name: 'Canada',               code: 'CA', dial: '+1',   flag: '🇨🇦' },
+    { name: 'Australia',            code: 'AU', dial: '+61',  flag: '🇦🇺' },
+    { name: 'Germany',              code: 'DE', dial: '+49',  flag: '🇩🇪' },
+    { name: 'France',               code: 'FR', dial: '+33',  flag: '🇫🇷' },
+    { name: 'China',                code: 'CN', dial: '+86',  flag: '🇨🇳' },
+    { name: 'Russia',               code: 'RU', dial: '+7',   flag: '🇷🇺' },
+    { name: 'Egypt',                code: 'EG', dial: '+20',  flag: '🇪🇬' },
+    { name: 'Jordan',               code: 'JO', dial: '+962', flag: '🇯🇴' },
+    { name: 'Lebanon',              code: 'LB', dial: '+961', flag: '🇱🇧' },
+    { name: 'Turkey',               code: 'TR', dial: '+90',  flag: '🇹🇷' },
+    { name: 'South Africa',         code: 'ZA', dial: '+27',  flag: '🇿🇦' },
+    { name: 'Nigeria',              code: 'NG', dial: '+234', flag: '🇳🇬' },
+    { name: 'Singapore',            code: 'SG', dial: '+65',  flag: '🇸🇬' },
+    { name: 'Malaysia',             code: 'MY', dial: '+60',  flag: '🇲🇾' },
+    { name: 'Philippines',          code: 'PH', dial: '+63',  flag: '🇵🇭' },
+    { name: 'Bangladesh',           code: 'BD', dial: '+880', flag: '🇧🇩' }
+  ];
+
+  function PhoneWidget(opts) {
+    this.btn      = document.getElementById(opts.btnId);
+    this.flagEl   = document.getElementById(opts.flagId);
+    this.dialEl   = document.getElementById(opts.dialId);
+    this.numInput = document.getElementById(opts.numInputId);
+    this.dropdown = document.getElementById(opts.dropdownId);
+    this.searchEl = document.getElementById(opts.searchId);
+    this.listEl   = document.getElementById(opts.listId);
+    // the real Django-rendered field, visually hidden but submitted with the form
+    this.realInput = document.getElementById(opts.realInputId);
+    this.selected = COUNTRIES[0];
+    if (this.realInput) this.realInput.removeAttribute('required');
+    this._init();
+  }
+
+  PhoneWidget.prototype._init = function () {
+    var self = this;
+    this._renderList(COUNTRIES);
+
+    this.btn.addEventListener('click', function (e) { e.stopPropagation(); self._toggle(); });
+
+    this.searchEl.addEventListener('input', function () {
+      var q = this.value.toLowerCase();
+      self._renderList(COUNTRIES.filter(function (c) {
+        return c.name.toLowerCase().indexOf(q) !== -1 || c.dial.indexOf(q) !== -1 || c.code.toLowerCase().indexOf(q) !== -1;
+      }));
+    });
+
+    this.numInput.addEventListener('input', function () {
+      this.value = this.value.replace(/\D/g, '');
+      self._assemble();
+    });
+
+    document.addEventListener('click', function (e) {
+      if (!self.dropdown.contains(e.target) && e.target !== self.btn) self._close();
+    });
+
+    // restore value if the page re-rendered after a validation error
+    var existing = this.realInput ? this.realInput.value : '';
+    if (existing && existing.charAt(0) === '+') {
+      var match = null;
+      for (var i = 0; i < COUNTRIES.length; i++) {
+        if (existing.indexOf(COUNTRIES[i].dial) === 0) { match = COUNTRIES[i]; break; }
+      }
+      if (match) {
+        self._select(match, true);
+        self.numInput.value = existing.slice(match.dial.length).replace(/\D/g, '');
+      }
+    }
+  };
+
+  PhoneWidget.prototype._renderList = function (list) {
+    var self = this;
+    this.listEl.innerHTML = '';
+    list.forEach(function (c) {
+      var item = document.createElement('div');
+      item.className = 'phone-dropdown__item' + (c.code === self.selected.code ? ' selected' : '');
+      item.innerHTML = '<span class="di-flag">' + c.flag + '</span><span class="di-name">' + c.name + '</span><span class="di-code">' + c.dial + '</span>';
+      item.addEventListener('click', function () { self._select(c); });
+      self.listEl.appendChild(item);
+    });
+  };
+
+  PhoneWidget.prototype._select = function (country, silent) {
+    this.selected = country;
+    this.flagEl.textContent = country.flag;
+    this.dialEl.textContent = country.dial;
+    if (!silent) { this._close(); this.numInput.focus(); }
+    this._assemble();
+  };
+
+  PhoneWidget.prototype._assemble = function () {
+    if (!this.realInput) return;
+    var num = this.numInput.value.replace(/\D/g, '');
+    this.realInput.value = num ? this.selected.dial + num : '';
+  };
+
+  PhoneWidget.prototype._toggle = function () { this.dropdown.classList.contains('open') ? this._close() : this._open(); };
+  PhoneWidget.prototype._open = function () {
+    this.dropdown.classList.add('open');
+    this.btn.classList.add('open');
+    this.searchEl.value = '';
+    this._renderList(COUNTRIES);
+    this.searchEl.focus();
+  };
+  PhoneWidget.prototype._close = function () { this.dropdown.classList.remove('open'); this.btn.classList.remove('open'); };
+
+  var phoneWrapEl = document.getElementById('phoneWrap');
+  var waWrapEl    = document.getElementById('waWrap');
+
+  var phoneWidget = new PhoneWidget({
+    btnId: 'phoneBtn', flagId: 'phoneFlag', dialId: 'phoneDial',
+    numInputId: 'phoneNumberInput', dropdownId: 'phoneDropdown',
+    searchId: 'phoneSearch', listId: 'phoneList',
+    realInputId: phoneWrapEl ? phoneWrapEl.dataset.target : null
+  });
+
+  var waWidget = new PhoneWidget({
+    btnId: 'waBtn', flagId: 'waFlag', dialId: 'waDial',
+    numInputId: 'waNumberInput', dropdownId: 'waDropdown',
+    searchId: 'waSearch', listId: 'waList',
+    realInputId: waWrapEl ? waWrapEl.dataset.target : null
+  });
+
+  // "same as phone" convenience checkbox
+  var sameChk = document.getElementById('sameAsPhone');
+  sameChk.addEventListener('change', function () {
+    if (this.checked) {
+      waWidget._select(phoneWidget.selected, true);
+      waWidget.numInput.value = phoneWidget.numInput.value;
+      waWidget._assemble();
+      waWidget.numInput.disabled = true;
+      waWidget.btn.disabled = true;
+    } else {
+      waWidget.numInput.disabled = false;
+      waWidget.btn.disabled = false;
+    }
+  });
+  phoneWidget.numInput.addEventListener('input', function () {
+    if (sameChk.checked) {
+      waWidget.numInput.value = phoneWidget.numInput.value;
+      waWidget._assemble();
+    }
+  });
+
+  // lightweight client-side validation (server-side Django validation is still authoritative)
+  function showErr(wrapEl, errEl, msg) {
+    if (wrapEl) wrapEl.classList.add('is-invalid');
+    if (errEl) errEl.textContent = msg;
+  }
+  function clearErr(wrapEl, errEl) {
+    if (wrapEl) wrapEl.classList.remove('is-invalid');
+    if (errEl) errEl.textContent = '';
+  }
+
+  document.getElementById('contactForm').addEventListener('submit', function (e) {
+    var valid = true;
+
+    var nameInput = document.getElementById('{{ form.name.id_for_label }}');
+    var nameErr = document.getElementById('nameError');
+    clearErr(nameInput, nameErr);
+    if (!nameInput.value.trim() || nameInput.value.trim().length < 2) {
+      nameInput.classList.add('is-invalid');
+      showErr(null, nameErr, 'Please enter your full name (at least 2 characters).');
+      valid = false;
+    }
+
+    var emailInput = document.getElementById('{{ form.email.id_for_label }}');
+    var emailErr = document.getElementById('emailError');
+    clearErr(emailInput, emailErr);
+    var emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailInput.value.trim() || !emailRegex.test(emailInput.value.trim())) {
+      emailInput.classList.add('is-invalid');
+      showErr(null, emailErr, 'Please enter a valid email address.');
+      valid = false;
+    }
+
+    var messageInput = document.getElementById('{{ form.message.id_for_label }}');
+    var messageErr = document.getElementById('messageError');
+    clearErr(messageInput, messageErr);
+    if (!messageInput.value.trim() || messageInput.value.trim().length < 5) {
+      messageInput.classList.add('is-invalid');
+      showErr(null, messageErr, 'Please tell us a little about what you need.');
+      valid = false;
+    }
+
+    clearErr(phoneWrapEl, document.getElementById('phoneError'));
+    if (!phoneWidget.realInput || phoneWidget.realInput.value.length < 8) {
+      showErr(phoneWrapEl, document.getElementById('phoneError'), 'Please enter a valid phone number.');
+      valid = false;
+    }
+
+    if (!valid) {
+      e.preventDefault();
+      return;
+    }
+
+    var btn = document.getElementById('submitBtn');
+    btn.disabled = true;
+    btn.innerHTML = 'Sending&hellip; <svg viewBox="0 0 24 24" style="animation:ct-spin 1s linear infinite;width:1rem;height:1rem;stroke:currentColor;fill:none;stroke-width:2;flex-shrink:0;"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>';
+  });
+
+})();
+</script>
 {% endblock %}

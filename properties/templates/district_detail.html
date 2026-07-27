@@ -1,0 +1,733 @@
+{% extends 'base.html' %}
+{% load static humanize %}
+
+{# meta_title / meta_description / canonical / robots / rel_prev / rel_next
+   all come from the view and are rendered by base.html. #}
+
+{% block body_class %}has-hero{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* =====================================================================
+     AREA DETAIL — scoped under .adet / .pcard.
+     .pcard is deliberately identical to the property list card so a visitor
+     moving between pages sees one card, not two. Radius is a flat .5rem.
+     ===================================================================== */
+
+  .adet-head {
+    position: relative; overflow: hidden;
+    background: var(--ink); color: var(--cream);
+    padding-top: calc(var(--nav-height) + 2.5rem);
+    padding-bottom: 4.5rem;
+  }
+  .adet-head__photo { position: absolute; inset: 0; }
+  .adet-head__photo img { width: 100%; height: 100%; object-fit: cover; opacity: .3; }
+  .adet-head__photo::after {
+    content: ""; position: absolute; inset: 0;
+    background:
+      linear-gradient(180deg, rgba(11,21,18,.35) 0%, var(--ink) 94%),
+      radial-gradient(50% 70% at 90% 10%, color-mix(in srgb, var(--gold) 16%, transparent), transparent 70%);
+  }
+  .adet-head__inner { position: relative; z-index: 1; }
+
+  .adet-crumb {
+    display: flex; flex-wrap: wrap; align-items: center; gap: .375rem;
+    font-size: .6875rem; text-transform: uppercase; letter-spacing: .16em;
+    color: rgba(246,242,233,.55);
+  }
+  .adet-crumb a { color: rgba(246,242,233,.85); }
+  .adet-crumb a:hover { color: var(--gold); }
+  .adet-crumb span[aria-current] { color: var(--cream); }
+
+  .adet-eyebrow {
+    display: inline-flex; align-items: center; gap: .625rem; margin-top: 1rem;
+    font-size: .6875rem; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .18em; color: var(--gold);
+  }
+  .adet-eyebrow::before { content: ""; width: 1.75rem; height: 1px; background: var(--gold); }
+
+  .adet-head h1 {
+    margin: .75rem 0 0; font-family: var(--font-display);
+    font-size: clamp(1.875rem, 5.5vw, 3.25rem); line-height: 1.08; color: var(--cream);
+    overflow-wrap: anywhere;
+  }
+  .adet-head h1 em { font-style: normal; color: var(--gold); }
+
+  .adet-facts {
+    display: flex; flex-wrap: wrap; gap: 1.25rem 2.25rem;
+    margin-top: 2rem; padding-top: 1.75rem;
+    border-top: 1px solid rgba(246,242,233,.15);
+  }
+  .adet-fact { min-width: 0; }
+  .adet-fact strong {
+    display: block; font-family: var(--font-display);
+    font-size: clamp(1.5rem, 4.5vw, 2.125rem); line-height: 1; color: var(--gold);
+    overflow-wrap: anywhere;
+  }
+  .adet-fact span {
+    font-size: .625rem; text-transform: uppercase; letter-spacing: .16em;
+    color: rgba(246,242,233,.6);
+  }
+
+  /* ---- About ---- */
+  .adet-about { padding-block: 3rem 1rem; }
+  .adet-about h2 {
+    margin: 0 0 1rem; font-family: var(--font-display);
+    font-size: clamp(1.5rem, 4vw, 2.125rem); color: var(--foreground);
+  }
+  .adet-about p {
+    margin: 0 0 1rem; max-width: 55rem;
+    font-size: .9375rem; line-height: 1.8; color: var(--muted-foreground);
+  }
+  .adet-about p:last-child { margin-bottom: 0; }
+
+  /* ---- Filters ---- */
+  .adet-filters { padding-top: 2rem; }
+  .adet-filters__card {
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: .5rem; box-shadow: var(--shadow-card);
+    padding: 1rem;
+  }
+  @media (min-width: 768px) { .adet-filters__card { padding: 1.5rem; } }
+
+  .adet-searchrow { display: flex; gap: .625rem; }
+  .adet-search { position: relative; flex: 1; min-width: 0; }
+  .adet-search svg {
+    position: absolute; left: .875rem; top: 50%; translate: 0 -50%;
+    width: 1rem; height: 1rem; color: var(--muted-foreground); pointer-events: none;
+  }
+  .adet-search input {
+    width: 100%; height: 2.75rem; padding: 0 .875rem 0 2.5rem;
+    border: 1px solid var(--border); border-radius: .5rem;
+    background: var(--secondary); color: var(--foreground);
+    font-family: inherit; font-size: 1rem;
+  }
+  @media (min-width: 1024px) { .adet-search input { font-size: .9375rem; } }
+  .adet-search input:focus { outline: none; border-color: var(--primary); }
+
+  .adet-toggle {
+    display: inline-flex; align-items: center; gap: .5rem;
+    height: 2.75rem; padding-inline: 1rem;
+    border: 1px solid var(--border); border-radius: .5rem;
+    background: var(--secondary); color: var(--foreground);
+    font-family: inherit; font-size: .875rem; font-weight: 500;
+    cursor: pointer; white-space: nowrap;
+  }
+  .adet-toggle svg { width: 1rem; height: 1rem; }
+  @media (min-width: 1024px) { .adet-toggle { display: none; } }
+
+  .adet-fields { display: none; margin-top: 1rem; }
+  .adet-fields.is-open { display: block; }
+  @media (min-width: 1024px) { .adet-fields { display: block !important; } }
+
+  .adet-grid { display: grid; gap: .875rem; grid-template-columns: minmax(0, 1fr); }
+  @media (min-width: 560px)  { .adet-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (min-width: 1024px) { .adet-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+
+  .adet-field { display: flex; flex-direction: column; gap: .375rem; min-width: 0; }
+  .adet-field > label {
+    font-size: .625rem; text-transform: uppercase; letter-spacing: .14em;
+    font-weight: 600; color: var(--muted-foreground);
+  }
+  .adet-field select, .adet-field input {
+    width: 100%; height: 2.625rem; padding-inline: .75rem;
+    border: 1px solid var(--border); border-radius: .5rem;
+    background: var(--card); color: var(--foreground);
+    font-family: inherit; font-size: 1rem;
+  }
+  @media (min-width: 1024px) {
+    .adet-field select, .adet-field input { font-size: .875rem; }
+  }
+  .adet-field select:focus, .adet-field input:focus { outline: none; border-color: var(--primary); }
+
+  .adet-actions {
+    margin-top: 1.125rem; padding-top: 1.125rem;
+    border-top: 1px solid var(--border);
+    display: flex; flex-wrap: wrap; align-items: center; gap: .75rem;
+  }
+  .adet-actions .btn-solid, .adet-actions .btn-ghost { border-radius: .5rem; }
+  .adet-actions .adet-field { margin-left: auto; flex-direction: row; align-items: center; gap: .5rem; }
+  .adet-actions .adet-field select { width: auto; min-width: 10rem; }
+
+  .adet-pills { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: 1.25rem; }
+  .adet-pill {
+    display: inline-flex; align-items: center; gap: .5rem;
+    padding: .3125rem .625rem .3125rem .75rem; border-radius: .5rem;
+    background: color-mix(in srgb, var(--primary) 8%, transparent);
+    border: 1px solid color-mix(in srgb, var(--primary) 22%, transparent);
+    font-size: .75rem; font-weight: 500; color: var(--primary);
+  }
+  .adet-pill a {
+    display: grid; place-items: center; width: 1rem; height: 1rem;
+    border-radius: .5rem; background: color-mix(in srgb, var(--primary) 15%, transparent);
+    color: var(--primary); font-size: .75rem; line-height: 1;
+  }
+
+  /* ---- Results ---- */
+  .adet-results { padding-block: 2.5rem 4rem; }
+  .adet-resulthead {
+    display: flex; flex-wrap: wrap; align-items: baseline;
+    justify-content: space-between; gap: .75rem; margin-bottom: 1.5rem;
+  }
+  .adet-resulthead h2 {
+    margin: 0; font-family: var(--font-display);
+    font-size: clamp(1.375rem, 3.5vw, 1.875rem); color: var(--foreground);
+  }
+  .adet-resulthead p { margin: 0; font-size: .8125rem; color: var(--muted-foreground); }
+
+  .adet-cards { display: grid; gap: 1rem; grid-template-columns: minmax(0, 1fr); }
+  @media (min-width: 560px)  { .adet-cards { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1.25rem; } }
+  @media (min-width: 1000px) { .adet-cards { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  @media (min-width: 1400px) { .adet-cards { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+
+  /* ---- Property card (mirrors property_list.html) ---- */
+  .pcard {
+    display: flex; flex-direction: column; height: 100%; min-width: 0;
+    background: var(--card); border: 1px solid var(--border);
+    border-radius: .5rem; overflow: hidden;
+    transition: transform .3s ease, box-shadow .3s ease, border-color .3s ease;
+  }
+  .pcard:hover {
+    transform: translateY(-4px);
+    border-color: color-mix(in srgb, var(--primary) 35%, transparent);
+    box-shadow: var(--shadow-card);
+  }
+  .pcard__media { position: relative; aspect-ratio: 16 / 10; overflow: hidden; background: var(--secondary); }
+  .pcard__media img { width: 100%; height: 100%; object-fit: cover; transition: transform .7s ease; }
+  .pcard:hover .pcard__media img { transform: scale(1.05); }
+  .pcard__badge {
+    position: absolute; top: .625rem; left: .625rem;
+    padding: .25rem .5rem; border-radius: .5rem;
+    background: var(--primary); color: var(--primary-foreground);
+    font-size: .625rem; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .1em;
+  }
+  .pcard__badge--offplan { background: var(--gold); color: var(--ink); }
+
+  .pcard__body { flex: 1; display: flex; flex-direction: column; padding: .9375rem .9375rem 0; min-width: 0; }
+  .pcard__dev {
+    display: flex; align-items: center; gap: .5rem; margin: 0 0 .5rem;
+    font-size: .625rem; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .14em; color: var(--gold); min-width: 0;
+  }
+  .pcard__dev img {
+    width: 1.75rem; height: 1.75rem; object-fit: contain; flex-shrink: 0;
+    border-radius: .5rem; background: var(--secondary); padding: .125rem;
+  }
+  .pcard__dev span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+  .pcard__title {
+    margin: 0; font-family: var(--font-display);
+    font-size: 1.0625rem; line-height: 1.3; color: var(--foreground);
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .pcard__loc {
+    display: flex; align-items: center; gap: .375rem; min-width: 0;
+    margin: .5rem 0 0; font-size: .78125rem; color: var(--muted-foreground);
+  }
+  .pcard__loc svg { width: .875rem; height: .875rem; flex-shrink: 0; color: var(--primary); }
+  .pcard__loc span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pcard__meta { display: flex; flex-wrap: wrap; gap: .3125rem; margin: .75rem 0 .9375rem; }
+  .pcard__meta span {
+    padding: .1875rem .5rem; border-radius: .5rem;
+    background: var(--secondary); font-size: .6875rem; color: var(--muted-foreground);
+  }
+  .pcard__foot {
+    margin-top: auto; display: flex; align-items: center;
+    justify-content: space-between; gap: .75rem;
+    padding: .75rem .9375rem; border-top: 1px solid var(--border);
+    background: color-mix(in srgb, var(--secondary) 45%, transparent);
+  }
+  .pcard__price { font-size: .875rem; font-weight: 600; color: var(--primary); min-width: 0; }
+  .pcard__price small {
+    display: block; margin-top: .125rem; font-size: .625rem; font-weight: 400;
+    text-transform: uppercase; letter-spacing: .1em; color: var(--muted-foreground);
+  }
+  .pcard__arrow {
+    display: grid; place-items: center; flex-shrink: 0;
+    width: 2rem; height: 2rem; border-radius: .5rem;
+    border: 1px solid var(--border); color: var(--primary);
+    transition: background-color .25s ease, color .25s ease, border-color .25s ease;
+  }
+  .pcard__arrow svg { width: .875rem; height: .875rem; }
+  .pcard:hover .pcard__arrow { background: var(--primary); border-color: var(--primary); color: var(--primary-foreground); }
+
+  .adet-empty {
+    grid-column: 1 / -1; text-align: center; padding: 4rem 1.5rem;
+    border: 1px dashed var(--border); border-radius: .5rem;
+  }
+  .adet-empty svg { width: 2.75rem; height: 2.75rem; margin-bottom: 1rem; color: var(--border); }
+  .adet-empty h2 { margin: 0; font-family: var(--font-display); font-size: 1.375rem; }
+  .adet-empty p { margin: .5rem 0 1.5rem; color: var(--muted-foreground); }
+
+  .adet-pager {
+    margin-top: 2.5rem; display: flex; flex-wrap: wrap;
+    align-items: center; justify-content: center; gap: .375rem;
+  }
+  .adet-pager a, .adet-pager span {
+    min-width: 2.5rem; height: 2.5rem; padding-inline: .5rem;
+    display: grid; place-items: center;
+    border: 1px solid var(--border); border-radius: .5rem;
+    font-size: .875rem; color: var(--foreground);
+    transition: border-color .2s ease, color .2s ease, background-color .2s ease;
+  }
+  .adet-pager a:hover { border-color: var(--primary); color: var(--primary); }
+  .adet-pager .is-current { background: var(--primary); border-color: var(--primary); color: var(--primary-foreground); font-weight: 600; }
+  .adet-pager .is-gap { border: 0; min-width: 1.5rem; color: var(--muted-foreground); }
+  .adet-pager svg { width: 1rem; height: 1rem; }
+
+  /* ---- FAQ ---- */
+  .adet-faq { padding-block: 3rem; background: var(--secondary); }
+  .adet-faq h2 {
+    margin: 0 0 1.5rem; font-family: var(--font-display);
+    font-size: clamp(1.375rem, 3.5vw, 1.875rem); color: var(--foreground);
+  }
+  .adet-faq details {
+    border: 1px solid var(--border); border-radius: .5rem;
+    background: var(--card); margin-bottom: .625rem; overflow: hidden;
+  }
+  .adet-faq summary {
+    display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+    padding: .9375rem 1.125rem; cursor: pointer; list-style: none;
+    font-weight: 600; font-size: .9375rem; color: var(--foreground);
+  }
+  .adet-faq summary::-webkit-details-marker { display: none; }
+  .adet-faq summary::after {
+    content: "+"; flex-shrink: 0;
+    font-family: var(--font-display); font-size: 1.375rem; line-height: 1; color: var(--gold);
+  }
+  .adet-faq details[open] summary::after { content: "\2212"; }
+  .adet-faq p {
+    margin: 0; padding: 0 1.125rem 1.125rem;
+    font-size: .9375rem; line-height: 1.75; color: var(--muted-foreground);
+  }
+
+  /* ---- Nearby areas ---- */
+  .adet-nearby { padding-block: 3rem 4rem; }
+  .adet-nearby h2 {
+    margin: 0 0 1.25rem; font-family: var(--font-display);
+    font-size: clamp(1.375rem, 3.5vw, 1.875rem); color: var(--foreground);
+  }
+  .adet-nearby p { margin: 0 0 1.25rem; max-width: 48rem; font-size: .9375rem; line-height: 1.8; color: var(--muted-foreground); }
+  .adet-nearby__links { display: flex; flex-wrap: wrap; gap: .5rem; }
+  .adet-nearby__links a {
+    display: inline-flex; align-items: center; gap: .5rem;
+    padding: .4375rem .875rem; border-radius: .5rem;
+    border: 1px solid var(--border); background: var(--card);
+    font-size: .8125rem; color: var(--foreground);
+    transition: border-color .2s ease, color .2s ease;
+  }
+  .adet-nearby__links a:hover { border-color: var(--primary); color: var(--primary); }
+  .adet-nearby__links b { color: var(--gold); font-weight: 600; }
+</style>
+{% endblock %}
+
+
+{% block content %}
+
+<script type="application/ld+json">{{ schema_json|safe }}</script>
+
+<!-- ================= BANNER ================= -->
+<section class="adet-head">
+  {% if cover_image %}
+    <div class="adet-head__photo">
+      <img src="{{ cover_image }}" alt="{{ district.name }}, {{ district.city.name }}"
+           width="1600" height="900">
+    </div>
+  {% endif %}
+
+  <div class="container-page adet-head__inner">
+    <nav class="adet-crumb" aria-label="Breadcrumb">
+      <a href="{% url 'home' %}">Home</a> <span>/</span>
+      <a href="{% url 'properties:property_list' %}">Properties</a> <span>/</span>
+      <a href="{% url 'properties:district_list' %}">Areas</a> <span>/</span>
+      <span aria-current="page">{{ district.name }}</span>
+    </nav>
+
+    <span class="adet-eyebrow">{{ district.city.name }}</span>
+
+    <h1>
+      Property in <em>{{ district.name }}</em>{% if page_obj.number > 1 %}
+        <span style="font-size:.4em;letter-spacing:.1em;opacity:.55;">Page {{ page_obj.number }}</span>
+      {% endif %}
+    </h1>
+
+    <div class="adet-facts">
+      <div class="adet-fact">
+        <strong>{{ area_total|intcomma }}</strong>
+        <span>{{ area_total|pluralize:"Listing,Listings" }}</span>
+      </div>
+      {% if offplan_count %}
+      <div class="adet-fact">
+        <strong>{{ offplan_count|intcomma }}</strong>
+        <span>Off-plan</span>
+      </div>
+      {% endif %}
+      {% if ready_count %}
+      <div class="adet-fact">
+        <strong>{{ ready_count|intcomma }}</strong>
+        <span>Ready</span>
+      </div>
+      {% endif %}
+      {% if low_price %}
+      <div class="adet-fact">
+        <strong>AED {{ low_price|floatformat:0|intcomma }}</strong>
+        <span>From</span>
+      </div>
+      {% endif %}
+      {% if developer_count %}
+      <div class="adet-fact">
+        <strong>{{ developer_count }}</strong>
+        <span>{{ developer_count|pluralize:"Developer,Developers" }}</span>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</section>
+
+
+<!-- ================= ABOUT ================= -->
+<section class="container-page adet-about">
+  <h2>About {{ district.name }}</h2>
+  {% for para in area_paragraphs %}
+    <p>{{ para }}</p>
+  {% endfor %}
+</section>
+
+
+<!-- ================= FILTERS ================= -->
+<div class="container-page adet-filters">
+  <form class="adet-filters__card" method="get"
+        action="{% url 'properties:district_detail' district.slug %}" id="adetForm">
+
+    <div class="adet-searchrow">
+      <div class="adet-search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" aria-hidden="true">
+          <circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>
+        </svg>
+        <label for="f-q" hidden>Search</label>
+        <input type="search" id="f-q" name="q" value="{{ active_search }}"
+               placeholder="Search projects in {{ district.name }}&hellip;">
+      </div>
+
+      <button type="button" class="adet-toggle" id="adetToggle"
+              aria-expanded="false" aria-controls="adetFields">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
+        Filters
+      </button>
+    </div>
+
+    <div class="adet-fields" id="adetFields">
+      <div class="adet-grid">
+
+        <div class="adet-field">
+          <label for="f-status">Status</label>
+          <select id="f-status" name="status">
+            <option value="">All statuses</option>
+            {% for s in statuses %}
+              <option value="{{ s.slug }}" {% if s.slug == active_status %}selected{% endif %}>{{ s.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="adet-field">
+          <label for="f-type">Property type</label>
+          <select id="f-type" name="type">
+            <option value="">All types</option>
+            {% for t in types %}
+              <option value="{{ t.slug }}" {% if t.slug == active_type %}selected{% endif %}>{{ t.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="adet-field">
+          <label for="f-developer">Developer</label>
+          <select id="f-developer" name="developer">
+            <option value="">All developers</option>
+            {% for d in developers %}
+              <option value="{{ d.slug }}" {% if d.slug == active_developer %}selected{% endif %}>{{ d.name }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="adet-field">
+          <label for="f-unit">Unit type</label>
+          <select id="f-unit" name="unit_type">
+            <option value="">All unit types</option>
+            {% for u in unit_types %}
+              <option value="{{ u }}" {% if u == active_unit_type %}selected{% endif %}>{{ u }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="adet-field">
+          <label for="f-beds">Bedrooms</label>
+          <select id="f-beds" name="bedrooms">
+            <option value="">Any</option>
+            {% for b in "12345" %}
+              <option value="{{ b }}" {% if b == active_bedrooms %}selected{% endif %}>{{ b }}+</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="adet-field">
+          <label for="f-pmin">Min price (AED)</label>
+          <input type="number" id="f-pmin" name="price_min" value="{{ active_price_min }}"
+                 min="0" step="50000" inputmode="numeric" placeholder="No minimum">
+        </div>
+
+        <div class="adet-field">
+          <label for="f-pmax">Max price (AED)</label>
+          <input type="number" id="f-pmax" name="price_max" value="{{ active_price_max }}"
+                 min="0" step="50000" inputmode="numeric" placeholder="No maximum">
+        </div>
+
+      </div>
+
+      <div class="adet-actions">
+        <button type="submit" class="btn-solid">Apply filters</button>
+        {% if has_filters %}
+          <a href="{% url 'properties:district_detail' district.slug %}" class="btn-ghost">Clear all</a>
+        {% endif %}
+
+        <div class="adet-field">
+          <label for="f-sort">Sort</label>
+          <select id="f-sort" name="sort" data-autosubmit>
+            <option value="newest"     {% if active_sort == 'newest' %}selected{% endif %}>Newest first</option>
+            <option value="price_asc"  {% if active_sort == 'price_asc' %}selected{% endif %}>Price: low to high</option>
+            <option value="price_desc" {% if active_sort == 'price_desc' %}selected{% endif %}>Price: high to low</option>
+            <option value="oldest"     {% if active_sort == 'oldest' %}selected{% endif %}>Oldest first</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </form>
+
+  {% if has_filters %}
+  <div class="adet-pills">
+    {% if active_search %}<span class="adet-pill">&ldquo;{{ active_search }}&rdquo; <a href="#" data-drop="q">&times;</a></span>{% endif %}
+    {% if active_status %}<span class="adet-pill">{{ active_status|title }} <a href="#" data-drop="status">&times;</a></span>{% endif %}
+    {% if active_type %}<span class="adet-pill">{{ active_type|title }} <a href="#" data-drop="type">&times;</a></span>{% endif %}
+    {% if active_developer %}<span class="adet-pill">{{ active_developer|title }} <a href="#" data-drop="developer">&times;</a></span>{% endif %}
+    {% if active_unit_type %}<span class="adet-pill">{{ active_unit_type }} <a href="#" data-drop="unit_type">&times;</a></span>{% endif %}
+    {% if active_bedrooms %}<span class="adet-pill">{{ active_bedrooms }}+ beds <a href="#" data-drop="bedrooms">&times;</a></span>{% endif %}
+    {% if active_price_min or active_price_max %}
+      <span class="adet-pill">AED {{ active_price_min|default:"0" }} &ndash; {{ active_price_max|default:"any" }} <a href="#" data-drop="price_min,price_max">&times;</a></span>
+    {% endif %}
+  </div>
+  {% endif %}
+</div>
+
+
+<!-- ================= RESULTS ================= -->
+<section class="adet-results">
+  <div class="container-page">
+
+    <div class="adet-resulthead">
+      <h2>Properties in {{ district.name }}</h2>
+      <p>
+        {{ total_count|intcomma }} result{{ total_count|pluralize }}
+        {% if page_obj.paginator.num_pages > 1 %}
+          &middot; page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+        {% endif %}
+      </p>
+    </div>
+
+    <div class="adet-cards">
+      {% for property in properties %}
+        <a class="pcard" href="{% url 'properties:property_detail' property.slug %}?return={{ request.get_full_path|urlencode }}">
+          <div class="pcard__media">
+            <img src="{{ property.cover_image }}" alt="{{ property.title }}"
+                 loading="lazy" width="600" height="375">
+            {% if property.property_status %}
+              <span class="pcard__badge {% if property.property_status.slug == 'off-plan' %}pcard__badge--offplan{% endif %}">
+                {{ property.property_status.name }}
+              </span>
+            {% endif %}
+          </div>
+
+          <div class="pcard__body">
+            {% if property.developer_company %}
+              <p class="pcard__dev">
+                {% if property.developer_company.logo %}
+                  <img src="{% if property.developer_company.logo|stringformat:'s'|slice:':4' == 'http' %}{{ property.developer_company.logo }}{% else %}{{ property.developer_company.logo.url }}{% endif %}"
+                       alt="{{ property.developer_company.name }} logo" loading="lazy" width="28" height="28">
+                {% endif %}
+                <span>{{ property.developer_company.name }}</span>
+              </p>
+            {% endif %}
+
+            <h3 class="pcard__title">{{ property.title }}</h3>
+
+            <p class="pcard__loc">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>
+              </svg>
+              <span>{{ district.name }}, {{ district.city.name }}</span>
+            </p>
+
+            <div class="pcard__meta">
+              {% if property.compare_bedroom_options %}
+                <span>{{ property.compare_bedroom_options|truncatechars:22 }}</span>
+              {% endif %}
+              {% if property.compare_unit_size_range %}
+                <span>{{ property.compare_unit_size_range }}</span>
+              {% endif %}
+              {% if property.delivery_date %}
+                <span>Handover {{ property.delivery_date|date:"M Y" }}</span>
+              {% endif %}
+            </div>
+          </div>
+
+          <div class="pcard__foot">
+            <div class="pcard__price">
+              {% firstof property.price property.compare_starting_price as from_price %}
+              {% if from_price %}
+                AED {{ from_price|floatformat:0|intcomma }}
+                <small>Starting from</small>
+              {% else %}
+                Price on request
+                <small>Enquire for details</small>
+              {% endif %}
+            </div>
+            <span class="pcard__arrow" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </span>
+          </div>
+        </a>
+
+      {% empty %}
+        <div class="adet-empty">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M9 22V12h6v10"/>
+          </svg>
+          <h2>Nothing in {{ district.name }} matches those filters</h2>
+          <p>Widen the budget or clear a filter to see the whole area.</p>
+          <a href="{% url 'properties:district_detail' district.slug %}" class="btn-solid">Show all in {{ district.name }}</a>
+        </div>
+      {% endfor %}
+    </div>
+
+    {% if page_obj.paginator.num_pages > 1 %}
+    <nav class="adet-pager" aria-label="Pagination">
+      {% if page_obj.has_previous %}
+        <a href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.previous_page_number }}"
+           rel="prev" aria-label="Previous page">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+        </a>
+      {% endif %}
+
+      {% for num in page_range %}
+        {% if num == page_obj.paginator.ELLIPSIS %}
+          <span class="is-gap">{{ num }}</span>
+        {% elif num == page_obj.number %}
+          <span class="is-current" aria-current="page">{{ num }}</span>
+        {% elif num == 1 %}
+          <a href="{% url 'properties:district_detail' district.slug %}{% if querystring %}?{{ querystring }}{% endif %}">1</a>
+        {% else %}
+          <a href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ num }}">{{ num }}</a>
+        {% endif %}
+      {% endfor %}
+
+      {% if page_obj.has_next %}
+        <a href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ page_obj.next_page_number }}"
+           rel="next" aria-label="Next page">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+        </a>
+      {% endif %}
+    </nav>
+    {% endif %}
+  </div>
+</section>
+
+
+<!-- ================= FAQ ================= -->
+{% if faqs %}
+<section class="adet-faq">
+  <div class="container-page">
+    <h2>{{ district.name }} questions, answered</h2>
+    {% for item in faqs %}
+      <details {% if forloop.first %}open{% endif %}>
+        <summary>{{ item.q }}</summary>
+        <p>{{ item.a }}</p>
+      </details>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+
+
+<!-- ================= NEARBY AREAS ================= -->
+{% if siblings %}
+<section class="adet-nearby">
+  <div class="container-page">
+    <h2>Other areas in {{ district.city.name }}</h2>
+    <p>
+      Comparing {{ district.name }} against its neighbours is usually the fastest
+      way to confirm a shortlist. Each area below carries its own live inventory,
+      starting price and handover schedule.
+    </p>
+    <div class="adet-nearby__links">
+      {% for area in siblings %}
+        <a href="{% url 'properties:district_detail' area.slug %}">
+          {{ area.name }} <b>{{ area.prop_count }}</b>
+        </a>
+      {% endfor %}
+      <a href="{% url 'properties:district_list' %}">All areas</a>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+{% endblock %}
+
+
+{% block extra_js %}
+<script>
+(function () {
+  var form = document.getElementById('adetForm');
+  if (!form) return;
+
+  var toggle = document.getElementById('adetToggle');
+  var fields = document.getElementById('adetFields');
+  if (toggle && fields) {
+    toggle.addEventListener('click', function () {
+      var open = fields.classList.toggle('is-open');
+      toggle.setAttribute('aria-expanded', String(open));
+    });
+    if (document.querySelector('.adet-pills')) {
+      fields.classList.add('is-open');
+      toggle.setAttribute('aria-expanded', 'true');
+    }
+  }
+
+  /* Empty fields are stripped so the URL stays clean and canonical-friendly */
+  function submit() {
+    Array.prototype.forEach.call(form.elements, function (el) {
+      if (el.name && el.value === '') el.disabled = true;
+    });
+    form.submit();
+  }
+  form.addEventListener('submit', function (e) { e.preventDefault(); submit(); });
+
+  var sort = form.querySelector('[data-autosubmit]');
+  if (sort) sort.addEventListener('change', submit);
+
+  document.addEventListener('click', function (e) {
+    var pill = e.target.closest('[data-drop]');
+    if (!pill) return;
+    e.preventDefault();
+    var url = new URL(window.location.href);
+    pill.dataset.drop.split(',').forEach(function (k) { url.searchParams.delete(k); });
+    url.searchParams.delete('page');
+    window.location.href = url.pathname + (url.search || '');
+  });
+})();
+</script>
+{% endblock %}
