@@ -112,7 +112,7 @@
     align-items: center;
     justify-content: center;
     border-radius: 9999px;
-    background: var(--primary)!important;
+    background: var(--primary);
     color: var(--primary-foreground);
     padding: .625rem 1.25rem;
     font-family: var(--font-body);
@@ -221,8 +221,8 @@
       <a href="{% url 'properties:ready_properties' %}" class="nav-link {% if '/ready' in request.path %}is-active{% endif %}">Ready</a>
       <a href="{% url 'properties:developer_list' %}" class="nav-link {% if '/developer_list' in request.path %}is-active{% endif %}">Developers</a>
       <a href="{% url 'properties:district_list' %}" class="nav-link {% if '/district_list' in request.path %}is-active{% endif %}">Areas</a>
-      {# TODO: point at the blogs app once the url name is confirmed, e.g. {% url 'blog_list' %} #}
-      <a href="" class="nav-link {% if '/blog' in request.path %}is-active{% endif %}">Insights</a>
+      <a href="{% url 'blogs:event_list' %}" class="nav-link {% if '/events' in request.path %}is-active{% endif %}">Events</a>
+      <a href="{% url 'blogs:blog_list' %}" class="nav-link {% if '/insights' in request.path %}is-active{% endif %}">Insights</a>
       <a href="{% url 'about' %}" class="nav-link {% if '/about' in request.path %}is-active{% endif %}">About</a>
     </nav>
 
@@ -261,7 +261,8 @@
       <a href="{% url 'properties:ready_properties' %}" class="mobile-link {% if '/ready' in request.path %}is-active{% endif %}">Ready</a>
       <a href="{% url 'properties:developer_list' %}" class="mobile-link {% if '/developer_list' in request.path %}is-active{% endif %}">Developers</a>
       <a href="{% url 'properties:district_list' %}" class="mobile-link {% if '/district_list' in request.path %}is-active{% endif %}">Areas</a>
-      <a href="" class="mobile-link {% if '/blog' in request.path %}is-active{% endif %}">Insights</a>
+      <a href="{% url 'blogs:event_list' %}" class="mobile-link {% if '/events' in request.path %}is-active{% endif %}">Events</a>
+      <a href="{% url 'blogs:blog_list' %}" class="mobile-link {% if '/insights' in request.path %}is-active{% endif %}">Insights</a>
       <a href="{% url 'about' %}" class="mobile-link {% if '/about' in request.path %}is-active{% endif %}">About Us</a>
       <a href="{% url 'contact' %}" class="btn-primary">Book a Viewing</a>
       <a href="tel:+{{ phone_number }}" class="phone-link">

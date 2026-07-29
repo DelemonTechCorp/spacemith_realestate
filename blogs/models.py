@@ -218,9 +218,6 @@ class BlogAuthor(models.Model):
             self.slug = slugify(self.name)
         super().save(*args, **kwargs)
 
-    def get_absolute_url(self):
-        return reverse('blog_author', kwargs={'slug': self.slug})
-
     @property
     def post_count(self):
         return self.blog_posts.filter(is_published=True).count()
@@ -322,7 +319,7 @@ class BlogPost(models.Model):
         super().save(*args, **kwargs)
 
     def get_absolute_url(self):
-        return reverse('blog_detail', kwargs={'slug': self.slug})
+        return reverse('blogs:blog_detail', kwargs={'slug': self.slug})
 
     def increment_view_count(self):
         from django.db.models import F
@@ -346,9 +343,72 @@ class BlogPost(models.Model):
     def get_meta_keywords(self):
         if self.meta_keywords:
             return self.meta_keywords
-        return "luxury real estate Dubai, SKC Real Estate, property investment UAE"
+        return "luxury real estate Dubai, Spacesmith Real Estate, property investment UAE"
 
     def get_schema_keywords(self):
         if self.meta_keywords:
             return [kw.strip() for kw in self.meta_keywords.split(',')]
-        return ["luxury real estate", "Dubai property", "UAE investment", "SKC Real Estate"]
+        return ["luxury real estate", "Dubai property", "UAE investment", "Spacesmith Real Estate"]
+    
+    
+    
+
+
+
+class Event(models.Model):
+    """
+    A single event — one row on /events/.
+    Photos are attached via the EventPhoto inline in admin.
+    """
+    title        = models.CharField(max_length=200)
+    date         = models.DateField(help_text="Date the event took place — controls ordering")
+    summary      = models.TextField(
+        help_text="Short write-up shown beside the photo strip. 2–4 sentences works best."
+    )
+    instagram_url = models.URLField(
+        blank=True,
+        help_text="Optional. Link to the Instagram reel or post for this event."
+    )
+    location     = models.CharField(
+        max_length=150, blank=True,
+        help_text="Optional. e.g. 'Rove Hotels, Dubai' or 'Meydan'"
+    )
+    is_published = models.BooleanField(default=True)
+    created_at   = models.DateTimeField(auto_now_add=True)
+ 
+    class Meta:
+        verbose_name        = 'Event'
+        verbose_name_plural = 'Events'
+        # newest first
+        ordering            = ['-date', '-id']
+        indexes = [
+            models.Index(fields=['-date']),
+            models.Index(fields=['is_published']),
+        ]
+ 
+    def __str__(self):
+        return f"{self.title} — {self.date:%b %Y}"
+ 
+    @property
+    def photo_count(self):
+        return self.photos.count()
+ 
+ 
+class EventPhoto(models.Model):
+    event   = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='photos')
+    image   = models.ImageField(upload_to='events/%Y/%m/')
+    caption = models.CharField(max_length=200, blank=True)
+    video_url = models.URLField(
+        blank=True,
+        help_text="Optional. If set, this photo becomes a play button that opens "
+                  "the Instagram reel instead of the lightbox."
+    )
+    order   = models.PositiveIntegerField(default=0)
+ 
+    class Meta:
+        verbose_name        = 'Photo'
+        verbose_name_plural = 'Photos'
+        ordering            = ['order', 'id']
+ 
+    def __str__(self):
+        return self.caption or f"Photo {self.pk}"

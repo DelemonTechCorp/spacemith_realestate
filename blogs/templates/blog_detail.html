@@ -1,0 +1,859 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ meta_title }}{% endblock %}
+{% block meta_description %}{{ meta_description }}{% endblock %}
+{% block canonical %}{{ canonical }}{% endblock %}
+
+{% block schema %}
+{{ block.super }}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "@id": "{{ canonical }}#article",
+  "mainEntityOfPage": { "@type": "WebPage", "@id": "{{ canonical }}" },
+  "headline": "{{ post.title|escapejs }}",
+  "description": "{{ post.get_meta_description|escapejs }}",
+  "image": "{{ og_image }}",
+  "datePublished": "{{ post.publish_date|date:'c' }}",
+  "dateModified": "{{ post.updated_at|date:'c' }}",
+  "inLanguage": "en-AE",
+  "wordCount": {{ word_count|default:0 }},
+  {% if post.author %}"author": { "@type": "Person", "name": "{{ post.author.name|escapejs }}" },{% endif %}
+  "publisher": { "@id": "https://spacesmithrealestate.com/#organization" },
+  "isPartOf": { "@id": "https://spacesmithrealestate.com/insights/#blog" }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://spacesmithrealestate.com/" },
+    { "@type": "ListItem", "position": 2, "name": "Insights", "item": "https://spacesmithrealestate.com/insights/" },
+    { "@type": "ListItem", "position": 3, "name": "{{ post.title|escapejs }}", "item": "{{ canonical }}" }
+  ]
+}
+</script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+/* =====================================================================
+   BLOG DETAIL — Spacesmith Real Estate
+   ===================================================================== */
+
+/* ---------- reading progress ---------- */
+/*.bd-progress {
+  position: fixed; top: var(--nav-height); left: 0;
+  height: 2px; width: 0;
+  background: linear-gradient(90deg, var(--primary-light), var(--gold));
+  z-index: 900;
+  transition: width .1s linear;
+}*/
+
+/* ---------- 1. HERO ---------- */
+.bd-hero {
+  position: relative;
+  display: flex; align-items: flex-end;
+  min-height: 66vh;
+  padding-top: var(--nav-height);
+  overflow: hidden;
+  background: var(--ink);
+}
+.bd-hero__bg {
+  position: absolute; inset: 0;
+  background-size: cover; background-position: center;
+  transform: scale(1.07);
+  transition: transform 9s cubic-bezier(.2,.8,.2,1);
+}
+.bd-hero.in-view .bd-hero__bg { transform: scale(1); }
+.bd-hero__veil {
+  position: absolute; inset: 0;
+  background:
+    linear-gradient(180deg, rgba(11,21,18,.30) 0%, rgba(10,42,32,.80) 50%, rgba(10,42,32,.97) 100%);
+}
+.bd-hero::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 2px;
+  background: linear-gradient(90deg, var(--gold), rgba(212,175,55,.12) 50%, transparent);
+}
+.bd-hero__inner { position: relative; z-index: 2; width: 100%; padding-block: 4rem 4.5rem; }
+
+.bd-crumbs {
+  display: flex; flex-wrap: wrap; align-items: center; gap: .625rem;
+  font-size: .6875rem; text-transform: uppercase; letter-spacing: .16em;
+  color: rgba(246,242,233,.6);
+  margin-bottom: 1.75rem;
+}
+.bd-crumbs a { color: rgba(246,242,233,.8); }
+.bd-crumbs a:hover { color: var(--gold); }
+.bd-crumbs svg { width: .625rem; height: .625rem; stroke: var(--gold); fill: none; stroke-width: 2.5; }
+.bd-crumbs__current { max-width: 26ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.bd-hero__title {
+  font-family: var(--font-display);
+  font-size: clamp(2.125rem, 4.8vw, 3.875rem);
+  font-weight: 500; line-height: 1.08;
+  color: var(--cream);
+  margin: 0 0 1rem;
+  max-width: 22ch;
+}
+.bd-hero__sub {
+  max-width: 44rem; margin: 0;
+  color: rgba(246,242,233,.72);
+  font-size: 1.0625rem; line-height: 1.7;
+}
+
+.bd-hero__meta {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 1.5rem 2rem;
+  margin-top: 2.25rem; padding-top: 1.75rem;
+  border-top: 1px solid rgba(246,242,233,.16);
+}
+.bd-author-chip { display: flex; align-items: center; gap: .875rem; }
+.bd-author-chip img,
+.bd-author-chip .bd-author-chip__initial {
+  width: 2.75rem; height: 2.75rem; border-radius: 50%; object-fit: cover;
+  border: 1px solid rgba(212,175,55,.55); flex-shrink: 0;
+}
+.bd-author-chip__initial {
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(246,242,233,.10); color: var(--gold);
+  font-family: var(--font-display); font-size: 1.125rem;
+}
+.bd-author-chip small {
+  display: block; font-size: .625rem; text-transform: uppercase; letter-spacing: .18em;
+  color: rgba(246,242,233,.5); margin-bottom: .1875rem;
+}
+.bd-author-chip b { font-size: .9375rem; font-weight: 500; color: var(--cream); }
+
+.bd-fact { display: inline-flex; align-items: center; gap: .5rem; font-size: .8125rem; color: rgba(246,242,233,.78); }
+.bd-fact svg { width: .9375rem; height: .9375rem; stroke: var(--gold); fill: none; stroke-width: 1.6; }
+
+/* ---------- 2. LAYOUT ---------- */
+.bd-main { background: var(--background); padding-block: 4.5rem 5rem; }
+.bd-layout {
+  display: grid; gap: 3.5rem;
+  grid-template-columns: 1fr;
+  align-items: start;
+}
+@media (min-width: 1024px) {
+  .bd-layout { grid-template-columns: minmax(0, 1fr) 20rem; gap: 4.5rem; }
+}
+
+/* lead image */
+.bd-figure {
+  margin: 0 0 3rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--secondary);
+}
+.bd-figure img { width: 100%; height: auto; }
+.bd-figure figcaption {
+  padding: .875rem 1.25rem;
+  border-top: 1px solid var(--border);
+  background: var(--card);
+  font-size: .8125rem; color: var(--muted-foreground); font-style: italic;
+}
+
+/* ---------- 3. ARTICLE TYPOGRAPHY (CKEditor output) ---------- */
+.bd-content {
+  font-size: 1.0625rem;
+  line-height: 1.85;
+  color: var(--muted-foreground);
+}
+.bd-content > *:first-child { margin-top: 0; }
+.bd-content p { margin: 0 0 1.5rem; }
+
+/* opening paragraph gets a little editorial weight */
+.bd-content > p:first-of-type {
+  font-size: 1.1875rem;
+  line-height: 1.75;
+  color: var(--foreground);
+}
+
+.bd-content h2, .bd-content h3, .bd-content h4 {
+  font-family: var(--font-display);
+  color: var(--foreground);
+  font-weight: 600;
+  line-height: 1.2;
+  scroll-margin-top: calc(var(--nav-height) + 1.5rem);
+}
+.bd-content h2 {
+  font-size: clamp(1.625rem, 2.8vw, 2.125rem);
+  margin: 3rem 0 1rem;
+  padding-bottom: .75rem;
+  border-bottom: 1px solid var(--border);
+  position: relative;
+}
+.bd-content h2::after {
+  content: ""; position: absolute; left: 0; bottom: -1px;
+  width: 3rem; height: 2px; background: var(--gold);
+}
+.bd-content h3 { font-size: clamp(1.25rem, 2vw, 1.5rem); margin: 2.25rem 0 .75rem; }
+.bd-content h4 { font-size: 1.125rem; margin: 2rem 0 .625rem; }
+
+.bd-content a {
+  color: var(--primary);
+  border-bottom: 1px solid color-mix(in srgb, var(--gold) 65%, transparent);
+  transition: color .2s ease, border-color .2s ease;
+}
+.bd-content a:hover { color: var(--gold-dark); border-bottom-color: var(--gold); }
+
+.bd-content ul, .bd-content ol { margin: 0 0 1.5rem; padding-left: 1.25rem; }
+.bd-content li { margin-bottom: .625rem; }
+.bd-content ul li::marker { color: var(--gold-dark); }
+.bd-content ol li::marker { color: var(--gold-dark); font-family: var(--font-display); }
+
+.bd-content blockquote {
+  margin: 2.5rem 0;
+  padding: 1.75rem 2rem;
+  background: var(--cream);
+  border-left: 3px solid var(--gold);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  font-family: var(--font-display);
+  font-size: 1.3125rem; font-style: italic; line-height: 1.5;
+  color: var(--primary);
+}
+.bd-content blockquote p:last-child { margin-bottom: 0; }
+
+.bd-content img {
+  width: 100%; height: auto;
+  margin: 2rem 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.bd-content figure { margin: 2rem 0; }
+.bd-content figcaption { font-size: .8125rem; font-style: italic; opacity: .8; }
+
+.bd-content table {
+  width: 100%; border-collapse: collapse;
+  margin: 2rem 0; font-size: .9375rem;
+  display: block; overflow-x: auto;
+}
+.bd-content th, .bd-content td { padding: .875rem 1rem; border: 1px solid var(--border); text-align: left; }
+.bd-content th {
+  background: var(--primary); color: var(--cream);
+  font-size: .75rem; letter-spacing: .1em; text-transform: uppercase; font-weight: 500;
+}
+.bd-content tr:nth-child(even) td { background: var(--secondary); }
+
+.bd-content code {
+  background: var(--secondary); border: 1px solid var(--border);
+  padding: .125rem .375rem; border-radius: .25rem;
+  font-size: .875rem; color: var(--primary-dark);
+}
+.bd-content pre {
+  background: var(--ink); color: var(--cream);
+  padding: 1.25rem 1.5rem; border-radius: var(--radius);
+  overflow-x: auto; margin: 2rem 0;
+}
+.bd-content pre code { background: none; border: 0; color: inherit; }
+.bd-content iframe { width: 100%; aspect-ratio: 16/9; border: 0; border-radius: var(--radius); margin: 2rem 0; }
+.bd-content hr { border: 0; border-top: 1px solid var(--border); margin: 2.5rem 0; }
+
+/* ---------- 4. SHARE ROW ---------- */
+.bd-share {
+  display: flex; flex-wrap: wrap; align-items: center; gap: .625rem;
+  margin-top: 3rem; padding-block: 1.5rem;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+.bd-share__label {
+  margin-right: .5rem;
+  font-size: .6875rem; text-transform: uppercase; letter-spacing: .18em;
+  color: var(--muted-foreground); opacity: .7;
+}
+.bd-share__btn {
+  display: inline-flex; align-items: center; gap: .5rem;
+  border: 1px solid var(--border); border-radius: 9999px;
+  background: var(--card); color: var(--muted-foreground);
+  padding: .5rem 1rem;
+  font-family: inherit; font-size: .8125rem; cursor: pointer;
+  transition: background-color .2s ease, color .2s ease, border-color .2s ease, transform .2s ease;
+}
+.bd-share__btn svg { width: 1rem; height: 1rem; fill: currentColor; }
+.bd-share__btn:hover { transform: translateY(-2px); border-color: var(--primary); color: var(--primary); }
+.bd-share__btn--wa:hover { background: #25D366; border-color: #25D366; color: #fff; }
+.bd-share__btn--li:hover { background: #0077B5; border-color: #0077B5; color: #fff; }
+.bd-share__btn--fb:hover { background: #1877F2; border-color: #1877F2; color: #fff; }
+.bd-share__btn--x:hover  { background: var(--ink);   border-color: var(--ink);   color: #fff; }
+.bd-share__btn.is-copied { background: var(--primary); border-color: var(--primary); color: var(--primary-foreground); }
+
+/* ---------- 5. AUTHOR CARD ---------- */
+.bd-author {
+  display: flex; gap: 1.5rem; align-items: flex-start;
+  margin-top: 2.5rem; padding: 1.75rem;
+  background: var(--secondary);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--gold);
+  border-radius: var(--radius);
+}
+.bd-author img, .bd-author .bd-author__initial {
+  width: 4.5rem; height: 4.5rem; border-radius: 50%; object-fit: cover;
+  border: 1px solid var(--border); flex-shrink: 0;
+}
+.bd-author__initial {
+  display: flex; align-items: center; justify-content: center;
+  background: var(--primary); color: var(--cream);
+  font-family: var(--font-display); font-size: 1.75rem;
+}
+.bd-author__role {
+  font-size: .625rem; text-transform: uppercase; letter-spacing: .18em;
+  color: var(--gold-dark); display: block; margin-bottom: .375rem;
+}
+.bd-author__name { font-family: var(--font-display); font-size: 1.375rem; margin: 0 0 .5rem; }
+.bd-author__bio { margin: 0 0 1rem; font-size: .875rem; line-height: 1.75; color: var(--muted-foreground); }
+.bd-author__links { display: flex; gap: .5rem; }
+.bd-author__links a {
+  width: 2rem; height: 2rem; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid var(--border); background: var(--card);
+  transition: background-color .2s ease, border-color .2s ease;
+}
+.bd-author__links svg { width: .875rem; height: .875rem; fill: var(--muted-foreground); }
+.bd-author__links a:hover { background: var(--primary); border-color: var(--primary); }
+.bd-author__links a:hover svg { fill: var(--cream); }
+
+@media (max-width: 560px) {
+  .bd-author { flex-direction: column; }
+}
+
+/* ---------- 6. SIDEBAR ---------- */
+.bd-side {
+  display: flex; flex-direction: column; gap: 1.5rem;
+}
+@media (min-width: 1024px) {
+  .bd-side { position: sticky; top: calc(var(--nav-height) + 1.5rem); }
+}
+.bd-widget {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.bd-widget__head {
+  display: flex; align-items: center; gap: .625rem;
+  padding: .9375rem 1.25rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--secondary);
+}
+.bd-widget__head::before { content: ""; width: 1rem; height: 2px; background: var(--gold); flex-shrink: 0; }
+.bd-widget__head h2 {
+  font-family: var(--font-body);
+  font-size: .6875rem; font-weight: 600; letter-spacing: .18em; text-transform: uppercase;
+  color: var(--foreground); margin: 0;
+}
+.bd-widget__body { padding: 1.25rem; }
+
+/* contents index — built from the article's own H2/H3 */
+.bd-toc { max-height: 20rem; overflow-y: auto; }
+.bd-toc ol { list-style: none; margin: 0; padding: 0; counter-reset: toc; }
+.bd-toc li { margin: 0; }
+.bd-toc a {
+  display: block;
+  padding: .4375rem 0 .4375rem .875rem;
+  border-left: 2px solid var(--border);
+  font-size: .8125rem; line-height: 1.5; color: var(--muted-foreground);
+  transition: color .2s ease, border-color .2s ease;
+}
+.bd-toc a:hover { color: var(--primary); border-left-color: var(--gold); }
+.bd-toc a.is-active { color: var(--primary); font-weight: 500; border-left-color: var(--gold); }
+.bd-toc li.lvl-3 a { padding-left: 1.75rem; font-size: .78125rem; opacity: .85; }
+
+/* recent posts */
+.bd-recent { display: flex; gap: .875rem; padding: .875rem 0; border-bottom: 1px solid var(--border); }
+.bd-recent:first-child { padding-top: 0; }
+.bd-recent:last-child { border-bottom: 0; padding-bottom: 0; }
+.bd-recent img {
+  width: 4.5rem; height: 3.5rem; object-fit: cover; flex-shrink: 0;
+  border-radius: .375rem; border: 1px solid var(--border);
+}
+.bd-recent h3 {
+  font-family: var(--font-body);
+  font-size: .8125rem; font-weight: 500; line-height: 1.45; margin: 0 0 .3125rem;
+  color: var(--foreground);
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.bd-recent:hover h3 { color: var(--primary); }
+.bd-recent time { font-size: .6875rem; color: var(--muted-foreground); opacity: .7; }
+
+/* CTA */
+.bd-cta {
+  position: relative;
+  background: linear-gradient(155deg, var(--primary) 0%, var(--primary-dark) 55%, var(--ink) 100%);
+  border-radius: var(--radius);
+  padding: 2rem 1.5rem;
+  text-align: center;
+  overflow: hidden;
+}
+.bd-cta::before {
+  content: ""; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, var(--gold), transparent);
+}
+.bd-cta h2 {
+  font-family: var(--font-display); font-size: 1.375rem; font-weight: 500;
+  color: var(--cream); margin: 0 0 .625rem; line-height: 1.25;
+}
+.bd-cta p { margin: 0 0 1.5rem; font-size: .875rem; line-height: 1.7; color: rgba(246,242,233,.72); }
+.bd-cta .btn-gold { width: 100%; }
+
+/* ---------- 7. PREV / NEXT ---------- */
+.bd-nav { border-top: 1px solid var(--border); background: var(--secondary); }
+.bd-nav__grid { display: grid; grid-template-columns: 1fr; }
+@media (min-width: 768px) { .bd-nav__grid { grid-template-columns: 1fr 1fr; } }
+.bd-nav__item {
+  display: flex; align-items: center; gap: 1.25rem;
+  padding: 2rem 0;
+  transition: background-color .2s ease;
+}
+.bd-nav__item--prev { border-bottom: 1px solid var(--border); }
+@media (min-width: 768px) {
+  .bd-nav__item--prev { border-bottom: 0; border-right: 1px solid var(--border); padding-right: 2rem; }
+  .bd-nav__item--next { padding-left: 2rem; justify-content: flex-end; text-align: right; }
+}
+.bd-nav__arrow {
+  width: 2.75rem; height: 2.75rem; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid var(--border); background: var(--card); flex-shrink: 0;
+  transition: background-color .2s ease, border-color .2s ease;
+}
+.bd-nav__arrow svg { width: 1rem; height: 1rem; stroke: var(--primary); fill: none; stroke-width: 2; }
+.bd-nav__item:hover .bd-nav__arrow { background: var(--primary); border-color: var(--primary); }
+.bd-nav__item:hover .bd-nav__arrow svg { stroke: var(--cream); }
+.bd-nav__label {
+  display: block; font-size: .625rem; text-transform: uppercase; letter-spacing: .18em;
+  color: var(--gold-dark); margin-bottom: .375rem;
+}
+.bd-nav__title {
+  font-family: var(--font-display); font-size: 1.125rem; line-height: 1.3; color: var(--foreground);
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+
+/* ---------- 8. RELATED ---------- */
+.bd-related { padding-block: 4.5rem; border-top: 1px solid var(--border); }
+.bd-related__grid { display: grid; gap: 2rem; grid-template-columns: repeat(3, 1fr); }
+@media (max-width: 1024px) { .bd-related__grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 640px)  { .bd-related__grid { grid-template-columns: 1fr; } }
+
+.bd-rel {
+  position: relative;
+  display: flex; flex-direction: column; height: 100%;
+  background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+  overflow: hidden;
+  transition: transform .3s ease, box-shadow .3s ease, border-color .3s ease;
+}
+.bd-rel:hover {
+  transform: translateY(-4px); box-shadow: var(--shadow-card);
+  border-color: color-mix(in srgb, var(--primary) 30%, transparent);
+}
+.bd-rel__media { aspect-ratio: 16/10; overflow: hidden; background: var(--secondary); }
+.bd-rel__media img { width: 100%; height: 100%; object-fit: cover; transition: transform .6s ease; }
+.bd-rel:hover .bd-rel__media img { transform: scale(1.05); }
+.bd-rel__body { padding: 1.25rem 1.25rem 1.5rem; }
+.bd-rel__date { font-size: .6875rem; text-transform: uppercase; letter-spacing: .12em; color: var(--gold-dark); }
+.bd-rel__title {
+  font-family: var(--font-display); font-size: 1.25rem; font-weight: 500; line-height: 1.25;
+  margin: .5rem 0 0; color: var(--foreground);
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+}
+.bd-rel:hover .bd-rel__title { color: var(--primary); }
+.bd-stretch::before { content: ""; position: absolute; inset: 0; z-index: 1; }
+
+/* ---------- 9. BACK ---------- */
+.bd-back { border-top: 1px solid var(--border); padding-block: 2.5rem; text-align: center; }
+
+@media (prefers-reduced-motion: reduce) {
+  .bd-hero__bg { transition: none; }
+  /*.bd-progress { transition: none; }*/
+}
+</style>
+{% endblock %}
+
+
+{% block content %}
+
+<!-- <div class="bd-progress" id="bdProgress" aria-hidden="true"></div> -->
+
+<!-- ============================= HERO ============================= -->
+<article>
+<header class="bd-hero" id="bdHero">
+  <div class="bd-hero__bg" aria-hidden="true"
+       style="background-image:
+         {% if post.featured_image %}url('{{ post.featured_image.url }}'){% else %}url('{% static 'img/og-default.jpg' %}'){% endif %};"></div>
+  <div class="bd-hero__veil" aria-hidden="true"></div>
+
+  <div class="bd-hero__inner container-page">
+    <nav class="bd-crumbs" aria-label="Breadcrumb">
+      <a href="{% url 'home' %}">Home</a>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18l6-6-6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <a href="{% url 'blogs:blog_list' %}">Insights</a>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18l6-6-6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span class="bd-crumbs__current" aria-current="page">{{ post.title }}</span>
+    </nav>
+
+    <h1 class="bd-hero__title">{{ post.title }}</h1>
+
+    {% if post.subtitle %}
+      <p class="bd-hero__sub">{{ post.subtitle }}</p>
+    {% endif %}
+
+    <div class="bd-hero__meta">
+      {% if post.author %}
+      <div class="bd-author-chip">
+        {% if post.author.avatar %}
+          <img src="{{ post.author.avatar.url }}" alt="" width="44" height="44">
+        {% else %}
+          <span class="bd-author-chip__initial" aria-hidden="true">{{ post.author.name|first|upper }}</span>
+        {% endif %}
+        <div>
+          <small>Written by</small>
+          <b>{{ post.author.name }}</b>
+        </div>
+      </div>
+      {% endif %}
+
+      <span class="bd-fact">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 11h18"/></svg>
+        <time datetime="{{ post.publish_date|date:'Y-m-d' }}">{{ post.formatted_publish_date }}</time>
+      </span>
+      <span class="bd-fact">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+        {{ post.reading_time }} min read
+      </span>
+      <span class="bd-fact">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6z"/><circle cx="12" cy="12" r="2.5"/></svg>
+        {{ post.view_count }} views
+      </span>
+    </div>
+  </div>
+</header>
+
+
+<!-- ============================= BODY ============================= -->
+<div class="bd-main">
+  <div class="container-page bd-layout">
+
+    <div>
+      {% if post.featured_image %}
+      <figure class="bd-figure">
+        <img src="{{ post.featured_image.url }}" alt="{{ post.title }}" loading="eager" width="1200" height="675">
+        {% if post.featured_image_caption %}
+          <figcaption>{{ post.featured_image_caption }}</figcaption>
+        {% endif %}
+      </figure>
+      {% endif %}
+
+      <div class="bd-content" id="bdContent">
+        {{ post.content|safe }}
+      </div>
+
+      <!-- share -->
+      <div class="bd-share">
+        <span class="bd-share__label">Share</span>
+
+        <a class="bd-share__btn bd-share__btn--wa"
+           href="https://wa.me/?text={{ post.title|urlencode }}%20{{ canonical|urlencode }}"
+           target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 00-8.6 15l-1.3 4.7 4.8-1.3A10 10 0 1012 2zm5.5 14c-.2.6-1.2 1.2-1.7 1.2-.4 0-1 .1-3-.8a11 11 0 01-4.5-4c-.3-.5-1-1.5-1-2.9 0-1.3.7-2 1-2.3.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.8 2c.1.2 0 .4-.1.6l-.4.5c-.1.2-.3.3-.1.6.5.9 1 1.4 1.7 1.9.7.5 1.2.7 1.4.8.2 0 .4 0 .5-.2l.7-.8c.2-.2.3-.2.6-.1l1.9.9c.3.1.5.2.5.4 0 .1 0 .7-.1 1z"/></svg>
+          WhatsApp
+        </a>
+
+        <a class="bd-share__btn bd-share__btn--li"
+           href="https://www.linkedin.com/sharing/share-offsite/?url={{ canonical|urlencode }}"
+           target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4.98 3.5a2.5 2.5 0 11-.02 5 2.5 2.5 0 01.02-5zM3 9h4v12H3zM9 9h3.8v1.7h.05c.53-1 1.83-2.05 3.77-2.05 4.03 0 4.78 2.65 4.78 6.1V21h-4v-5.4c0-1.3 0-3-1.8-3s-2.1 1.4-2.1 2.9V21H9z"/></svg>
+          LinkedIn
+        </a>
+
+        <a class="bd-share__btn bd-share__btn--fb"
+           href="https://www.facebook.com/sharer/sharer.php?u={{ canonical|urlencode }}"
+           target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 21v-8h2.7l.4-3h-3.1V8.2c0-.9.3-1.5 1.5-1.5h1.7V4.1c-.3 0-1.3-.1-2.4-.1-2.4 0-4.1 1.5-4.1 4.2V10H7.5v3h2.7v8z"/></svg>
+          Facebook
+        </a>
+
+        <a class="bd-share__btn bd-share__btn--x"
+           href="https://twitter.com/intent/tweet?url={{ canonical|urlencode }}&text={{ post.title|urlencode }}"
+           target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.2 2H21l-6.5 7.4L22 22h-6l-4.7-6.2L5.9 22H3l7-8-7.3-12h6.2l4.2 5.7zm-1 18h1.6L7.9 3.7H6.2z"/></svg>
+          X
+        </a>
+
+        <button type="button" class="bd-share__btn" id="bdCopy" data-url="{{ canonical }}">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 1H4a2 2 0 00-2 2v12h2V3h12zm3 4H8a2 2 0 00-2 2v14a2 2 0 002 2h11a2 2 0 002-2V7a2 2 0 00-2-2zm0 16H8V7h11z"/></svg>
+          <span>Copy link</span>
+        </button>
+      </div>
+
+      <!-- author -->
+      {% if post.author %}
+      <div class="bd-author reveal">
+        {% if post.author.avatar %}
+          <img src="{{ post.author.avatar.url }}" alt="" width="72" height="72" loading="lazy">
+        {% else %}
+          <span class="bd-author__initial" aria-hidden="true">{{ post.author.name|first|upper }}</span>
+        {% endif %}
+        <div>
+          <span class="bd-author__role">Property advisor · Spacesmith Real Estate</span>
+          <h2 class="bd-author__name">{{ post.author.name }}</h2>
+          <p class="bd-author__bio">
+            {% if post.author.bio %}
+              {{ post.author.bio|truncatewords:45 }}
+            {% else %}
+              Advises buyers, tenants and investors on residential and commercial property across Dubai and the wider UAE.
+            {% endif %}
+          </p>
+          <div class="bd-author__links">
+            {% if post.author.linkedin %}
+            <a href="{{ post.author.linkedin }}" target="_blank" rel="noopener" aria-label="LinkedIn profile">
+              <svg viewBox="0 0 24 24"><path d="M4.98 3.5a2.5 2.5 0 11-.02 5 2.5 2.5 0 01.02-5zM3 9h4v12H3zM9 9h3.8v1.7h.05c.53-1 1.83-2.05 3.77-2.05 4.03 0 4.78 2.65 4.78 6.1V21h-4v-5.4c0-1.3 0-3-1.8-3s-2.1 1.4-2.1 2.9V21H9z"/></svg>
+            </a>
+            {% endif %}
+            {% if post.author.instagram %}
+            <a href="{{ post.author.instagram }}" target="_blank" rel="noopener" aria-label="Instagram profile">
+              <svg viewBox="0 0 24 24"><path d="M12 2.2c3.2 0 3.6 0 4.9.1 1.2.1 1.8.3 2.2.4.6.2 1 .5 1.4.9.4.4.7.8.9 1.4.2.4.3 1 .4 2.2.1 1.3.1 1.7.1 4.9s0 3.6-.1 4.9c-.1 1.2-.3 1.8-.4 2.2-.2.6-.5 1-.9 1.4-.4.4-.8.7-1.4.9-.4.2-1 .3-2.2.4-1.3.1-1.7.1-4.9.1s-3.6 0-4.9-.1c-1.2-.1-1.8-.3-2.2-.4-.6-.2-1-.5-1.4-.9-.4-.4-.7-.8-.9-1.4-.2-.4-.3-1-.4-2.2C2.2 15.6 2.2 15.2 2.2 12s0-3.6.1-4.9c.1-1.2.3-1.8.4-2.2.2-.6.5-1 .9-1.4.4-.4.8-.7 1.4-.9.4-.2 1-.3 2.2-.4C8.4 2.2 8.8 2.2 12 2.2zm0 3.2A6.6 6.6 0 1018.6 12 6.6 6.6 0 0012 5.4zm0 10.9A4.3 4.3 0 1116.3 12 4.3 4.3 0 0112 16.3zm6.8-11.1a1.5 1.5 0 11-1.5-1.5 1.5 1.5 0 011.5 1.5z"/></svg>
+            </a>
+            {% endif %}
+            {% if post.author.facebook %}
+            <a href="{{ post.author.facebook }}" target="_blank" rel="noopener" aria-label="Facebook profile">
+              <svg viewBox="0 0 24 24"><path d="M13.5 21v-8h2.7l.4-3h-3.1V8.2c0-.9.3-1.5 1.5-1.5h1.7V4.1c-.3 0-1.3-.1-2.4-.1-2.4 0-4.1 1.5-4.1 4.2V10H7.5v3h2.7v8z"/></svg>
+            </a>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- ============================= SIDEBAR ============================= -->
+    <aside class="bd-side">
+
+      <div class="bd-widget" id="bdTocWidget" hidden>
+        <div class="bd-widget__head"><h2>In this article</h2></div>
+        <div class="bd-widget__body bd-toc"><ol id="bdToc"></ol></div>
+      </div>
+
+      {% if recent_posts %}
+      <div class="bd-widget">
+        <div class="bd-widget__head"><h2>Latest insights</h2></div>
+        <div class="bd-widget__body">
+          {% for rp in recent_posts %}
+          <a href="{% url 'blogs:blog_detail' rp.slug %}" class="bd-recent">
+            {% if rp.featured_image %}
+              <img src="{{ rp.featured_image.url }}" alt="" loading="lazy" width="72" height="56">
+            {% else %}
+              <img src="{% static 'img/og-default.jpg' %}" alt="" loading="lazy" width="72" height="56">
+            {% endif %}
+            <div>
+              <h3>{{ rp.title }}</h3>
+              <time datetime="{{ rp.publish_date|date:'Y-m-d' }}">{{ rp.formatted_publish_date }}</time>
+            </div>
+          </a>
+          {% endfor %}
+        </div>
+      </div>
+      {% endif %}
+
+      <div class="bd-cta">
+        <h2>Looking at a specific building?</h2>
+        <p>Send us the project or community and we will come back with current pricing, service charges and realistic yields.</p>
+        <a href="{% url 'contact' %}" class="btn-gold">
+          Talk to an advisor
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+      </div>
+
+    </aside>
+
+  </div>
+</div>
+</article>
+
+
+<!-- ============================= PREV / NEXT ============================= -->
+{% if prev_post or next_post %}
+<nav class="bd-nav" aria-label="More articles">
+  <div class="container-page">
+    <div class="bd-nav__grid">
+      {% if prev_post %}
+      <a href="{% url 'blogs:blog_detail' prev_post.slug %}" class="bd-nav__item bd-nav__item--prev">
+        <span class="bd-nav__arrow"><svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg></span>
+        <span>
+          <span class="bd-nav__label">Previous</span>
+          <span class="bd-nav__title">{{ prev_post.title }}</span>
+        </span>
+      </a>
+      {% else %}<span></span>{% endif %}
+
+      {% if next_post %}
+      <a href="{% url 'blogs:blog_detail' next_post.slug %}" class="bd-nav__item bd-nav__item--next">
+        <span>
+          <span class="bd-nav__label">Next</span>
+          <span class="bd-nav__title">{{ next_post.title }}</span>
+        </span>
+        <span class="bd-nav__arrow"><svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg></span>
+      </a>
+      {% endif %}
+    </div>
+  </div>
+</nav>
+{% endif %}
+
+
+<!-- ============================= RELATED ============================= -->
+{% if related_posts %}
+<section class="bd-related">
+  <div class="container-page">
+    <div class="section-head">
+      <div>
+        <p class="eyebrow">Keep reading</p>
+        <h2 class="section-title">Related insights</h2>
+      </div>
+      <a href="{% url 'blogs:blog_list' %}" class="btn-ghost">
+        All articles
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </a>
+    </div>
+
+    <div class="bd-related__grid">
+      {% for rp in related_posts %}
+      <article class="bd-rel reveal" data-delay="{{ forloop.counter0 }}00">
+        <div class="bd-rel__media">
+          {% if rp.featured_image %}
+            <img src="{{ rp.featured_image.url }}" alt="{{ rp.title }}" loading="lazy" width="640" height="400">
+          {% else %}
+            <img src="{% static 'img/og-default.jpg' %}" alt="{{ rp.title }}" loading="lazy" width="640" height="400">
+          {% endif %}
+        </div>
+        <div class="bd-rel__body">
+          <span class="bd-rel__date">{{ rp.formatted_publish_date }} · {{ rp.reading_time }} min</span>
+          <h3 class="bd-rel__title">
+            <a href="{% url 'blogs:blog_detail' rp.slug %}" class="bd-stretch">{{ rp.title }}</a>
+          </h3>
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+
+
+<div class="bd-back">
+  <a href="{% url 'blogs:blog_list' %}" class="btn-ghost">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+    Back to all insights
+  </a>
+</div>
+
+{% endblock %}
+
+
+{% block extra_js %}
+<script>
+(function () {
+  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  /* ---- hero ken burns ---- */
+  var hero = document.getElementById('bdHero');
+  if (hero) {
+    if ('IntersectionObserver' in window && !reduced) {
+      new IntersectionObserver(function (entries, obs) {
+        entries.forEach(function (e) {
+          if (e.isIntersecting) { hero.classList.add('in-view'); obs.disconnect(); }
+        });
+      }, { threshold: 0.05 }).observe(hero);
+    } else {
+      hero.classList.add('in-view');
+    }
+  }
+
+  var content = document.getElementById('bdContent');
+
+  /* ---- reading progress ---- */
+  var bar = document.getElementById('bdProgress');
+  if (bar && content) {
+    var ticking = false;
+    var update = function () {
+      var rect = content.getBoundingClientRect();
+      var total = content.offsetHeight - window.innerHeight;
+      var pct = total > 0 ? (-rect.top / total) * 100 : (rect.top < 0 ? 100 : 0);
+      bar.style.width = Math.min(Math.max(pct, 0), 100) + '%';
+      ticking = false;
+    };
+    window.addEventListener('scroll', function () {
+      if (!ticking) { ticking = true; requestAnimationFrame(update); }
+    }, { passive: true });
+    window.addEventListener('resize', update, { passive: true });
+    update();
+  }
+
+  /* ---- contents index, built from the article's own headings ---- */
+  if (content) {
+    var headings = content.querySelectorAll('h2, h3');
+    var list = document.getElementById('bdToc');
+    var widget = document.getElementById('bdTocWidget');
+    var links = [];
+
+    if (headings.length >= 3 && list && widget) {
+      Array.prototype.forEach.call(headings, function (h, i) {
+        if (!h.id) {
+          h.id = 'section-' + (i + 1) + '-' +
+            h.textContent.trim().toLowerCase()
+              .replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').slice(0, 50);
+        }
+        var li = document.createElement('li');
+        li.className = 'lvl-' + h.tagName.charAt(1);
+        var a = document.createElement('a');
+        a.href = '#' + h.id;
+        a.textContent = h.textContent.trim();
+        li.appendChild(a);
+        list.appendChild(li);
+        links.push({ a: a, el: h });
+      });
+      widget.hidden = false;
+
+      if ('IntersectionObserver' in window) {
+        var spy = new IntersectionObserver(function (entries) {
+          entries.forEach(function (entry) {
+            if (!entry.isIntersecting) return;
+            links.forEach(function (item) {
+              item.a.classList.toggle('is-active', item.el === entry.target);
+            });
+          });
+        }, { rootMargin: '-20% 0px -70% 0px', threshold: 0 });
+        links.forEach(function (item) { spy.observe(item.el); });
+      }
+    }
+  }
+
+  /* ---- copy link ---- */
+  var copyBtn = document.getElementById('bdCopy');
+  if (copyBtn) {
+    copyBtn.addEventListener('click', function () {
+      var url = copyBtn.dataset.url || window.location.href;
+      var label = copyBtn.querySelector('span');
+      var done = function () {
+        copyBtn.classList.add('is-copied');
+        label.textContent = 'Link copied';
+        setTimeout(function () {
+          copyBtn.classList.remove('is-copied');
+          label.textContent = 'Copy link';
+        }, 2000);
+      };
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(url).then(done);
+      } else {
+        var ta = document.createElement('textarea');
+        ta.value = url; ta.style.position = 'fixed'; ta.style.opacity = '0';
+        document.body.appendChild(ta); ta.select();
+        try { document.execCommand('copy'); done(); } catch (e) {}
+        document.body.removeChild(ta);
+      }
+    });
+  }
+})();
+</script>
+{% endblock %}

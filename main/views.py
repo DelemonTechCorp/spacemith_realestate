@@ -3,11 +3,12 @@
 import math
 from django.shortcuts import render
 from django.db.models import Max
+from django.utils import timezone
 from properties.models import City, District, GroupedApartment, Property, PropertyType
 from django.db.models import Case, IntegerField, Q, Value, When
-
+from blogs.models import BlogPost
 from properties.models import DeveloperCompany
- 
+from .models import InstagramHighlight 
  
 
 
@@ -46,6 +47,14 @@ def home(request):
     .order_by('-created_at')[:8]
 )
 
+        # ── Latest insights (home page teaser) ─────────────────────
+    latest_posts = (
+        BlogPost.objects
+        .select_related('author')
+        .filter(is_published=True, publish_date__lte=timezone.now())
+        .order_by('-publish_date')[:4]
+    )
+    
     return render(request, 'home.html', {
         'locations': locations,
         'types': PropertyType.objects.filter(is_active=True).order_by('name'),
@@ -53,9 +62,12 @@ def home(request):
         'max_price': max_price,
         'price_step': 500000,
         'featured_properties': featured_properties,
+        'latest_posts': latest_posts,
         'meta_title': 'Spacesmith Real Estate | We Find Your Space',
         'meta_description': 'Off-plan launches and ready properties across Dubai.',
         'canonical': 'https://spacesmithrealestate.com/',
+        "instagram_highlights": InstagramHighlight.objects.filter(is_active=True)[:4],
+        
     })
     
     

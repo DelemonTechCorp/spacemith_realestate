@@ -1,0 +1,863 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ meta_title }}{% endblock %}
+{% block meta_description %}{{ meta_description }}{% endblock %}
+{% block canonical %}{{ canonical }}{% endblock %}
+
+{% block schema %}
+{{ block.super }}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Blog",
+  "@id": "https://spacesmithrealestate.com/insights/#blog",
+  "name": "Spacesmith Insights",
+  "description": "Dubai and UAE property market analysis, off-plan launches, leasing trends and investment guides from Spacesmith Real Estate.",
+  "url": "https://spacesmithrealestate.com/insights/",
+  "inLanguage": "en-AE",
+  "publisher": { "@id": "https://spacesmithrealestate.com/#organization" }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://spacesmithrealestate.com/" },
+    { "@type": "ListItem", "position": 2, "name": "Insights", "item": "https://spacesmithrealestate.com/insights/" }
+  ]
+}
+</script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+/* =====================================================================
+   BLOG LIST — Spacesmith Real Estate
+   Hero mirrors the blog detail hero (same veil, scale, hairline, crumbs)
+   ===================================================================== */
+
+/* ---------- 1. HERO ---------- */
+.bl-hero {
+  position: relative;
+  display: flex; align-items: flex-end;
+  min-height: 66vh;
+  padding-top: var(--nav-height);
+  overflow: hidden;
+  background: var(--ink);
+}
+.bl-hero__bg {
+  position: absolute; inset: 0;
+  background-size: cover; background-position: center;
+  transform: scale(1.07);
+  transition: transform 9s cubic-bezier(.2,.8,.2,1);
+}
+.bl-hero.in-view .bl-hero__bg { transform: scale(1); }
+.bl-hero__veil {
+  position: absolute; inset: 0;
+  background:
+    linear-gradient(180deg, rgba(11,21,18,.30) 0%, rgba(10,42,32,.80) 50%, rgba(10,42,32,.97) 100%);
+}
+.bl-hero::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 2px;
+  background: linear-gradient(90deg, var(--gold), rgba(212,175,55,.12) 50%, transparent);
+}
+.bl-hero__inner { position: relative; z-index: 2; width: 100%; padding-block: 4rem 5.5rem; }
+
+/* breadcrumbs — identical treatment to the detail page */
+.bl-crumbs {
+  display: flex; flex-wrap: wrap; align-items: center; gap: .625rem;
+  font-size: .6875rem; text-transform: uppercase; letter-spacing: .16em;
+  color: rgba(246,242,233,.6);
+  margin-bottom: 1.75rem;
+}
+.bl-crumbs a { color: rgba(246,242,233,.8); }
+.bl-crumbs a:hover { color: var(--gold); }
+.bl-crumbs svg { width: .625rem; height: .625rem; stroke: var(--gold); fill: none; stroke-width: 2.5; }
+
+.bl-hero__title {
+  font-family: var(--font-display);
+  font-size: clamp(2.125rem, 4.8vw, 3.875rem);
+  font-weight: 500; line-height: 1.08;
+  color: var(--cream);
+  margin: 0 0 1rem;
+  max-width: 22ch;
+}
+.bl-hero__title em { font-style: italic; color: var(--gold); }
+.bl-hero__sub {
+  max-width: 44rem; margin: 0;
+  color: rgba(246,242,233,.72);
+  font-size: 1.0625rem; line-height: 1.7;
+}
+
+.bl-hero__meta {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 1.5rem 3rem;
+  margin-top: 2.25rem; padding-top: 1.75rem;
+  border-top: 1px solid rgba(246,242,233,.16);
+}
+.bl-hero__stat b {
+  display: block;
+  font-family: var(--font-display);
+  font-size: 1.75rem; font-weight: 500;
+  color: var(--cream); line-height: 1;
+}
+.bl-hero__stat span {
+  display: block; margin-top: .4375rem;
+  font-size: .625rem; text-transform: uppercase; letter-spacing: .18em;
+  color: rgba(246,242,233,.5);
+}
+
+/* ---------- 2. FILTER BAR (overlaps the hero) ---------- */
+.bl-toolbar-wrap { position: relative; z-index: 5; margin-top: -2.75rem; }
+.bl-toolbar {
+  position: relative;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-elegant);
+  overflow: hidden;
+}
+.bl-toolbar::before {
+  content: ""; position: absolute; top: 0; left: 0; right: 0; height: 2px; z-index: 2;
+  background: linear-gradient(90deg, var(--gold), rgba(212,175,55,.15) 55%, transparent);
+}
+.bl-toolbar form { display: flex; flex-wrap: wrap; align-items: stretch; }
+.bl-toolbar__search {
+  position: relative; flex: 1 1 18rem; min-width: 0;
+  border-right: 1px solid var(--border);
+}
+.bl-toolbar__search svg {
+  position: absolute; left: 1.375rem; top: 50%; transform: translateY(-50%);
+  width: 1rem; height: 1rem; stroke: var(--gold-dark); fill: none; stroke-width: 2;
+  pointer-events: none;
+}
+.bl-toolbar__input {
+  width: 100%; height: 4rem;
+  border: 0; background: transparent;
+  padding: 0 1rem 0 3.375rem;
+  font-family: inherit; font-size: .9375rem; color: var(--foreground);
+}
+.bl-toolbar__input::placeholder { color: color-mix(in srgb, var(--muted-foreground) 50%, transparent); }
+.bl-toolbar__input:focus { outline: none; }
+.bl-toolbar__select {
+  height: 4rem; min-width: 12.5rem;
+  border: 0; border-right: 1px solid var(--border);
+  background-color: var(--secondary);
+  padding: 0 2.75rem 0 1.25rem;
+  -webkit-appearance: none; appearance: none;
+  font-family: inherit; font-size: .75rem; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--muted-foreground); cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23d4af37' stroke-width='1.6' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 1.125rem center;
+}
+.bl-toolbar__select:focus { outline: none; color: var(--foreground); }
+.bl-toolbar__btn {
+  height: 4rem; padding-inline: 2.25rem;
+  border: 0; cursor: pointer;
+  background: var(--primary); color: var(--primary-foreground);
+  font-family: inherit; font-size: .75rem; font-weight: 500;
+  letter-spacing: .16em; text-transform: uppercase;
+  transition: background-color .25s ease;
+}
+.bl-toolbar__btn:hover { background: var(--primary-dark); }
+
+@media (max-width: 768px) {
+  .bl-toolbar__search { flex: 1 1 100%; border-right: 0; border-bottom: 1px solid var(--border); }
+  .bl-toolbar__select { flex: 1 1 auto; min-width: 0; }
+  .bl-toolbar__btn { flex: 1 1 100%; }
+}
+
+/* ---------- 3. TOPIC CHIPS ---------- */
+.bl-topics {
+  display: flex; flex-wrap: wrap; align-items: center; gap: .625rem;
+  margin-top: 1.75rem;
+}
+.bl-topics__label {
+  font-size: .625rem; text-transform: uppercase; letter-spacing: .2em;
+  color: var(--muted-foreground); opacity: .65; margin-right: .5rem;
+}
+.bl-chip {
+  display: inline-flex; align-items: center;
+  border: 1px solid var(--border); border-radius: 9999px;
+  background: var(--card); color: var(--muted-foreground);
+  padding: .4375rem 1rem;
+  font-size: .75rem; letter-spacing: .04em;
+  transition: background-color .2s ease, color .2s ease, border-color .2s ease;
+}
+.bl-chip:hover { background: var(--primary); border-color: var(--primary); color: var(--primary-foreground); }
+.bl-chip.is-active { background: var(--gold); border-color: var(--gold); color: var(--ink); font-weight: 600; }
+
+/* ---------- 4. RESULT META ---------- */
+.bl-resultbar {
+  display: flex; align-items: baseline; justify-content: space-between;
+  flex-wrap: wrap; gap: .75rem;
+  margin: 3.5rem 0 2.25rem;
+}
+.bl-resultbar p { margin: 0; font-size: .875rem; color: var(--muted-foreground); }
+.bl-resultbar strong { color: var(--foreground); font-weight: 600; }
+.bl-clear {
+  font-size: .8125rem; color: var(--primary); font-weight: 500;
+  border-bottom: 1px solid color-mix(in srgb, var(--primary) 35%, transparent);
+}
+.bl-clear:hover { color: var(--gold-dark); border-bottom-color: var(--gold); }
+
+/* ---------- 5. FEATURED ARTICLE ---------- */
+.bl-featured {
+  position: relative;
+  display: grid; grid-template-columns: 1.15fr 1fr;
+  min-height: 27rem;                /* drives the row height, not the media */
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-bottom: 4.5rem;
+  transition: box-shadow .35s ease, border-color .35s ease;
+}
+.bl-featured::after {
+  content: ""; position: absolute; left: 0; bottom: 0; height: 2px; width: 0;
+  background: linear-gradient(90deg, var(--gold), var(--primary-light));
+  transition: width .55s ease;
+  z-index: 2;
+}
+.bl-featured:hover { box-shadow: var(--shadow-elegant); border-color: color-mix(in srgb, var(--primary) 35%, transparent); }
+.bl-featured:hover::after { width: 100%; }
+
+/* media fills whatever height the row ends up at */
+.bl-featured__media {
+  position: relative;
+  overflow: hidden;
+  background: var(--secondary);
+}
+.bl-featured__media img {
+  position: absolute; inset: 0;
+  display: block;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  transition: transform .9s cubic-bezier(.2,.8,.2,1);
+}
+.bl-featured:hover .bl-featured__media img { transform: scale(1.05); }
+.bl-featured__media::after {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(90deg, transparent 55%, rgba(11,21,18,.18) 100%);
+  pointer-events: none;
+}
+.bl-featured__flag {
+  position: absolute; top: 1.125rem; left: 1.125rem; z-index: 2;
+  display: inline-flex; align-items: center; gap: .5rem;
+  background: var(--gold); color: var(--ink);
+  border-radius: 9999px;
+  padding: .375rem .9375rem;
+  font-size: .625rem; text-transform: uppercase; letter-spacing: .18em; font-weight: 600;
+}
+.bl-featured__body {
+  display: flex; flex-direction: column; justify-content: center;
+  min-width: 0;                     /* lets long words wrap instead of pushing the grid */
+  padding: 3.25rem 3rem;
+  border-left: 1px solid var(--border);
+}
+.bl-meta-row {
+  display: flex; flex-wrap: wrap; align-items: center; gap: .75rem 1.25rem;
+  font-size: .75rem; color: var(--muted-foreground);
+  opacity: .8;
+}
+.bl-meta-row span { display: inline-flex; align-items: center; gap: .4375rem; }
+.bl-meta-row svg { width: .875rem; height: .875rem; stroke: var(--gold-dark); fill: none; stroke-width: 1.6; flex-shrink: 0; }
+.bl-featured__title {
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 2.4vw, 2.375rem);
+  font-weight: 500; line-height: 1.15;
+  margin: 1rem 0 .875rem;
+  color: var(--foreground);
+  overflow-wrap: anywhere;
+  transition: color .25s ease;
+}
+.bl-featured:hover .bl-featured__title { color: var(--primary); }
+.bl-featured__excerpt {
+  margin: 0 0 2rem;
+  color: var(--muted-foreground);
+  font-size: .9375rem; line-height: 1.8;
+  display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden;
+}
+.bl-featured__foot {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+}
+
+/* byline (shared) */
+.bl-byline { display: flex; align-items: center; gap: .75rem; min-width: 0; }
+.bl-byline__avatar {
+  width: 2.25rem; height: 2.25rem; border-radius: 50%;
+  object-fit: cover; border: 1px solid var(--border); flex-shrink: 0;
+}
+.bl-byline__initial {
+  width: 2.25rem; height: 2.25rem; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--primary); color: var(--cream);
+  font-family: var(--font-display); font-size: 1rem; flex-shrink: 0;
+}
+.bl-byline__name {
+  font-size: .8125rem; font-weight: 500; color: var(--foreground);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.bl-readmore {
+  display: inline-flex; align-items: center; gap: .5rem;
+  font-size: .6875rem; font-weight: 600; letter-spacing: .16em; text-transform: uppercase;
+  color: var(--primary); white-space: nowrap;
+}
+.bl-readmore svg { width: 1rem; height: 1rem; stroke: currentColor; fill: none; stroke-width: 2; transition: transform .25s ease; }
+.bl-featured:hover .bl-readmore svg,
+.bl-card:hover .bl-readmore svg { transform: translateX(5px); }
+
+/* laptop — same two columns, but breathing room comes down */
+@media (max-width: 1200px) {
+  .bl-featured { min-height: 24rem; }
+  .bl-featured__body { padding: 2.25rem 2rem; }
+  .bl-featured__excerpt { -webkit-line-clamp: 3; margin-bottom: 1.5rem; }
+}
+
+/* stack at the same point the article grid drops to 2 columns */
+@media (max-width: 1024px) {
+  .bl-featured { grid-template-columns: 1fr; min-height: 0; }
+  .bl-featured__media { aspect-ratio: 16 / 9; }
+  .bl-featured__body {
+    padding: 2rem 1.75rem;
+    border-left: 0; border-top: 1px solid var(--border);
+  }
+  .bl-featured__title { font-size: 1.75rem; }
+}
+
+@media (max-width: 640px) {
+  .bl-featured { margin-bottom: 3rem; }
+  .bl-featured__media { aspect-ratio: 16 / 10; }
+  .bl-featured__body { padding: 1.5rem 1.25rem; }
+  .bl-featured__title { font-size: 1.4375rem; margin: .75rem 0 .625rem; }
+  .bl-featured__excerpt { font-size: .875rem; margin-bottom: 1.25rem; }
+  .bl-featured__foot { padding-top: 1.25rem; }
+  .bl-featured__flag { top: .75rem; left: .75rem; padding: .3125rem .75rem; font-size: .5625rem; }
+}
+
+/* ---------- 6. ARTICLE GRID ---------- */
+.bl-label {
+  display: flex; align-items: center; gap: 1.25rem;
+  margin-bottom: 2rem;
+}
+.bl-label span {
+  font-size: .625rem; letter-spacing: .22em; text-transform: uppercase;
+  color: var(--muted-foreground); opacity: .7; white-space: nowrap;
+}
+.bl-label::before { content: ""; width: 1.75rem; height: 1px; background: var(--gold); flex-shrink: 0; }
+.bl-label::after { content: ""; flex: 1; height: 1px; background: var(--border); }
+
+.bl-grid { display: grid; gap: 2rem; grid-template-columns: repeat(3, 1fr); }
+@media (max-width: 1024px) { .bl-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 640px)  { .bl-grid { grid-template-columns: 1fr; } }
+
+.bl-card {
+  position: relative;
+  display: flex; flex-direction: column; height: 100%;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  transition: transform .35s cubic-bezier(.2,.8,.2,1), box-shadow .35s ease, border-color .35s ease;
+}
+.bl-card::after {
+  content: ""; position: absolute; left: 0; bottom: 0; height: 2px; width: 0;
+  background: linear-gradient(90deg, var(--gold), var(--primary-light));
+  transition: width .45s ease;
+  z-index: 2;
+}
+.bl-card:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-card);
+  border-color: color-mix(in srgb, var(--primary) 30%, transparent);
+}
+.bl-card:hover::after { width: 100%; }
+.bl-card__media { position: relative; aspect-ratio: 16 / 10; overflow: hidden; background: var(--secondary); }
+.bl-card__media img { width: 100%; height: 100%; object-fit: cover; transition: transform .7s cubic-bezier(.2,.8,.2,1); }
+.bl-card:hover .bl-card__media img { transform: scale(1.06); }
+.bl-card__media::after {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(180deg, transparent 55%, rgba(11,21,18,.45) 100%);
+  pointer-events: none;
+}
+.bl-card__time {
+  position: absolute; right: .875rem; bottom: .875rem; z-index: 2;
+  background: rgba(11,21,18,.66); backdrop-filter: blur(6px);
+  border: 1px solid rgba(212,175,55,.35);
+  color: var(--cream); border-radius: 9999px;
+  padding: .25rem .8125rem;
+  font-size: .625rem; letter-spacing: .12em; text-transform: uppercase;
+}
+.bl-card__body { flex: 1; display: flex; flex-direction: column; padding: 1.625rem 1.625rem 0; }
+.bl-card__title {
+  font-family: var(--font-display);
+  font-size: 1.375rem; font-weight: 500; line-height: 1.25;
+  margin: .875rem 0 .625rem;
+  color: var(--foreground);
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+  transition: color .25s ease;
+}
+.bl-card:hover .bl-card__title { color: var(--primary); }
+.bl-card__excerpt {
+  margin: 0 0 1.5rem;
+  font-size: .875rem; line-height: 1.75; color: var(--muted-foreground);
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+}
+.bl-card__foot {
+  display: flex; align-items: center; justify-content: space-between; gap: .75rem;
+  margin-top: auto;
+  padding: 1rem 1.625rem;
+  border-top: 1px solid var(--border);
+  background: var(--secondary);
+}
+
+/* whole-card link */
+.bl-stretch::before { content: ""; position: absolute; inset: 0; z-index: 3; }
+
+/* ---------- 7. PAGINATION ---------- */
+.bl-pager {
+  display: flex; align-items: center; justify-content: center; gap: .5rem;
+  flex-wrap: wrap;
+  margin-top: 4.5rem;
+}
+.bl-pager__link {
+  display: inline-flex; align-items: center; gap: .5rem;
+  border: 1px solid var(--border); border-radius: 9999px;
+  background: var(--card); color: var(--primary);
+  padding: .6875rem 1.5rem;
+  font-size: .75rem; font-weight: 600; letter-spacing: .1em; text-transform: uppercase;
+  transition: background-color .2s ease, color .2s ease, border-color .2s ease;
+}
+.bl-pager__link:hover { background: var(--primary); color: var(--primary-foreground); border-color: var(--primary); }
+.bl-pager__link[aria-disabled="true"] { opacity: .3; pointer-events: none; }
+.bl-pager__link svg { width: 1rem; height: 1rem; stroke: currentColor; fill: none; stroke-width: 2; }
+
+.bl-pages { display: flex; align-items: center; gap: .375rem; margin-inline: .75rem; }
+.bl-page {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 2.5rem; height: 2.5rem; padding-inline: .5rem;
+  border: 1px solid var(--border); border-radius: 9999px;
+  background: var(--card); color: var(--muted-foreground);
+  font-size: .8125rem; font-weight: 500;
+  transition: background-color .2s ease, color .2s ease, border-color .2s ease;
+}
+.bl-page:hover { border-color: var(--gold); color: var(--primary); }
+.bl-page.is-current {
+  background: var(--primary); border-color: var(--primary); color: var(--cream);
+  font-weight: 600;
+}
+.bl-page__gap { color: var(--muted-foreground); opacity: .5; padding-inline: .125rem; }
+@media (max-width: 560px) { .bl-pages { display: none; } }
+
+/* ---------- 8. ADVISORY CTA BAND ---------- */
+.bl-band {
+  position: relative;
+  background: linear-gradient(155deg, var(--primary) 0%, var(--primary-dark) 55%, var(--ink) 100%);
+  overflow: hidden;
+}
+.bl-band::before {
+  content: ""; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, var(--gold), rgba(212,175,55,.15) 50%, transparent);
+}
+.bl-band__inner {
+  display: grid; gap: 2rem; align-items: center;
+  grid-template-columns: 1fr;
+  padding-block: 4rem;
+}
+@media (min-width: 900px) { .bl-band__inner { grid-template-columns: 1.4fr auto; gap: 4rem; } }
+.bl-band .eyebrow { color: var(--gold); }
+.bl-band h2 {
+  font-family: var(--font-display);
+  font-size: clamp(1.75rem, 3vw, 2.375rem);
+  font-weight: 500; line-height: 1.15;
+  color: var(--cream); margin: .75rem 0 .875rem;
+}
+.bl-band p { margin: 0; max-width: 44rem; font-size: .9375rem; line-height: 1.8; color: rgba(246,242,233,.72); }
+
+/* ---------- 9. INTRO / OUTRO COPY ---------- */
+.bl-intro {
+  display: grid; gap: 2.5rem;
+  grid-template-columns: 1fr;
+  padding-block: 4.5rem;
+  border-bottom: 1px solid var(--border);
+}
+@media (min-width: 900px) { .bl-intro { grid-template-columns: 1fr 1.4fr; gap: 4rem; } }
+.bl-intro h2 {
+  font-family: var(--font-display);
+  font-size: clamp(1.75rem, 3vw, 2.5rem);
+  font-weight: 500; line-height: 1.15; margin: .75rem 0 0;
+}
+.bl-intro p { margin: 0 0 1.125rem; color: var(--muted-foreground); font-size: .9375rem; line-height: 1.8; }
+.bl-intro p:last-child { margin-bottom: 0; }
+
+.bl-outro { background: var(--secondary); border-top: 1px solid var(--border); padding-block: 3.5rem; }
+.bl-outro p { margin: 0 0 1rem; font-size: .8125rem; line-height: 1.85; color: var(--muted-foreground); opacity: .9; }
+.bl-outro p:last-child { margin-bottom: 0; }
+
+.bl-body { padding-block: 0 6rem; }
+
+@media (prefers-reduced-motion: reduce) {
+  .bl-hero__bg { transition: none; }
+}
+</style>
+{% endblock %}
+
+
+{% block content %}
+
+<!-- ============================= HERO ============================= -->
+<section class="bl-hero" id="blHero">
+  <div class="bl-hero__bg" aria-hidden="true"
+       style="background-image: url('{% static 'img/about-hero.jpg' %}')"></div>
+  <div class="bl-hero__veil" aria-hidden="true"></div>
+
+  <div class="bl-hero__inner container-page">
+    <nav class="bl-crumbs" aria-label="Breadcrumb">
+      <a href="{% url 'home' %}">Home</a>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18l6-6-6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      <span aria-current="page">Insights</span>
+    </nav>
+
+    <h1 class="bl-hero__title">Reading the Dubai market, <em>one address at a time</em></h1>
+
+    <p class="bl-hero__sub">
+      Off-plan launches, handover timelines, rental yields and leasing trends — written by the
+      advisors who negotiate them, for buyers and investors who want the numbers before the pitch.
+    </p>
+
+    <div class="bl-hero__meta">
+      <div class="bl-hero__stat">
+        <b>{{ total_posts }}</b>
+        <span>Articles published</span>
+      </div>
+      <div class="bl-hero__stat">
+        <b>UAE</b>
+        <span>Coverage area</span>
+      </div>
+      <div class="bl-hero__stat">
+        <b>Weekly</b>
+        <span>Market updates</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ============================= SEARCH / SORT ============================= -->
+<div class="container-page bl-toolbar-wrap">
+  <div class="bl-toolbar">
+    <form method="get" action="{% url 'blogs:blog_list' %}" role="search">
+      <div class="bl-toolbar__search">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+        <label for="blSearch" class="skip-link">Search articles</label>
+        <input id="blSearch" type="search" name="search" class="bl-toolbar__input"
+               placeholder="Search areas, developers, off-plan projects…"
+               value="{{ search_query }}">
+      </div>
+
+      <select name="sort" class="bl-toolbar__select" aria-label="Sort articles" onchange="this.form.submit()">
+        <option value="-publish_date" {% if sort_by == '-publish_date' %}selected{% endif %}>Newest first</option>
+        <option value="publish_date"  {% if sort_by == 'publish_date'  %}selected{% endif %}>Oldest first</option>
+        <option value="-view_count"   {% if sort_by == '-view_count'   %}selected{% endif %}>Most read</option>
+        <option value="title"         {% if sort_by == 'title'         %}selected{% endif %}>Title A–Z</option>
+      </select>
+
+      <button type="submit" class="bl-toolbar__btn">Search</button>
+    </form>
+  </div>
+
+  <div class="bl-topics">
+    <span class="bl-topics__label">Popular</span>
+    <a href="{% url 'blogs:blog_list' %}?search=off-plan" class="bl-chip {% if search_query|lower == 'off-plan' %}is-active{% endif %}">Off-plan</a>
+    <a href="{% url 'blogs:blog_list' %}?search=Dubai+Marina" class="bl-chip {% if search_query|lower == 'dubai marina' %}is-active{% endif %}">Dubai Marina</a>
+    <a href="{% url 'blogs:blog_list' %}?search=Downtown+Dubai" class="bl-chip {% if search_query|lower == 'downtown dubai' %}is-active{% endif %}">Downtown Dubai</a>
+    <a href="{% url 'blogs:blog_list' %}?search=Business+Bay" class="bl-chip {% if search_query|lower == 'business bay' %}is-active{% endif %}">Business Bay</a>
+    <a href="{% url 'blogs:blog_list' %}?search=Palm+Jumeirah" class="bl-chip {% if search_query|lower == 'palm jumeirah' %}is-active{% endif %}">Palm Jumeirah</a>
+    <a href="{% url 'blogs:blog_list' %}?search=JVC" class="bl-chip {% if search_query|lower == 'jvc' %}is-active{% endif %}">JVC</a>
+    <a href="{% url 'blogs:blog_list' %}?search=rental+yield" class="bl-chip {% if search_query|lower == 'rental yield' %}is-active{% endif %}">Rental yields</a>
+  </div>
+</div>
+
+
+<!-- ============================= ARTICLES ============================= -->
+<section class="bl-body">
+  <div class="container-page">
+
+    <div class="bl-resultbar">
+      <p>
+        {% if search_query %}
+          Showing <strong>{{ total_posts }}</strong> result{{ total_posts|pluralize }} for “<strong>{{ search_query }}</strong>”
+        {% else %}
+          <strong>{{ total_posts }}</strong> article{{ total_posts|pluralize }} on Dubai property
+        {% endif %}
+      </p>
+      {% if search_query %}
+        <a href="{% url 'blogs:blog_list' %}" class="bl-clear">Clear search</a>
+      {% endif %}
+    </div>
+
+    {% if posts %}
+
+      {% if featured_post and not search_query and posts.number == 1 %}
+      <article class="bl-featured reveal">
+        <div class="bl-featured__media">
+          {% if featured_post.featured_image %}
+            <img src="{{ featured_post.featured_image.url }}" alt="{{ featured_post.title }}" loading="eager" width="880" height="560">
+          {% else %}
+            <img src="{% static 'img/og-default.jpg' %}" alt="{{ featured_post.title }}" loading="eager" width="880" height="560">
+          {% endif %}
+          <span class="bl-featured__flag">Editor’s pick</span>
+        </div>
+
+        <div class="bl-featured__body">
+          <div class="bl-meta-row">
+            <span>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 11h18"/></svg>
+              {{ featured_post.formatted_publish_date }}
+            </span>
+            <span>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+              {{ featured_post.reading_time }} min read
+            </span>
+          </div>
+
+          <h2 class="bl-featured__title">
+            <a href="{% url 'blogs:blog_detail' featured_post.slug %}" class="bl-stretch">{{ featured_post.title }}</a>
+          </h2>
+
+          <p class="bl-featured__excerpt">{{ featured_post.excerpt|truncatewords:34 }}</p>
+
+          <div class="bl-featured__foot">
+            {% if featured_post.author %}
+              <div class="bl-byline">
+                {% if featured_post.author.avatar %}
+                  <img src="{{ featured_post.author.avatar.url }}" alt="" class="bl-byline__avatar" loading="lazy" width="36" height="36">
+                {% else %}
+                  <span class="bl-byline__initial" aria-hidden="true">{{ featured_post.author.name|first|upper }}</span>
+                {% endif %}
+                <span class="bl-byline__name">{{ featured_post.author.name }}</span>
+              </div>
+            {% else %}<span></span>{% endif %}
+
+            <span class="bl-readmore">
+              Read article
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </span>
+          </div>
+        </div>
+      </article>
+      {% endif %}
+
+      {% if not search_query %}
+      <div class="bl-label"><span>All articles</span></div>
+      {% endif %}
+
+      <div class="bl-grid">
+        {% for post in posts %}
+        <article class="bl-card reveal" data-delay="{{ forloop.counter0|add:1 }}00">
+
+          <div class="bl-card__media">
+            {% if post.featured_image %}
+              <img src="{{ post.featured_image.url }}" alt="{{ post.title }}" loading="lazy" width="640" height="400">
+            {% else %}
+              <img src="{% static 'img/og-default.jpg' %}" alt="{{ post.title }}" loading="lazy" width="640" height="400">
+            {% endif %}
+            <span class="bl-card__time">{{ post.reading_time }} min read</span>
+          </div>
+
+          <div class="bl-card__body">
+            <div class="bl-meta-row">
+              <span>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 11h18"/></svg>
+                {{ post.formatted_publish_date }}
+              </span>
+              <span>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6z"/><circle cx="12" cy="12" r="2.5"/></svg>
+                {{ post.view_count }}
+              </span>
+            </div>
+
+            <h3 class="bl-card__title">
+              <a href="{% url 'blogs:blog_detail' post.slug %}" class="bl-stretch">{{ post.title }}</a>
+            </h3>
+
+            <p class="bl-card__excerpt">{{ post.excerpt|truncatewords:24 }}</p>
+          </div>
+
+          <div class="bl-card__foot">
+            {% if post.author %}
+              <div class="bl-byline">
+                {% if post.author.avatar %}
+                  <img src="{{ post.author.avatar.url }}" alt="" class="bl-byline__avatar" loading="lazy" width="36" height="36">
+                {% else %}
+                  <span class="bl-byline__initial" aria-hidden="true">{{ post.author.name|first|upper }}</span>
+                {% endif %}
+                <span class="bl-byline__name">{{ post.author.name }}</span>
+              </div>
+            {% else %}<span></span>{% endif %}
+
+            <span class="bl-readmore">
+              Read
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </span>
+          </div>
+
+        </article>
+        {% endfor %}
+      </div>
+
+      {% if posts.has_other_pages %}
+      <nav class="bl-pager" aria-label="Article pages">
+        {% if posts.has_previous %}
+          {% if posts.previous_page_number == 1 %}
+            <a class="bl-pager__link" href="{% url 'blogs:blog_list' %}{{ qs_suffix }}">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> Previous
+            </a>
+          {% else %}
+            <a class="bl-pager__link" href="{% url 'blogs:blog_list_paged' posts.previous_page_number %}{{ qs_suffix }}">
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> Previous
+            </a>
+          {% endif %}
+        {% else %}
+          <span class="bl-pager__link" aria-disabled="true">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> Previous
+          </span>
+        {% endif %}
+
+        <div class="bl-pages">
+          {% for num in posts.paginator.page_range %}
+            {% if num == posts.number %}
+              <span class="bl-page is-current" aria-current="page">{{ num }}</span>
+            {% elif num > posts.number|add:"-3" and num < posts.number|add:"3" %}
+              <a class="bl-page" href="{% if num == 1 %}{% url 'blogs:blog_list' %}{% else %}{% url 'blogs:blog_list_paged' num %}{% endif %}{{ qs_suffix }}">{{ num }}</a>
+            {% elif num == 1 %}
+              <a class="bl-page" href="{% url 'blogs:blog_list' %}{{ qs_suffix }}">1</a>
+              <span class="bl-page__gap" aria-hidden="true">…</span>
+            {% elif num == posts.paginator.num_pages %}
+              <span class="bl-page__gap" aria-hidden="true">…</span>
+              <a class="bl-page" href="{% url 'blogs:blog_list_paged' num %}{{ qs_suffix }}">{{ num }}</a>
+            {% endif %}
+          {% endfor %}
+        </div>
+
+        {% if posts.has_next %}
+          <a class="bl-pager__link" href="{% url 'blogs:blog_list_paged' posts.next_page_number %}{{ qs_suffix }}">
+            Next <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </a>
+        {% else %}
+          <span class="bl-pager__link" aria-disabled="true">
+            Next <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </span>
+        {% endif %}
+      </nav>
+      {% endif %}
+
+    {% else %}
+
+      <div class="empty reveal">
+        <h3>No articles match that search</h3>
+        <p>
+          {% if search_query %}
+            Try an area name (Dubai Marina, JVC, Business Bay), a developer, or “off-plan”.
+          {% else %}
+            The first Spacesmith market note is on its way. Check back shortly.
+          {% endif %}
+        </p>
+        <a href="{% url 'blogs:blog_list' %}" class="btn-solid">
+          Browse all articles
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </a>
+      </div>
+
+    {% endif %}
+
+  </div>
+</section>
+
+
+<!-- ============================= ADVISORY BAND ============================= -->
+<section class="bl-band">
+  <div class="container-page bl-band__inner">
+    <div>
+      <p class="eyebrow">Private advisory</p>
+      <h2>Numbers on a specific building, before you commit</h2>
+      <p>
+        Send us the project, tower or community you are considering. We come back with current
+        pricing, payment plan terms, service charge history and a realistic net yield — not a brochure.
+      </p>
+    </div>
+    <div>
+      <a href="{% url 'contact' %}" class="btn-gold">
+        Talk to an advisor
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </a>
+    </div>
+  </div>
+</section>
+
+
+<!-- ============================= INTRO COPY (SEO) ============================= -->
+<section>
+  <div class="container-page">
+    <div class="bl-intro">
+      <div>
+        <p class="eyebrow">Why we publish</p>
+        <h2>Dubai property, explained without the sales pitch</h2>
+      </div>
+      <div>
+        <p>
+          Spacesmith Real Estate advises buyers, tenants and investors across Dubai and the wider UAE.
+          These insights are the same research we hand to clients: launch pricing on off-plan projects,
+          payment plan structures, service charge benchmarks, and realistic rental yields by community.
+        </p>
+        <p>
+          Coverage spans Dubai Marina, Downtown Dubai, Business Bay, Palm Jumeirah, JVC, Dubai Hills Estate
+          and Dubai Investment Park, alongside developer updates from Emaar, DAMAC, Sobha, Nakheel and Danube.
+        </p>
+        <p>
+          If an article raises a question about a specific unit, building or handover date,
+          <a href="{% url 'contact' %}" class="link-inline">speak to an advisor</a> — we will pull the numbers for you.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ============================= OUTRO STRIP ============================= -->
+<div class="bl-outro">
+  <div class="container-page">
+    <p>
+      Spacesmith Real Estate LLC — Royal Class Building, Dubai Investment Park First, Dubai, UAE.
+      Residential and commercial sales, leasing, portfolio management and investment advisory across the Emirates.
+    </p>
+    <p>
+      Editorial covers off-plan launches, ready property trends, ROI and service charge analysis, developer
+      handovers and community guides. Figures quoted are indicative and subject to change; verify current
+      pricing with an advisor before committing.
+    </p>
+  </div>
+</div>
+
+{% endblock %}
+
+
+{% block extra_js %}
+<script>
+  (function () {
+    var hero = document.getElementById('blHero');
+    if (!hero) return;
+    var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!('IntersectionObserver' in window) || reduced) { hero.classList.add('in-view'); return; }
+    new IntersectionObserver(function (entries, obs) {
+      entries.forEach(function (e) {
+        if (e.isIntersecting) { hero.classList.add('in-view'); obs.disconnect(); }
+      });
+    }, { threshold: 0.05 }).observe(hero);
+  })();
+</script>
+{% endblock %}

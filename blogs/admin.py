@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.utils.html import format_html
-from .models import BlogAuthor, BlogPost
+from .models import BlogAuthor, BlogPost, Event, EventPhoto
 
 
 # ─────────────────────────────────────────────────────────────
@@ -103,3 +103,48 @@ class BlogPostAdmin(admin.ModelAdmin):
             except BlogAuthor.DoesNotExist:
                 pass
         super().save_model(request, obj, form, change)
+        
+        
+        
+
+
+
+class EventPhotoInline(admin.TabularInline):
+    model = EventPhoto
+    extra = 6                      # six empty upload slots by default
+    fields = ('preview', 'image', 'caption', 'video_url', 'order')
+    readonly_fields = ('preview',)
+    ordering = ('order', 'id')
+ 
+    def preview(self, obj):
+        if obj.pk and obj.image:
+            return format_html(
+                '<img src="{}" style="height:60px;width:80px;'
+                'object-fit:cover;border-radius:4px;">',
+                obj.image.url
+            )
+        return "—"
+    preview.short_description = "Preview"
+ 
+ 
+@admin.register(Event)
+class EventAdmin(admin.ModelAdmin):
+    list_display  = ('title', 'date', 'location', 'photo_count', 'is_published')
+    list_filter   = ('is_published', 'date')
+    search_fields = ('title', 'summary', 'location')
+    date_hierarchy = 'date'
+    list_editable = ('is_published',)
+    inlines = [EventPhotoInline]
+ 
+    fieldsets = (
+        (None, {
+            'fields': ('title', 'date', 'location', 'summary')
+        }),
+        ('Extras', {
+            'fields': ('instagram_url', 'is_published'),
+        }),
+    )
+ 
+    def photo_count(self, obj):
+        return obj.photos.count()
+    photo_count.short_description = "Photos"

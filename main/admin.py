@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import GeneralEnquiry, Newsletter, Testimonial, Newsletter
+from .models import GeneralEnquiry, Newsletter, Testimonial, Newsletter, InstagramHighlight
 
 admin.site.register(GeneralEnquiry)
 
@@ -25,3 +25,13 @@ class TestimonialAdmin(admin.ModelAdmin):
     list_editable = ['is_featured', 'order', 'rating']
     list_filter   = ['is_featured', 'rating']
     search_fields = ['name', 'feedback']
+    
+    
+    
+ 
+ 
+@admin.register(InstagramHighlight)
+class InstagramHighlightAdmin(admin.ModelAdmin):
+    list_display = ("caption", "order", "is_active", "created_at")
+    list_editable = ("order", "is_active")
+    ordering = ("order",)

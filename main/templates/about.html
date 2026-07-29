@@ -348,11 +348,182 @@
 </section>
 
 
+
+<!-- ------------------------------------------3.5 section (Portfolio Management)---------------------------------------- -->
+<style>
+  .pm {
+    position: relative;
+    background: var(--background);
+    padding-block: 3rem;
+  }
+  @media (min-width: 1024px) { .pm { padding-block: 3rem; } }
+
+  .pm__head { max-width: 46rem; }
+  .pm__eyebrow {
+    font-size: .6875rem; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .28em;
+    color: var(--primary); margin: 0;
+  }
+  .pm__title {
+    font-family: var(--font-display); font-weight: 400;
+    font-size: clamp(2rem, 3.8vw, 2.9rem); line-height: 1.18;
+    color: var(--foreground); margin: .85rem 0 0;
+  }
+  .pm__lead {
+    margin: 1.25rem 0 0;
+    font-size: .9375rem; line-height: 1.75;
+    color: var(--muted-foreground);
+    max-width: 62ch;
+  }
+
+  /* ---- three numbered cards, same visual family as .standfor .principle ---- */
+  .pm__grid {
+    margin-top: 3rem;
+    display: grid; gap: 1.5rem; grid-template-columns: 1fr;
+  }
+  @media (min-width: 768px)  { .pm__grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (min-width: 1100px) { .pm__grid { grid-template-columns: repeat(3, 1fr); } }
+
+  .pm__card {
+    position: relative; overflow: hidden;
+    background: var(--card); border-radius: 1.1rem;
+    box-shadow: var(--shadow-card);
+    padding: 2.25rem 1.85rem;
+    transition: box-shadow .3s ease, transform .3s ease;
+  }
+  .pm__card:hover { box-shadow: var(--shadow-elegant); transform: translateY(-5px); }
+  .pm__card::before {
+    content: ""; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--gold), var(--primary));
+    transform: scaleX(0); transform-origin: left;
+    transition: transform .35s ease;
+  }
+  .pm__card:hover::before { transform: scaleX(1); }
+
+  .pm__card-num {
+    position: absolute; top: -.5rem; right: .75rem;
+    font-family: var(--font-display); font-size: 5rem; line-height: 1;
+    color: color-mix(in srgb, var(--primary) 6%, transparent);
+    pointer-events: none; user-select: none;
+  }
+
+  .pm__card-icon {
+    position: relative; z-index: 1;
+    width: 3rem; height: 3rem; border-radius: 50%;
+    border: 1px solid color-mix(in srgb, var(--gold) 45%, transparent);
+    color: var(--primary);
+    display: flex; align-items: center; justify-content: center;
+    transition: background-color .3s ease, color .3s ease, border-color .3s ease;
+  }
+  .pm__card:hover .pm__card-icon { background: var(--primary); color: var(--primary-foreground); border-color: var(--primary); }
+  .pm__card-icon svg { width: 1.4rem; height: 1.4rem; }
+
+  .pm__card h3 {
+    position: relative; z-index: 1;
+    font-family: var(--font-display); font-weight: 400; font-size: 1.2rem; line-height: 1.35;
+    color: var(--foreground); margin: 1.35rem 0 0;
+  }
+  .pm__card p {
+    position: relative; z-index: 1;
+    margin: .75rem 0 0; font-size: .875rem; color: var(--muted-foreground); line-height: 1.7;
+  }
+
+  /* ---- CTA: matches .intro__cta (the ring button already used on this page) ---- */
+  .pm__cta {
+    display: inline-grid; place-items: center;
+    width: 6.5rem; height: 6.5rem; border-radius: 50%;
+    border: 1px solid color-mix(in srgb, var(--primary) 35%, transparent);
+    color: var(--primary);
+    font-size: .75rem; font-weight: 600; letter-spacing: .04em;
+    line-height: 1.3; text-align: center; padding: .5rem;
+    margin: 2.75rem 0 0;
+    transition: background-color .3s ease, color .3s ease, border-color .3s ease;
+  }
+  .pm__cta:hover { background: var(--primary); color: var(--primary-foreground); border-color: var(--primary); }
+
+  @media (max-width: 1023px) {
+    .pm__cta { width: 5.5rem; height: 5.5rem; font-size: .6875rem; }
+  }
+</style>
+
+<section class="pm" id="portfolio">
+  <div class="container-page">
+
+    <div class="pm__head reveal">
+      <p class="pm__eyebrow">Portfolio Management</p>
+      <h2 class="pm__title">End-to-End Portfolio Management,<br>Handled with Expertise</h2>
+      <p class="pm__lead">
+        Spacesmith Real Estate offers a complete portfolio management solution for
+        investors who want clarity, control and consistent returns &ndash; without
+        day-to-day involvement. From identifying the right locations and developers
+        to managing handover, leasing, resale and reinvestment, we take care of the
+        entire investment lifecycle with transparency and precision.
+      </p>
+    </div>
+
+    <div class="pm__grid reveal" data-delay="100">
+
+      <div class="pm__card">
+        <span class="pm__card-num" aria-hidden="true">01</span>
+        <div class="pm__card-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/><path d="M11 8v3l2 2"/>
+          </svg>
+        </div>
+        <h3>Right Opportunities, Right Decisions</h3>
+        <p>
+          We identify high-potential locations, trusted developers and well-researched
+          projects aligned with your investment goals &ndash; focusing on strong
+          fundamentals, rental demand and future capital growth.
+        </p>
+      </div>
+
+      <div class="pm__card">
+        <span class="pm__card-num" aria-hidden="true">02</span>
+        <div class="pm__card-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 2 4 6v6c0 5 3.5 9 8 10 4.5-1 8-5 8-10V6l-8-4Z"/><path d="m9 12 2 2 4-4"/>
+          </svg>
+        </div>
+        <h3>Legal Due Diligence &amp; Handover Management</h3>
+        <p>
+          Our team conducts thorough legal and documentation verification and manages
+          the complete project handover on your behalf, ensuring specifications,
+          quality and compliance match what was committed.
+        </p>
+      </div>
+
+      <div class="pm__card">
+        <span class="pm__card-num" aria-hidden="true">03</span>
+        <div class="pm__card-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3 21h18"/><path d="m4 17 5-6 4 3 6-8"/><path d="M15 6h4v4"/>
+          </svg>
+        </div>
+        <h3>ROI, Resale &amp; Reinvestment Strategy</h3>
+        <p>
+          Post-handover, we manage leasing to maximize rental returns, evaluate resale
+          opportunities for capital appreciation, and strategically reinvest proceeds
+          to continuously grow your portfolio.
+        </p>
+      </div>
+
+    </div>
+
+    <a href="{% url 'contact' %}" class="pm__cta reveal" data-delay="180">Explore Investment Solutions</a>
+
+  </div>
+</section>
+
+
 <!-- ------------------------------------------4 section (2-up grid + full-width values)---------------------------------------- -->
 <style>
   .pillars4 {
     background: color-mix(in srgb, var(--secondary) 40%, #fff);
-    padding-block: 6.5rem;
+    padding-block: 3rem;
   }
 
   .pillars4__head { max-width: 42rem; margin: 0 auto; text-align: center; }

@@ -3,6 +3,13 @@
 
 {% block body_class %}has-hero{% endblock %}
 
+{% block preload %}
+<link rel="preload" as="image"
+      href="{% static 'img/hero-still.webp' %}"
+      type="image/webp"
+      fetchpriority="high">
+{% endblock %}
+
 {% block extra_css %}
 <style>
   /* =====================================================================
@@ -26,25 +33,50 @@
     }
   }
 
-  .hero__video {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    object-position: center;
-  }
+/* still image — the thing the visitor actually sees first */
+.hero__still {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+.hero__still img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+
+/* video sits on top, invisible until it's genuinely ready */
+.hero__video {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  opacity: 0;
+  transition: opacity 1.2s cubic-bezier(.2,.8,.2,1);
+}
+.hero__video.is-live { opacity: 1; }
 
   /* Overlay — unchanged from the original */
   .hero__scrim {
     position: absolute;
     inset: 0;
+    z-index: 2;
     background:
       linear-gradient(to top, rgba(11,21,18,.20), transparent 45%),
       linear-gradient(135deg, rgba(11,21,18,.20), rgba(11,21,18,.10) 50%, rgba(15,61,46,.15));
   }
 
-  .hero__inner { position: relative; z-index: 1; width: 100%; }
+  /* scrim must sit above both layers
+.hero__scrim { z-index: 2; }
+.hero__inner { z-index: 3; } */
+
+
+  .hero__inner { position: relative; z-index: 3; width: 100%; }
   .hero__text  { max-width: 48rem; }
 
   .hero__title {
@@ -187,13 +219,31 @@
 
 <!-- ================= HERO ================= -->
 <section class="hero">
+  
+    <!-- layer 1: paints immediately -->
+  <picture class="hero__still">
+    <source
+      type="image/webp"
+      srcset="{% static 'img/hero-still-800.webp' %}   800w,
+              {% static 'img/hero-still-1400.webp' %} 1400w,
+              {% static 'img/hero-still-1920.webp' %} 1920w"
+      sizes="100vw">
+    <img src="{% static 'img/hero-still-1400.jpg' %}"
+         alt=""
+         width="1920" height="1080"
+         fetchpriority="high"
+         decoding="async">
+  </picture>
+
+  <!-- layer 2: fades in on top once it can actually play -->
   <video class="hero__video"
-         autoplay muted loop playsinline
-         preload="metadata"
-         poster="{% static 'img/hero-poster.jpg' %}"
-         aria-hidden="true" tabindex="-1">
-    <source src="{% static 'video/video_1.mp4' %}" type="video/mp4">
-  </video>
+         id="heroVideo"
+         muted loop playsinline
+         preload="none"
+         data-src="{% static 'video/video_2.mp4' %}"
+         aria-hidden="true" tabindex="-1"></video>
+
+
   <div class="hero__scrim"></div>
 
   <div class="container-page hero__inner">
@@ -336,6 +386,67 @@
       if (el === range && Number(el.value) >= Number(el.dataset.max)) el.disabled = true;
     });
   });
+})();
+
+
+//----------------------video-------------------------------
+(function () {
+  var video = document.getElementById('heroVideo');
+  if (!video || !video.dataset.src) return;
+
+  var conn    = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+  var saveData = conn && conn.saveData;
+  var slowNet  = conn && /(^|-)(2g|slow-2g)$/.test(conn.effectiveType || '');
+  var small    = window.matchMedia('(max-width: 768px)').matches;
+  var reduced  = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // still image is the final state — nothing more to download
+  if (saveData || slowNet || small || reduced) return;
+
+  function reveal() {
+    video.classList.add('is-live');
+  }
+
+  function load() {
+    // only reveal once frames are genuinely rendering
+    video.addEventListener('playing', reveal, { once: true });
+
+    var source = document.createElement('source');
+    source.src  = video.dataset.src;
+    source.type = 'video/mp4';
+    video.appendChild(source);
+    video.load();
+
+    var attempt = video.play();
+    if (attempt) {
+      attempt.catch(function () {
+        // autoplay blocked or decode failed — still image stays, no broken state
+        video.removeEventListener('playing', reveal);
+      });
+    }
+  }
+
+  function schedule() {
+    if ('requestIdleCallback' in window) {
+      requestIdleCallback(load, { timeout: 2000 });
+    } else {
+      setTimeout(load, 400);
+    }
+  }
+
+  if (document.readyState === 'complete') schedule();
+  else window.addEventListener('load', schedule);
+
+  // pause when the hero scrolls away — saves battery and decode cycles
+  if ('IntersectionObserver' in window) {
+    new IntersectionObserver(function (entries) {
+      entries.forEach(function (e) {
+        if (!video.classList.contains('is-live')) return;
+        if (e.isIntersecting) { var p = video.play(); if (p) p.catch(function(){}); }
+        else video.pause();
+      });
+    }, { threshold: 0.1 }).observe(video);
+  }
 })();
 </script>
 {% endblock %}
@@ -671,7 +782,7 @@
     <div class="trust__logo reveal" data-delay="120">
       <span class="trust__orbit trust__orbit--outer" aria-hidden="true"></span>
       <span class="trust__orbit" aria-hidden="true"></span>
-      <img src="{% static 'img/logo.png' %}" alt="Spacesmith Real Estate"
+      <img src="{% static 'img/logo-ss.png' %}" alt="Spacesmith Real Estate"
            width="520" height="520" loading="lazy">
     </div>
  
@@ -728,6 +839,7 @@
   </div>
 </section>
  
+
 <!-- ------------------------------------------3 section-------------------------------------- -->
 <!-- ================= DEVELOPER MARQUEE ================= -->
 
@@ -1327,10 +1439,12 @@
 <!-- ================= SERVICES ================= -->
 <style>
   .services__grid { margin-top: 3.5rem; display: grid; gap: 1.5rem; grid-template-columns: 1fr; }
-  @media (min-width: 768px)  { .services__grid { grid-template-columns: repeat(2, 1fr); } }
-  @media (min-width: 1024px) { .services__grid { grid-template-columns: repeat(4, 1fr); } }
+  @media (min-width: 640px)  { .services__grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (min-width: 1024px) { .services__grid { grid-template-columns: repeat(3, 1fr); } }
+  @media (min-width: 1400px) { .services__grid { grid-template-columns: repeat(5, 1fr); } }
 
   .service {
+    position: relative;
     height: 100%;
     padding: 2rem;
     border-radius: 1rem;
@@ -1354,6 +1468,40 @@
   .service__icon svg { width: 1.5rem; height: 1.5rem; }
   .service h3 { font-family: var(--font-display); font-size: 1.25rem; margin: 1.5rem 0 0; color: var(--foreground); }
   .service p  { margin: .75rem 0 0; font-size: .875rem; color: var(--muted-foreground); line-height: 1.6; }
+
+  /* ---- accent variant: the investor card — same shape, a gold signal
+         so it reads as "worth a second look" without breaking the grid ---- */
+  .service--accent {
+    border-color: color-mix(in srgb, var(--gold) 45%, var(--border));
+    background:
+      linear-gradient(155deg, color-mix(in srgb, var(--gold) 6%, var(--card)) 0%, var(--card) 55%);
+  }
+  .service--accent:hover {
+    border-color: var(--gold);
+    box-shadow: 0 12px 28px color-mix(in srgb, var(--gold) 18%, transparent);
+  }
+  .service--accent .service__icon {
+    background: color-mix(in srgb, var(--gold) 16%, transparent);
+    color: var(--gold);
+  }
+  .service--accent:hover .service__icon { background: var(--gold); color: var(--ink); }
+
+  .service__tag {
+    position: absolute; top: 1.25rem; right: 1.25rem;
+    font-size: .5625rem; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .12em;
+    color: var(--gold);
+  }
+
+  .service__link {
+    display: inline-flex; align-items: center; gap: .375rem;
+    margin-top: 1rem;
+    font-size: .8125rem; font-weight: 600;
+    color: var(--primary);
+    text-decoration: none;
+  }
+  .service__link svg { width: .875rem; height: .875rem; transition: transform .2s ease; }
+  .service__link:hover svg { transform: translateX(3px); }
 </style>
 
 <section class="section">
@@ -1416,6 +1564,28 @@
         </div>
         <h3>Trusted Brokerage</h3>
         <p>RERA-certified agents, transparent contracts and complete transaction protection.</p>
+      </div>
+
+      <!-- ---- NEW: Portfolio Management, accent card, links to a dedicated page ---- -->
+      <div class="service service--accent reveal" data-delay="320">
+        <span class="service__tag">For Investors</span>
+        <div class="service__icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3 3v16a2 2 0 0 0 2 2h16"/>
+            <path d="m7 15 4-4 3 3 6-6"/>
+            <path d="M17 6h3v3"/>
+          </svg>
+        </div>
+        <h3>Portfolio Management</h3>
+        <p>Sourcing, due diligence, handover and reinvestment strategy — managed end-to-end for investors.</p>
+        <a href="{% url 'about' %}#portfolio" class="service__link">
+          Explore investment solutions
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M5 12h14M13 6l6 6-6 6"/>
+          </svg>
+        </a>
       </div>
 
     </div>
@@ -1533,32 +1703,101 @@
 </section>
 
 <!-------------------------------------------------------- 8 section---------------------------------------------------- -->
-
 <!-- ================= BLOG ================= -->
 <style>
-  .post { text-decoration: none; display: block; }
-  .post__media { aspect-ratio: 4 / 3; overflow: hidden; border-radius: 1rem; background: var(--secondary); }
-  .post__media img {
-    width: 100%; height: 100%; object-fit: cover;
-    transition: transform .7s ease;
-  }
-  .post:hover .post__media img { transform: scale(1.05); }
-  .post__meta {
-    margin-top: 1.25rem;
-    display: flex; gap: .75rem;
-    font-size: .6875rem; text-transform: uppercase; letter-spacing: .16em;
-  }
-  .post__meta .tag  { color: var(--gold); }
-  .post__meta .date { color: var(--muted-foreground); }
-  .post h3 {
-    margin: .5rem 0 0;
-    font-family: var(--font-display);
-    font-size: 1.5rem;
-    color: var(--foreground);
-    transition: color .2s ease;
-  }
-  .post:hover h3 { color: var(--primary); }
-  .post p { margin: .5rem 0 0; font-size: .875rem; color: var(--muted-foreground); }
+.bl-grid { display: grid; gap: 2rem; grid-template-columns: repeat(4, 1fr); }
+@media (max-width: 1200px) { .bl-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 860px)  { .bl-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 560px)  { .bl-grid { grid-template-columns: 1fr; } }
+
+.bl-card {
+  position: relative;
+  display: flex; flex-direction: column; height: 100%;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  transition: transform .35s cubic-bezier(.2,.8,.2,1), box-shadow .35s ease, border-color .35s ease;
+}
+.bl-card::after {
+  content: ""; position: absolute; left: 0; bottom: 0; height: 2px; width: 0;
+  background: linear-gradient(90deg, var(--gold), var(--primary-light));
+  transition: width .45s ease;
+  z-index: 2;
+}
+.bl-card:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-card);
+  border-color: color-mix(in srgb, var(--primary) 30%, transparent);
+}
+.bl-card:hover::after { width: 100%; }
+.bl-card__media { position: relative; aspect-ratio: 16 / 10; overflow: hidden; background: var(--secondary); }
+.bl-card__media img { width: 100%; height: 100%; object-fit: cover; transition: transform .7s cubic-bezier(.2,.8,.2,1); }
+.bl-card:hover .bl-card__media img { transform: scale(1.06); }
+.bl-card__media::after {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(180deg, transparent 55%, rgba(11,21,18,.45) 100%);
+  pointer-events: none;
+}
+.bl-card__time {
+  position: absolute; right: .875rem; bottom: .875rem; z-index: 2;
+  background: rgba(11,21,18,.66); backdrop-filter: blur(6px);
+  border: 1px solid rgba(212,175,55,.35);
+  color: var(--cream); border-radius: 9999px;
+  padding: .25rem .8125rem;
+  font-size: .625rem; letter-spacing: .12em; text-transform: uppercase;
+}
+.bl-card__body { flex: 1; display: flex; flex-direction: column; padding: 1.625rem 1.625rem 0; }
+.bl-meta-row {
+  display: flex; flex-wrap: wrap; align-items: center; gap: .75rem 1.25rem;
+  font-size: .75rem; color: var(--muted-foreground); opacity: .8;
+}
+.bl-meta-row span { display: inline-flex; align-items: center; gap: .4375rem; }
+.bl-meta-row svg { width: .875rem; height: .875rem; stroke: var(--gold-dark); fill: none; stroke-width: 1.6; flex-shrink: 0; }
+.bl-card__title {
+  font-family: var(--font-display);
+  font-size: 1.375rem; font-weight: 500; line-height: 1.25;
+  margin: .875rem 0 .625rem;
+  color: var(--foreground);
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+  transition: color .25s ease;
+}
+.bl-card:hover .bl-card__title { color: var(--primary); }
+.bl-card__excerpt {
+  margin: 0 0 1.5rem;
+  font-size: .875rem; line-height: 1.75; color: var(--muted-foreground);
+  display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+}
+.bl-card__foot {
+  display: flex; align-items: center; justify-content: space-between; gap: .75rem;
+  margin-top: auto;
+  padding: 1rem 1.625rem;
+  border-top: 1px solid var(--border);
+  background: var(--secondary);
+}
+.bl-byline { display: flex; align-items: center; gap: .75rem; min-width: 0; }
+.bl-byline__avatar {
+  width: 2.25rem; height: 2.25rem; border-radius: 50%;
+  object-fit: cover; border: 1px solid var(--border); flex-shrink: 0;
+}
+.bl-byline__initial {
+  width: 2.25rem; height: 2.25rem; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: var(--primary); color: var(--cream);
+  font-family: var(--font-display); font-size: 1rem; flex-shrink: 0;
+}
+.bl-byline__name {
+  font-size: .8125rem; font-weight: 500; color: var(--foreground);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.bl-readmore {
+  display: inline-flex; align-items: center; gap: .5rem;
+  font-size: .6875rem; font-weight: 600; letter-spacing: .16em; text-transform: uppercase;
+  color: var(--primary); white-space: nowrap;
+}
+.bl-readmore svg { width: 1rem; height: 1rem; stroke: currentColor; fill: none; stroke-width: 2; transition: transform .25s ease; }
+.bl-card:hover .bl-readmore svg { transform: translateX(5px); }
+.bl-stretch::before { content: ""; position: absolute; inset: 0; z-index: 3; }
 </style>
 
 <section class="section">
@@ -1569,7 +1808,7 @@
         <p class="eyebrow">Insights</p>
         <h2 class="section-title">From our journal</h2>
       </div>
-      <a href="" class="link-inline">
+      <a href="{% url 'blogs:blog_list' %}" class="link-inline">
         View all articles
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
              stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -1578,108 +1817,498 @@
       </a>
     </div>
 
-    <div class="grid-3">
+    {% if latest_posts %}
+    <div class="bl-grid">
+      {% for post in latest_posts %}
+      <article class="bl-card reveal" data-delay="{{ forloop.counter0|add:1 }}00">
 
-      <a href="" class="post reveal">
-        <div class="post__media">
-          <img src="{% static 'img/blog-1.jpg' %}" alt="First-time buyer's roadmap" loading="lazy">
+        <div class="bl-card__media">
+          {% if post.featured_image %}
+            <img src="{{ post.featured_image.url }}" alt="{{ post.title }}" loading="lazy" width="640" height="400">
+          {% else %}
+            <img src="{% static 'img/og-default.jpg' %}" alt="{{ post.title }}" loading="lazy" width="640" height="400">
+          {% endif %}
+          <span class="bl-card__time">{{ post.reading_time }} min read</span>
         </div>
-        <div class="post__meta"><span class="tag">Buying Guide</span><span class="date">Jul 08, 2026</span></div>
-        <h3>First-time buyer's roadmap to Dubai property</h3>
-        <p>From selecting the right community to closing at Dubai Land Department — a step-by-step walkthrough.</p>
-      </a>
 
-      <a href="" class="post reveal" data-delay="80">
-        <div class="post__media">
-          <img src="{% static 'img/blog-2.jpg' %}" alt="H2 2026 market outlook" loading="lazy">
+        <div class="bl-card__body">
+          <div class="bl-meta-row">
+            <span>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M8 3v4M16 3v4M3 11h18"/></svg>
+              {{ post.formatted_publish_date }}
+            </span>
+            <span>
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6z"/><circle cx="12" cy="12" r="2.5"/></svg>
+              {{ post.view_count }}
+            </span>
+          </div>
+
+          <h3 class="bl-card__title">
+            <a href="{% url 'blogs:blog_detail' post.slug %}" class="bl-stretch">{{ post.title }}</a>
+          </h3>
+
+          <p class="bl-card__excerpt">{{ post.excerpt|truncatewords:24 }}</p>
         </div>
-        <div class="post__meta"><span class="tag">Market</span><span class="date">Jul 02, 2026</span></div>
-        <h3>H2 2026 outlook: where prices are heading</h3>
-        <p>Marina, Downtown and Palm Jumeirah trends unpacked by our research desk with data you can act on.</p>
-      </a>
 
-      <a href="" class="post reveal" data-delay="160">
-        <div class="post__media">
-          <img src="{% static 'img/blog-3.jpg' %}" alt="Evaluating an off-plan payment plan" loading="lazy">
+        <div class="bl-card__foot">
+          {% if post.author %}
+            <div class="bl-byline">
+              {% if post.author.avatar %}
+                <img src="{{ post.author.avatar.url }}" alt="" class="bl-byline__avatar" loading="lazy" width="36" height="36">
+              {% else %}
+                <span class="bl-byline__initial" aria-hidden="true">{{ post.author.name|first|upper }}</span>
+              {% endif %}
+              <span class="bl-byline__name">{{ post.author.name }}</span>
+            </div>
+          {% else %}<span></span>{% endif %}
+
+          <span class="bl-readmore">
+            Read
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </span>
         </div>
-        <div class="post__meta"><span class="tag">Off Plan</span><span class="date">Jun 24, 2026</span></div>
-        <h3>How to evaluate an off-plan payment plan</h3>
-        <p>Post-handover vs construction-linked. What actually matters when comparing developer offers.</p>
-      </a>
-      
 
+      </article>
+      {% endfor %}
     </div>
+    {% endif %}
+
+  </div>
+</section>
+
+ 
+<!-- ===============----------------------------------== INSTAGRAM HIGHLIGHTS ====-------------------------------------============= -->
+<style>
+  .insta { padding-block: 4rem; background: var(--background); }
+ 
+  .insta__follow {
+    display: inline-flex; align-items: center; gap: .625rem;
+    text-decoration: none;
+    font-size: .6875rem; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .16em;
+    color: var(--foreground);
+    transition: color .2s ease;
+  }
+  .insta__follow:hover { color: var(--primary); }
+  .insta__follow-icon {
+    width: 1.75rem; height: 1.75rem; border-radius: .6rem;
+    display: flex; align-items: center; justify-content: center;
+    background: radial-gradient(circle at 30% 107%,
+      #fdf497 0%, #fdf497 5%, #fd5949 45%, #d6249f 60%, #285AEB 90%);
+    color: #fff; flex-shrink: 0;
+  }
+  .insta__follow-icon svg { width: 1rem; height: 1rem; }
+ 
+  .insta__grid {
+    margin-top: 2.5rem;
+    display: grid; gap: 1.25rem;
+    grid-template-columns: repeat(2, 1fr);
+  }
+  @media (min-width: 768px)  { .insta__grid { grid-template-columns: repeat(4, 1fr); gap: 1.5rem; } }
+ 
+  .reel {
+    position: relative;
+    display: block;
+    aspect-ratio: 4 / 5;
+    border-radius: .875rem;
+    overflow: hidden;
+    background: var(--secondary);
+  }
+  .reel img {
+    width: 100%; height: 100%; object-fit: cover; display: block;
+    transition: transform .6s cubic-bezier(.2,.7,.2,1);
+  }
+  .reel:hover img { transform: scale(1.06); }
+ 
+  .reel__scrim {
+    position: absolute; inset: 0;
+    background: linear-gradient(to top, rgba(11,21,18,.55) 0%, rgba(11,21,18,0) 42%);
+    opacity: .85;
+    transition: opacity .3s ease;
+  }
+  .reel:hover .reel__scrim { opacity: 1; }
+ 
+  /* centered play glyph — signals these are Reels, not static posts */
+  .reel__play {
+    position: absolute; inset: 0;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0;
+    transition: opacity .3s ease, transform .3s ease;
+    transform: scale(.85);
+  }
+  .reel:hover .reel__play { opacity: 1; transform: scale(1); }
+  .reel__play span {
+    width: 3rem; height: 3rem; border-radius: 50%;
+    background: rgba(246,242,233,.92);
+    color: var(--ink);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 8px 24px rgba(0,0,0,.35);
+  }
+  .reel__play svg { width: 1.15rem; height: 1.15rem; margin-left: .15rem; }
+ 
+  /* small instagram glyph, always visible, bottom-left — orients the
+     card as "this lives on Instagram" even before hover */
+  .reel__badge {
+    position: absolute; left: .75rem; bottom: .75rem;
+    width: 1.75rem; height: 1.75rem; border-radius: 50%;
+    background: rgba(11,21,18,.55);
+    backdrop-filter: blur(6px);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--cream);
+  }
+  .reel__badge svg { width: .9rem; height: .9rem; }
+ 
+  @media (max-width: 480px) {
+    .insta__grid { grid-template-columns: repeat(2, 1fr); gap: .875rem; }
+  }
+</style>
+ 
+<section class="insta">
+  <div class="container-page">
+ 
+    <div class="section-head reveal">
+      <div>
+        <p class="eyebrow">Instagram Feed</p>
+        <h2 class="section-title">Our Latest Highlights</h2>
+      </div>
+      <a href="https://instagram.com/spacesmithrealestate" target="_blank" rel="noopener" class="insta__follow">
+        <span class="insta__follow-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="2" y="2" width="20" height="20" rx="5"/>
+            <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37Z"/>
+            <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/>
+          </svg>
+        </span>
+        Follow on Instagram
+      </a>
+    </div>
+ 
+    <div class="insta__grid">
+      {% for post in instagram_highlights %}
+        <a class="reel reveal" data-delay="{{ forloop.counter0|add:1|stringformat:'d' }}0"
+           href="{{ post.permalink|default:'https://instagram.com/spacesmithrealestate' }}"
+           target="_blank" rel="noopener">
+          <img src="{{ post.thumbnail.url }}" alt="{{ post.caption|default:'Spacesmith on Instagram' }}" loading="lazy">
+          <div class="reel__scrim"></div>
+          <span class="reel__badge" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                 stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37Z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+          </span>
+          <span class="reel__play" aria-hidden="true">
+            <span><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7Z"/></svg></span>
+          </span>
+        </a>
+      {% empty %}
+        <!-- Fallback so the section still renders before the admin has posts loaded -->
+        {% for img in "1234" %}
+  <a class="reel reveal" href="https://instagram.com/spacesmithrealestate" target="_blank" rel="noopener">
+    <img src="{% static 'img/insta-placeholder-'|add:img|add:'.jpg' %}" alt="Spacesmith on Instagram" loading="lazy">
+    <div class="reel__scrim"></div>
+    <span class="reel__badge" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+           stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37Z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+    </span>
+    <span class="reel__play" aria-hidden="true">
+      <span><svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7Z"/></svg></span>
+    </span>
+  </a>
+{% endfor %}
+      {% endfor %}
+    </div>
+ 
   </div>
 </section>
 
 
-<!-- ------------------------------------------------9 section------------------------------------------- -->
 
+<!-- ------------------------------------------------9 section------------------------------------------- -->
 <!-- ================= CTA ================= -->
 <style>
-  .cta {
+  .cta-band {
     position: relative;
+    isolation: isolate;
     overflow: hidden;
-    border-radius: .5rem;
-    background: var(--primary);
-    color: var(--primary-foreground);
-    padding: 2.5rem;
+    padding-block: 6rem;
+    background: linear-gradient(135deg, #f6f2e9 0%, #fbf8f1 45%, #efe8da 100%);
+    color: var(--ink);
   }
-  @media (min-width: 768px) { .cta { padding: 4rem; } }
+  @media (min-width: 768px) { .cta-band { padding-block: 7.5rem; } }
 
-  .cta::before {
+  /* Drafting grid, left third — the table the deal gets drawn on */
+  .cta-band::before {
     content: "";
-    position: absolute;
-    inset: 0;
-    opacity: .10;
-    background:
-      radial-gradient(circle at 20% 20%, var(--gold) 0%, transparent 50%),
-      radial-gradient(circle at 80% 80%, var(--gold) 0%, transparent 45%);
+    position: absolute; left: 0; top: 0;
+    width: 46%; height: 100%;
+    z-index: -1; pointer-events: none;
+    background-image:
+      repeating-linear-gradient(90deg, rgba(200,169,110,.10) 0 1px, transparent 1px 56px),
+      repeating-linear-gradient(0deg,  rgba(200,169,110,.10) 0 1px, transparent 1px 56px);
+    -webkit-mask-image: radial-gradient(80% 80% at 6% 50%, #000, transparent 70%);
+            mask-image: radial-gradient(80% 80% at 6% 50%, #000, transparent 70%);
   }
-  .cta__inner {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    gap: 2rem;
-    justify-content: space-between;
-  }
-  @media (min-width: 1024px) { .cta__inner { flex-direction: row; align-items: center; } }
 
-  .cta__icon { width: 2.5rem; height: 2.5rem; color: var(--gold); }
-  .cta h2 { font-family: var(--font-display); font-size: clamp(2.25rem, 4vw, 3rem); margin: 1rem 0 0; }
-  .cta p  { margin: 1rem 0 0; color: rgba(255,255,255,.8); max-width: 36rem; }
-  .cta__actions { display: flex; flex-wrap: wrap; gap: .75rem; }
+  /* Property-boundary line — the parcel edge, bottom of the band */
+  .cta-band__boundary {
+    position: absolute; left: 0; right: 0; bottom: 2.5rem;
+    height: 1px;
+    background: repeating-linear-gradient(90deg, rgba(11,21,18,.22) 0 10px, transparent 10px 20px);
+    z-index: 0;
+  }
+  .cta-band__boundary span {
+    position: absolute; top: 50%; transform: translateY(-50%);
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--gold);
+  }
+  .cta-band__boundary span:nth-child(1) { left: 4%; }
+  .cta-band__boundary span:nth-child(2) { left: 50%; }
+  .cta-band__boundary span:nth-child(3) { left: 95%; }
+
+  .cta-band__grid {
+    position: relative; z-index: 1;
+    display: grid; gap: 3rem;
+    grid-template-columns: 1fr;
+    align-items: center;
+  }
+  @media (min-width: 1024px) {
+    .cta-band__grid { grid-template-columns: 1.25fr .75fr; gap: 5rem; }
+  }
+
+  /* ---- Copy ---- */
+  .cta-band__eyebrow {
+    display: flex; align-items: center; gap: .875rem;
+    margin: 0 0 1.5rem;
+    font-size: .6875rem; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .32em;
+    color: rgba(11,21,18,.55);
+  }
+  .cta-band__eyebrow::before {
+    content: "";
+    width: 2.75rem; height: 1px;
+    background: var(--gold);
+  }
+
+  .cta-band__title {
+    margin: 0;
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: clamp(2.5rem, 5.4vw, 4rem);
+    line-height: 1.04;
+    letter-spacing: -.01em;
+    color: var(--ink);
+  }
+  .cta-band__title em {
+    display: block;
+    font-style: normal;
+    background: linear-gradient(96deg,
+      var(--gold-dark) 0%, var(--gold) 38%, var(--gold-light) 55%,
+      var(--gold) 74%, var(--gold-dark) 100%);
+    background-size: 220% auto;
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent;
+    animation: goldDrift 7s linear infinite;
+  }
+  @keyframes goldDrift { to { background-position: -220% 0; } }
+
+  .cta-band__text {
+    margin: 1.75rem 0 0;
+    max-width: 42ch;
+    font-size: .9375rem; line-height: 1.75;
+    color: rgba(11,21,18,.65);
+    text-wrap: pretty;
+  }
+
+  .cta-band__actions { margin-top: 2.5rem; display: flex; flex-wrap: wrap; gap: .875rem; }
+
+  /* ---- Deed-stamp panel ---- */
+  .cta-panel {
+    position: relative;
+    padding: 2.75rem 2rem 2rem;
+    background: var(--ink);
+    border: 1px solid rgba(212,175,55,.25);
+    box-shadow: 0 30px 60px -25px rgba(11,21,18,.45);
+  }
+
+  /* Perforated tear-edge along the top, like a ticket stub */
+  .cta-panel::before {
+    content: "";
+    position: absolute; top: 0; left: 1.25rem; right: 1.25rem; height: 1px;
+    background-image: radial-gradient(circle, rgba(246,242,233,.35) 1.5px, transparent 1.5px);
+    background-size: 14px 1px;
+    background-repeat: repeat-x;
+  }
+
+  /* Gold seal stamp, corner-mounted like a notary mark */
+  .cta-panel__seal {
+    position: absolute; top: -1.125rem; right: 1.75rem;
+    width: 3.25rem; height: 3.25rem;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 50%;
+    background: var(--card, #fff);
+    border: 1.5px solid var(--gold);
+    transform: rotate(-8deg);
+    box-shadow: 0 6px 16px -6px rgba(11,21,18,.4);
+  }
+  .cta-panel__seal svg { width: 1.375rem; height: 1.375rem; stroke: var(--gold-dark); fill: none; stroke-width: 1.5; }
+
+  .cta-panel__label {
+    margin: 0 0 1.25rem;
+    font-size: .625rem; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .28em;
+    color: var(--gold);
+  }
+
+  .cta-panel__row {
+    display: flex; align-items: center; flex-wrap: wrap; gap: .875rem;
+    padding-block: 1rem;
+    text-decoration: none;
+    color: var(--cream);
+    border-top: 1px solid rgba(246,242,233,.1);
+    transition: color .25s ease, padding-left .35s cubic-bezier(.2,.8,.2,1);
+  }
+  .cta-panel__row:first-of-type { border-top: 0; padding-top: 0; }
+  .cta-panel__row:hover { color: var(--gold); padding-left: .5rem; }
+
+  .cta-panel__row svg { width: 1.125rem; height: 1.125rem; flex-shrink: 0; color: var(--gold); }
+  .cta-panel__row span {
+    font-size: .9375rem; letter-spacing: .01em;
+    min-width: 0;
+    overflow-wrap: anywhere;
+    word-break: break-word; /* fallback for older browsers */
+  }
+  .cta-panel__row small {
+    display: block; margin-top: .1875rem;
+    font-size: .625rem; text-transform: uppercase; letter-spacing: .14em;
+    color: rgba(246,242,233,.45);
+  }
+
+  .cta-panel__note {
+    margin: 1.5rem -2rem -2rem;
+    padding: 1.125rem 2rem;
+    background: rgba(212,175,55,.12);
+    border-top: 1px solid rgba(212,175,55,.25);
+    font-size: .75rem; line-height: 1.6;
+    color: rgba(246,242,233,.75);
+  }
+  .cta-panel__note strong { color: var(--gold); font-weight: 600; }
+
+  /* ---- Responsive ---- */
+
+  /* Tablet: panel goes full-bleed under the 2-col breakpoint, so give it
+     its own contained width rather than stretching edge-to-edge */
+  @media (min-width: 640px) and (max-width: 1023px) {
+    .cta-panel {
+      padding: 2.75rem 2.5rem 2rem;
+      max-width: 32rem;
+      margin-inline: auto;
+    }
+    .cta-panel__note {
+      margin: 1.5rem -2.5rem -2rem;
+      padding: 1.125rem 2.5rem;
+    }
+  }
+
+  @media (max-width: 1023px) {
+    .cta-band::before { width: 100%; }
+  }
+
+  /* Small phones: tighten padding and shrink the seal so it doesn't
+     crowd the panel edge */
+  @media (max-width: 420px) {
+    .cta-panel {
+      padding: 2.5rem 1.5rem 1.5rem;
+    }
+    .cta-panel__note {
+      margin: 1.5rem -1.5rem -1.5rem;
+      padding: 1rem 1.5rem;
+    }
+    .cta-panel__seal {
+      width: 2.5rem; height: 2.5rem;
+      top: -.875rem; right: 1.25rem;
+    }
+    .cta-panel__seal svg {
+      width: 1.125rem; height: 1.125rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cta-band__title em { animation: none; }
+    .cta-panel__row:hover { padding-left: 0; }
+  }
 </style>
 
-<section class="section-tight">
-  <div class="container-page">
-    <div class="cta reveal">
-      <div class="cta__inner">
-        <div>
-          <svg class="cta__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <circle cx="12" cy="8" r="6"/>
-            <path d="m8.5 13.5-1.5 8L12 19l5 2.5-1.5-8"/>
-          </svg>
-          <h2>Ready to find your space?</h2>
-          <p>
-            Tell us what you're looking for — a family villa, a first investment or a
-            penthouse view. Our advisors reply within one working day.
-          </p>
-        </div>
+<section class="cta-band">
+  <div class="cta-band__boundary" aria-hidden="true"><span></span><span></span><span></span></div>
 
-        <div class="cta__actions">
-          <a href="{% url 'contact' %}" class="btn-gold">
-            Book a consultation
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                 stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M5 12h14M13 6l6 6-6 6"/>
-            </svg>
-          </a>
-          <a href="" class="btn-line">Explore off-plan</a>
-        </div>
+  <div class="container-page cta-band__grid">
+
+    <!-- ---- Copy ---- -->
+    <div class="reveal">
+      <p class="cta-band__eyebrow">Start the conversation</p>
+
+      <h2 class="cta-band__title">
+        Let's build your
+        <em>next address.</em>
+      </h2>
+
+      <p class="cta-band__text">
+        Tell us what you're weighing up — a family villa, a first investment,
+        a portfolio that needs a second opinion. We'll come back with honest
+        numbers and a shortlist worth your time, not a brochure.
+      </p>
+
+      <div class="cta-band__actions">
+        <a href="{% url 'contact' %}" class="btn-gold">
+          Book a consultation
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M5 12h14M13 6l6 6-6 6"/>
+          </svg>
+        </a>
+        <a href="{% url 'properties:property_list' %}?status=off-plan" class="btn-line">
+          Explore off-plan
+        </a>
       </div>
     </div>
+
+    <!-- ---- Direct line: deed-stamp panel ---- -->
+    <div class="cta-panel reveal" data-delay="120">
+      <div class="cta-panel__seal" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M12 2l2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.5-4.8 2.5.9-5.4L4.2 7.7l5.4-.8L12 2z"/></svg>
+      </div>
+
+      <p class="cta-panel__label">Speak to us directly</p>
+
+      <a href="tel:+971556399212" class="cta-panel__row">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .3 1.9.6 2.8a2 2 0 0 1-.4 2.1L8 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.5 2.8.6a2 2 0 0 1 1.8 2.1Z"/>
+        </svg>
+        <span>+971 55 639 9212<small>Call an advisor</small></span>
+      </a>
+
+      <a href="https://wa.me/971556399212" target="_blank" rel="noopener" class="cta-panel__row">
+        <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+          <path d="M12 2a10 10 0 0 0-8.7 15L2 22l5.2-1.3A10 10 0 1 0 12 2Zm5.8 14.2c-.2.7-1.2 1.3-2 1.4-.5.1-1.2.1-3.4-.8-2.8-1.2-4.6-4-4.7-4.2-.1-.2-1.1-1.5-1.1-2.8 0-1.3.7-2 .9-2.2.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.8 2c.1.2.1.4 0 .5l-.4.5-.3.4c-.1.1-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.4 2.4 1.5.3.1.4.1.6-.1l.9-1c.2-.2.4-.2.6-.1l2 .9c.2.1.4.2.4.3.1.2.1.6 0 1Z"/>
+        </svg>
+        <span>WhatsApp<small>Fastest reply</small></span>
+      </a>
+
+      <a href="mailto:hello@spacesmithrealestate.com" class="cta-panel__row">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <rect x="2" y="4" width="20" height="16" rx="2"/>
+          <path d="m2 7 10 6 10-6"/>
+        </svg>
+        <span>hello@spacesmithrealestate.com<small>Email the team</small></span>
+      </a>
+
+      <p class="cta-panel__note">
+        <strong>Replies within one working day.</strong>
+        RERA-certified advisors · Office hours Sun–Thu, 9am–6pm GST.
+      </p>
+    </div>
+
   </div>
 </section>
 

@@ -6,6 +6,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#1e5138">
 
+  <!-- ================= PER-PAGE PRELOADS ================= -->
+
+ {% block preload %}{% endblock %}
+
   <!-- ================= SEO ================= -->
   <title>{% block title %}{{ meta_title|default:"Spacesmith Real Estate | We Find Your Space" }}{% endblock %}</title>
 
@@ -37,8 +41,8 @@
   <meta name="twitter:image" content="{% if og_image %}{{ og_image }}{% else %}{% static 'img/og-default.jpg' %}{% endif %}">
 
   <!-- Favicons -->
-  <link rel="icon" type="image/png" sizes="32x32" href="{% static 'img/favicon.png' %}">
-  <link rel="apple-touch-icon" href="{% static 'img/logo.png' %}">
+  <link rel="icon" type="image/png" sizes="32x32" href="{% static 'img/logo-ss.png' %}">
+  <link rel="apple-touch-icon" href="{% static 'img/logo-ss.png' %}">
 
   <!-- Structured data -->
   {% block schema %}
@@ -50,8 +54,8 @@
     "name": "Spacesmith Real Estate LLC",
     "alternateName": "Spacesmith",
     "url": "https://spacesmithrealestate.com/",
-    "logo": "{% static 'img/logo.png' %}",
-    "image": "{% static 'img/logo.png' %}",
+    "logo": "{% static 'img/logo-ss.png' %}",
+    "image": "{% static 'img/logo-ss.png' %}",
     "slogan": "We Find Your Space",
     "description": "Spacesmith Real Estate LLC is a Dubai-based real estate consultancy specializing in residential and commercial property sales, leasing, portfolio management and investment advisory across the UAE.",
     "telephone": "+971556399212",
@@ -385,8 +389,7 @@
       position: fixed; inset: 0; z-index: 9999;
       display: flex; align-items: center; justify-content: center;
       background: var(--cream);
-      transition: transform 1.1s cubic-bezier(.7,0,.3,1), opacity 1.1s ease;
-    }
+transition: transform .7s cubic-bezier(.7,0,.3,1), opacity .7s ease;    }
     .page-loader.is-hidden { transform: translateY(-100%); opacity: 0; }
 
     .page-loader__inner {
@@ -520,7 +523,7 @@
   <!-- PAGE LOADER -->
   <div id="page-loader" class="page-loader">
     <div class="page-loader__inner">
-      <img src="{% static 'img/logo.png' %}" alt="Spacesmith Real Estate" class="page-loader__logo">
+      <img src="{% static 'img/logo-ss.png' %}" alt="Spacesmith Real Estate" class="page-loader__logo">
       <span class="page-loader__ring" aria-hidden="true"></span>
     </div>
   </div>
@@ -576,12 +579,29 @@
       var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
       /* ---- Loader ---- */
-      window.addEventListener('load', function () {
+/* ---- Loader ---- */
+      (function () {
         var loader = document.getElementById('page-loader');
         if (!loader) return;
-        loader.classList.add('is-hidden');
-        setTimeout(function () { loader.remove(); }, 1100);
-      });
+
+        var hidden = false;
+        function hide() {
+          if (hidden) return;
+          hidden = true;
+          loader.classList.add('is-hidden');
+          setTimeout(function () { loader.remove(); }, 700);
+        }
+
+        // whichever fires first wins
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', function () {
+            setTimeout(hide, 250);
+          });
+        } else {
+          setTimeout(hide, 250);
+        }
+        setTimeout(hide, 2000);   // safety ceiling — never trap anyone
+      })();
 
       /* ---- Reveal on scroll (.reveal + optional data-delay) ---- */
       var reveals = document.querySelectorAll('.reveal, .fade-up');

@@ -1,0 +1,558 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ meta_title }}{% endblock %}
+{% block meta_description %}{{ meta_description }}{% endblock %}
+{% block canonical %}{{ canonical }}{% endblock %}
+
+{% block extra_css %}
+<style>
+/* =====================================================================
+   EVENTS — Spacesmith Real Estate
+   ===================================================================== */
+
+/* ---------- 1. HEADER ---------- */
+.ev-head{
+    position: relative;
+    min-height: 70vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    color: #fff;
+    /* clears the fixed header so the title isn't hidden behind the nav */
+    padding-top: var(--nav-height);
+
+    background:
+        linear-gradient(rgba(0,0,0,.45), rgba(0,0,0,.45)),
+        url("{% static 'img/event2-2.jpg' %}") center/cover no-repeat;
+        background-position: center 43%;
+}
+/* gold hairline anchoring the hero, matching the blog pages */
+.ev-head::after {
+  content: "";
+  position: absolute; left: 0; right: 0; bottom: 0; height: 2px;
+  background: linear-gradient(90deg, var(--gold), rgba(212,175,55,.15) 45%, transparent);
+}
+
+.ev-head__eyebrow {
+  display: inline-flex; align-items: center; gap: .75rem;
+  font-size: .75rem; text-transform: uppercase; letter-spacing: .22em;
+  color: #d8b36a;
+  margin: 0 0 1rem;
+}
+.ev-head__eyebrow::before,
+.ev-head__eyebrow::after { content: ""; width: 2rem; height: 1px; background: var(--gold); }
+
+.ev-head__title {
+  font-family: var(--font-display);
+  font-size: clamp(2.75rem, 6vw, 4.5rem);
+  font-weight: 500; line-height: 1;
+  color: #fff;
+  margin: 0 0 1.25rem;
+}
+.ev-head__lead {
+  max-width: 44rem; margin: 0 auto;
+  color: rgba(255,255,255,.9);
+  font-size: 1.0625rem;
+}
+
+/* ---------- 2. EVENT ROW ---------- */
+.ev-list { padding-block: 4.5rem 6rem; background: var(--background); }
+
+.ev-item {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+  padding-block: 3.5rem;
+  border-bottom: 1px solid var(--border);
+}
+.ev-item:first-child { padding-top: 0; }
+.ev-item:last-child { border-bottom: 0; padding-bottom: 0; }
+
+@media (min-width: 1024px) {
+  .ev-item { grid-template-columns: minmax(0, 1fr) 21rem; gap: 3.5rem; align-items: start; }
+}
+
+/* ---------- 3. PHOTO STRIP ---------- */
+.ev-strip { position: relative; min-width: 0; }
+
+.ev-track {
+  display: flex;
+  gap: 1rem;
+  height: 26rem;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.ev-track::-webkit-scrollbar { display: none; }
+
+@media (max-width: 768px) { .ev-track { height: 18rem; gap: .625rem; } }
+
+.ev-slide {
+  flex: 0 0 auto;
+  height: 100%;
+  margin: 0;
+  scroll-snap-align: start;
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--secondary);
+  cursor: zoom-in;
+  position: relative;
+  display: block;
+}
+.ev-slide img {
+  height: 100%;
+  width: auto;
+  max-width: none;
+  object-fit: cover;
+  transition: transform .5s ease, filter .3s ease;
+}
+.ev-slide:hover img { transform: scale(1.03); }
+.ev-slide::after {
+  content: "";
+  position: absolute; inset: 0;
+  background: linear-gradient(0deg, rgba(11,21,18,.28), transparent 45%);
+  opacity: 0; transition: opacity .3s ease;
+  pointer-events: none;
+}
+.ev-slide:hover::after { opacity: 1; }
+
+/* ── video slide: opens the Instagram reel instead of the lightbox ── */
+.ev-slide--video { cursor: pointer; }
+.ev-slide--video::after { opacity: 1; }          /* keep the scrim on so the button reads */
+
+.ev-play {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 3.75rem; height: 3.75rem;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(246,242,233,.16);
+  border: 1px solid rgba(246,242,233,.55);
+  backdrop-filter: blur(6px);
+  z-index: 2;
+  transition: background-color .25s ease, transform .25s ease, border-color .25s ease;
+}
+.ev-play svg { width: 1.5rem; height: 1.5rem; fill: var(--cream); margin-left: 3px; }
+.ev-slide--video:hover .ev-play {
+  background: var(--gold);
+  border-color: var(--gold);
+  transform: translate(-50%, -50%) scale(1.08);
+}
+.ev-slide--video:hover .ev-play svg { fill: var(--ink); }
+
+.ev-reel-tag {
+  position: absolute; top: .75rem; left: .75rem; z-index: 2;
+  border-radius: 9999px;
+  background: rgba(11,21,18,.7);
+  backdrop-filter: blur(6px);
+  color: var(--cream);
+  padding: .25rem .75rem;
+  font-size: .625rem; text-transform: uppercase; letter-spacing: .14em;
+}
+
+@media (max-width: 768px) {
+  .ev-play { width: 3rem; height: 3rem; }
+  .ev-play svg { width: 1.25rem; height: 1.25rem; }
+}
+
+/* fade hint at the right edge while more photos remain */
+.ev-strip::after {
+  content: "";
+  position: absolute; top: 0; right: 0; bottom: 0; width: 4rem;
+  background: linear-gradient(90deg, transparent, var(--background));
+  pointer-events: none;
+  opacity: 1; transition: opacity .3s ease;
+}
+.ev-strip.at-end::after { opacity: 0; }
+
+/* ---------- 4. CAPTION COLUMN ---------- */
+.ev-copy { display: flex; flex-direction: column; min-width: 0; }
+
+.ev-copy__date {
+  font-size: .6875rem; text-transform: uppercase; letter-spacing: .16em;
+  color: var(--gold-dark);
+  margin: 0 0 .625rem;
+}
+.ev-copy__date span { color: var(--muted-foreground); opacity: .7; }
+
+.ev-copy__title {
+  font-family: var(--font-display);
+  font-size: clamp(1.5rem, 2.4vw, 1.875rem);
+  font-weight: 500; line-height: 1.2;
+  color: var(--foreground);
+  margin: 0 0 1rem;
+}
+.ev-copy__text {
+  margin: 0;
+  font-size: .9375rem; line-height: 1.8;
+  color: var(--muted-foreground);
+}
+.ev-copy__text.is-clamped {
+  display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden;
+}
+.ev-more {
+  align-self: flex-start;
+  margin-top: .75rem;
+  border: 0; background: none; padding: 0; cursor: pointer;
+  font-family: inherit; font-size: .8125rem; font-weight: 500;
+  color: var(--primary);
+  border-bottom: 1px solid color-mix(in srgb, var(--gold) 60%, transparent);
+}
+.ev-more:hover { color: var(--gold-dark); }
+
+.ev-copy__ig {
+  display: inline-flex; align-items: center; gap: .5rem;
+  margin-top: 1.25rem;
+  font-size: .8125rem; font-weight: 500; color: var(--primary);
+}
+.ev-copy__ig svg { width: 1rem; height: 1rem; fill: currentColor; }
+.ev-copy__ig:hover { color: var(--gold-dark); }
+
+/* ---------- 5. ARROWS ---------- */
+.ev-nav { display: flex; gap: .75rem; margin-top: auto; padding-top: 2rem; }
+.ev-nav__btn {
+  width: 3rem; height: 3rem; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid var(--primary); background: transparent;
+  cursor: pointer;
+  transition: background-color .2s ease, opacity .2s ease;
+}
+.ev-nav__btn svg { width: 1.125rem; height: 1.125rem; stroke: var(--primary); fill: none; stroke-width: 1.6; transition: stroke .2s ease; }
+.ev-nav__btn:hover { background: var(--primary); }
+.ev-nav__btn:hover svg { stroke: var(--cream); }
+.ev-nav__btn:disabled { opacity: .3; cursor: default; }
+.ev-nav__btn:disabled:hover { background: transparent; }
+.ev-nav__btn:disabled:hover svg { stroke: var(--primary); }
+
+.ev-nav__count {
+  display: flex; align-items: center;
+  margin-left: .5rem;
+  font-size: .75rem; letter-spacing: .1em;
+  color: var(--muted-foreground); opacity: .7;
+}
+
+@media (max-width: 1023px) {
+  .ev-nav { padding-top: 1.5rem; margin-top: 0; }
+}
+
+/* ---------- 6. LIGHTBOX ---------- */
+.ev-lightbox {
+  position: fixed; inset: 0; z-index: 2000;
+  display: none;
+  align-items: center; justify-content: center;
+  background: rgba(11,21,18,.94);
+  padding: 1.5rem;
+}
+.ev-lightbox.is-open { display: flex; }
+.ev-lightbox img {
+  max-width: 92vw; max-height: 82vh;
+  width: auto; height: auto;
+  border-radius: var(--radius);
+}
+.ev-lightbox__cap {
+  position: absolute; left: 0; right: 0; bottom: 1.75rem;
+  text-align: center; padding-inline: 4rem;
+  font-size: .875rem; color: rgba(246,242,233,.8);
+}
+.ev-lightbox__btn {
+  position: absolute;
+  width: 3rem; height: 3rem; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(246,242,233,.12); border: 1px solid rgba(246,242,233,.3);
+  cursor: pointer;
+  transition: background-color .2s ease;
+}
+.ev-lightbox__btn:hover { background: rgba(246,242,233,.24); }
+.ev-lightbox__btn svg { width: 1.25rem; height: 1.25rem; stroke: var(--cream); fill: none; stroke-width: 1.8; }
+.ev-lightbox__btn--prev  { left: 1.5rem; }
+.ev-lightbox__btn--next  { right: 1.5rem; }
+.ev-lightbox__btn--close { top: 1.5rem; right: 1.5rem; }
+
+@media (max-width: 640px) {
+  .ev-lightbox__btn--prev  { left: .5rem; }
+  .ev-lightbox__btn--next  { right: .5rem; }
+  .ev-lightbox__cap { padding-inline: 1rem; bottom: 1rem; font-size: .8125rem; }
+}
+
+/* ---------- 7. PAGINATION + EMPTY ---------- */
+.ev-pager {
+  display: flex; align-items: center; justify-content: center; gap: 1rem;
+  margin-top: 4rem; flex-wrap: wrap;
+}
+.ev-pager a, .ev-pager span {
+  display: inline-flex; align-items: center; gap: .5rem;
+  border: 1px solid var(--border); border-radius: 9999px;
+  padding: .6875rem 1.5rem;
+  font-size: .8125rem; color: var(--primary); background: var(--card);
+}
+.ev-pager a:hover { background: var(--primary); color: var(--primary-foreground); border-color: var(--primary); }
+.ev-pager span.is-off { opacity: .35; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ev-track { scroll-behavior: auto; }
+  .ev-slide img { transition: none; }
+}
+</style>
+{% endblock %}
+
+
+{% block content %}
+
+<!-- ============================= HEADER ============================= -->
+<header class="ev-head">
+  <div class="container-page">
+    <p class="ev-head__eyebrow">Spacesmith</p>
+    <h1 class="ev-head__title">Events</h1>
+    <p class="ev-head__lead">
+      Developer launches, industry gatherings and the moments in between — a look at
+      where the Spacesmith team has been across Dubai.
+    </p>
+  </div>
+</header>
+
+
+<!-- ============================= LIST ============================= -->
+<section class="ev-list">
+  <div class="container-page">
+
+    {% for event in events %}
+    <article class="ev-item reveal">
+
+      <!-- photo strip -->
+      <div class="ev-strip" data-strip>
+        <div class="ev-track" data-track>
+          {% for photo in event.photos.all %}
+
+            {% if photo.video_url %}
+            <!-- video thumbnail → opens the reel -->
+            <a class="ev-slide ev-slide--video"
+               href="{{ photo.video_url }}" target="_blank" rel="noopener"
+               aria-label="Watch the reel: {{ photo.caption|default:event.title }}">
+              <img src="{{ photo.image.url }}"
+                   alt="{{ photo.caption|default:event.title }}"
+                   loading="{% if forloop.parentloop.first and forloop.counter <= 2 %}eager{% else %}lazy{% endif %}"
+                   decoding="async">
+              <span class="ev-reel-tag">Reel</span>
+              <span class="ev-play" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+              </span>
+            </a>
+
+            {% else %}
+            <!-- still photo → opens the lightbox -->
+            <figure class="ev-slide"
+                    data-full="{{ photo.image.url }}"
+                    data-caption="{{ photo.caption|default:event.title }}">
+              <img src="{{ photo.image.url }}"
+                   alt="{{ photo.caption|default:event.title }}"
+                   loading="{% if forloop.parentloop.first and forloop.counter <= 2 %}eager{% else %}lazy{% endif %}"
+                   decoding="async">
+            </figure>
+            {% endif %}
+
+          {% empty %}
+          <figure class="ev-slide">
+            <img src="{% static 'img/og-default.jpg' %}" alt="{{ event.title }}" loading="lazy">
+          </figure>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- caption -->
+      <div class="ev-copy">
+        <p class="ev-copy__date">
+          {{ event.date|date:"F Y" }}
+          {% if event.location %}<span>· {{ event.location }}</span>{% endif %}
+        </p>
+
+        <h2 class="ev-copy__title">{{ event.title }}</h2>
+
+        <p class="ev-copy__text is-clamped" data-summary>{{ event.summary|linebreaksbr }}</p>
+        <button type="button" class="ev-more" data-more hidden>Read more</button>
+
+        {% if event.instagram_url %}
+        <a href="{{ event.instagram_url }}" target="_blank" rel="noopener" class="ev-copy__ig">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.2c3.2 0 3.6 0 4.9.1 1.2.1 1.8.3 2.2.4.6.2 1 .5 1.4.9.4.4.7.8.9 1.4.2.4.3 1 .4 2.2.1 1.3.1 1.7.1 4.9s0 3.6-.1 4.9c-.1 1.2-.3 1.8-.4 2.2-.2.6-.5 1-.9 1.4-.4.4-.8.7-1.4.9-.4.2-1 .3-2.2.4-1.3.1-1.7.1-4.9.1s-3.6 0-4.9-.1c-1.2-.1-1.8-.3-2.2-.4-.6-.2-1-.5-1.4-.9-.4-.4-.7-.8-.9-1.4-.2-.4-.3-1-.4-2.2-.1-1.3-.1-1.7-.1-4.9s0-3.6.1-4.9c.1-1.2.3-1.8.4-2.2.2-.6.5-1 .9-1.4.4-.4.8-.7 1.4-.9.4-.2 1-.3 2.2-.4C8.4 2.2 8.8 2.2 12 2.2zm0 3.2A6.6 6.6 0 1018.6 12 6.6 6.6 0 0012 5.4zm0 10.9A4.3 4.3 0 1116.3 12 4.3 4.3 0 0112 16.3zm6.8-11.1a1.5 1.5 0 11-1.5-1.5 1.5 1.5 0 011.5 1.5z"/></svg>
+          Watch on Instagram
+        </a>
+        {% endif %}
+
+        <div class="ev-nav">
+          <button type="button" class="ev-nav__btn" data-dir="prev" aria-label="Previous photos">
+            <svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          <button type="button" class="ev-nav__btn" data-dir="next" aria-label="More photos">
+            <svg viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+          {% if event.photos.count > 1 %}
+          <span class="ev-nav__count">{{ event.photos.count }} photos</span>
+          {% endif %}
+        </div>
+      </div>
+
+    </article>
+    {% empty %}
+
+    <div class="empty">
+      <h3>No events published yet</h3>
+      <p>Event coverage from launches and team gatherings will appear here.</p>
+      <a href="{% url 'blogs:blog_list' %}" class="btn-solid">
+        Read our insights
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </a>
+    </div>
+
+    {% endfor %}
+
+    {% if events.has_other_pages %}
+    <nav class="ev-pager" aria-label="Event pages">
+      {% if events.has_previous %}
+        <a href="?page={{ events.previous_page_number }}">Newer events</a>
+      {% else %}
+        <span class="is-off">Newer events</span>
+      {% endif %}
+      <span>Page {{ events.number }} of {{ events.paginator.num_pages }}</span>
+      {% if events.has_next %}
+        <a href="?page={{ events.next_page_number }}">Older events</a>
+      {% else %}
+        <span class="is-off">Older events</span>
+      {% endif %}
+    </nav>
+    {% endif %}
+
+  </div>
+</section>
+
+
+<!-- ============================= LIGHTBOX ============================= -->
+<div class="ev-lightbox" id="evLightbox" role="dialog" aria-modal="true" aria-label="Photo viewer">
+  <button type="button" class="ev-lightbox__btn ev-lightbox__btn--close" data-lb="close" aria-label="Close">
+    <svg viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12" stroke-linecap="round"/></svg>
+  </button>
+  <button type="button" class="ev-lightbox__btn ev-lightbox__btn--prev" data-lb="prev" aria-label="Previous photo">
+    <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </button>
+  <img id="evLightboxImg" src="" alt="">
+  <button type="button" class="ev-lightbox__btn ev-lightbox__btn--next" data-lb="next" aria-label="Next photo">
+    <svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </button>
+  <p class="ev-lightbox__cap" id="evLightboxCap"></p>
+</div>
+
+{% endblock %}
+
+
+{% block extra_js %}
+<script>
+(function () {
+
+  /* ─────────── photo strips ─────────── */
+  document.querySelectorAll('.ev-item').forEach(function (item) {
+    var strip = item.querySelector('[data-strip]');
+    var track = item.querySelector('[data-track]');
+    var prev  = item.querySelector('[data-dir="prev"]');
+    var next  = item.querySelector('[data-dir="next"]');
+    if (!track) return;
+
+    function step() {
+      var slide = track.querySelector('.ev-slide');
+      if (!slide) return 300;
+      var gap = parseFloat(getComputedStyle(track).gap) || 16;
+      return slide.getBoundingClientRect().width + gap;
+    }
+
+    function sync() {
+      var max = track.scrollWidth - track.clientWidth;
+      var atStart = track.scrollLeft <= 2;
+      var atEnd   = track.scrollLeft >= max - 2;
+      if (prev) prev.disabled = atStart;
+      if (next) next.disabled = atEnd;
+      if (strip) strip.classList.toggle('at-end', atEnd || max <= 0);
+    }
+
+    if (prev) prev.addEventListener('click', function () { track.scrollLeft -= step(); });
+    if (next) next.addEventListener('click', function () { track.scrollLeft += step(); });
+
+    track.addEventListener('scroll', sync, { passive: true });
+    window.addEventListener('resize', sync, { passive: true });
+    sync();
+    // re-check once images have sized themselves
+    window.addEventListener('load', sync);
+  });
+
+  /* ─────────── "read more" — only shown when text actually overflows ─────────── */
+  document.querySelectorAll('.ev-copy').forEach(function (copy) {
+    var text = copy.querySelector('[data-summary]');
+    var btn  = copy.querySelector('[data-more]');
+    if (!text || !btn) return;
+    if (text.scrollHeight > text.clientHeight + 4) {
+      btn.hidden = false;
+      btn.addEventListener('click', function () {
+        var open = text.classList.toggle('is-clamped');
+        btn.textContent = open ? 'Read more' : 'Show less';
+      });
+    }
+  });
+
+  /* ─────────── lightbox (still photos only — video slides are plain links) ─────────── */
+  var box    = document.getElementById('evLightbox');
+  var boxImg = document.getElementById('evLightboxImg');
+  var boxCap = document.getElementById('evLightboxCap');
+  var group  = [];
+  var index  = 0;
+
+  function show(i) {
+    if (!group.length) return;
+    index = (i + group.length) % group.length;
+    var slide = group[index];
+    boxImg.src = slide.dataset.full;
+    boxImg.alt = slide.dataset.caption || '';
+    boxCap.textContent = slide.dataset.caption || '';
+  }
+
+  function open(slide) {
+    group = Array.prototype.slice.call(
+      slide.closest('[data-track]').querySelectorAll('.ev-slide[data-full]')
+    );
+    show(group.indexOf(slide));
+    box.classList.add('is-open');
+    document.body.style.overflow = 'hidden';
+  }
+
+  function close() {
+    box.classList.remove('is-open');
+    document.body.style.overflow = '';
+    boxImg.src = '';
+  }
+
+  document.querySelectorAll('.ev-slide[data-full]').forEach(function (slide) {
+    slide.addEventListener('click', function () { open(slide); });
+  });
+
+  box.addEventListener('click', function (e) {
+    var action = e.target.closest('[data-lb]');
+    if (action) {
+      var what = action.dataset.lb;
+      if (what === 'close') close();
+      if (what === 'prev')  show(index - 1);
+      if (what === 'next')  show(index + 1);
+      return;
+    }
+    if (e.target === box) close();   // click the backdrop
+  });
+
+  document.addEventListener('keydown', function (e) {
+    if (!box.classList.contains('is-open')) return;
+    if (e.key === 'Escape')     close();
+    if (e.key === 'ArrowLeft')  show(index - 1);
+    if (e.key === 'ArrowRight') show(index + 1);
+  });
+
+})();
+</script>
+{% endblock %}

@@ -7,21 +7,49 @@
 
 {% block extra_css %}
 <style>
-  /* This page only adds contact-specific rules. All colors, fonts and
-     spacing come from the :root tokens already defined in base.html —
-     nothing is redeclared here, so the page always stays in sync with
-     the rest of the site. */
+  /* ================================================================
+     CONTACT PAGE — PREMIUM, ELEGANT
+     Light hero + form/rail panel, dark ink map plate, dark ink careers
+     plate. Card and field corners use the theme's own var(--radius)
+     = .5rem; buttons keep their pill shape from base.html untouched.
+     ================================================================ */
 
   /* ================= HERO ================= */
   .ct-hero {
-    position: relative;
-    background:
-      radial-gradient(120% 140% at 82% -10%, color-mix(in srgb, var(--gold) 16%, transparent), transparent 58%),
-      linear-gradient(180deg, var(--ink), #0f231c);
-    color: var(--cream);
-    padding: calc(var(--nav-height) + 3rem) 0 4rem;
+ position: relative;
+    background: #e8dfd2;
     overflow: hidden;
+    isolation: isolate;
+    padding: calc(var(--nav-height) + 2rem) 0 1rem;
   }
+
+  /* Optional real photo layer. Drop a licensed image at the path below
+     (a Dubai skyline, an interior, a handover moment) and it sits behind
+     a warm scrim so the copy stays fully legible. If no file exists at
+     that path the browser simply shows nothing here and the gradient
+     carries the section on its own — this never looks broken either way. */
+.ct-hero-photo {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background-image: url("{% static 'img/contact-hero.webp' %}");
+    background-size: cover;
+    background-position: center;
+    opacity: .8;
+}
+.ct-hero-scrim {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+
+    background: linear-gradient(
+        90deg,
+        rgba(255,250,242,0.75) 0%,
+        rgba(255,250,242,0.70) 45%,
+        rgba(255,250,242,0.8) 100%
+    );
+}
+
   .ct-hero::after {
     content: '';
     position: absolute;
@@ -29,103 +57,101 @@
     transform: translateY(-50%);
     width: 620px; height: 620px;
     border-radius: 50%;
-    border: 1px solid rgba(246,242,233,.08);
+    border: 1px solid color-mix(in srgb, var(--gold) 25%, transparent);
     pointer-events: none;
+    z-index: 1;
   }
-  .ct-hero-inner { display: grid; gap: 3rem; grid-template-columns: 1fr; }
+  .ct-hero-inner { position: relative; z-index: 2; display: grid; gap: 3rem; grid-template-columns: 1fr; }
   @media (min-width: 1024px) { .ct-hero-inner { grid-template-columns: 1.05fr 1fr; align-items: center; gap: 4rem; } }
 
   .ct-breadcrumb {
     display: flex; align-items: center; gap: .5rem; flex-wrap: wrap;
-    font-size: .75rem; color: rgba(246,242,233,.45); margin-bottom: 1.25rem;
+    font-size: .75rem; color: var(--muted-foreground); margin-bottom: 1.25rem;
   }
-  .ct-breadcrumb a { color: rgba(246,242,233,.45); transition: color .2s ease; }
-  .ct-breadcrumb a:hover { color: var(--gold); }
-  .ct-breadcrumb span { color: rgba(246,242,233,.25); }
+  .ct-breadcrumb a { color: var(--muted-foreground); transition: color .2s ease; }
+  .ct-breadcrumb a:hover { color: var(--gold-dark); }
+  .ct-breadcrumb span { color: color-mix(in srgb, var(--muted-foreground) 55%, transparent); }
 
   .ct-hero h1 {
     font-size: clamp(2.25rem, 5vw, 4rem);
-    line-height: 1.06; margin: .5rem 0 0; color: var(--cream);
+    line-height: 1.06; margin: .5rem 0 0; color: var(--foreground);
   }
-  .ct-hero h1 .accent { color: var(--gold); }
-  .ct-hero-copy { margin: 1.25rem 0 0; font-size: 1.0625rem; color: rgba(246,242,233,.82); max-width: 34rem; }
+  .ct-hero h1 .accent { color: var(--gold-dark); }
+  .ct-hero-copy { margin: 1.25rem 0 0; font-size: 1.0625rem; color: var(--muted-foreground); max-width: 34rem; line-height: 1.75; }
+  .ct-hero .eyebrow { color: var(--gold-dark); }
 
-  /* hero contact cards */
-  .ct-hero-cards { display: flex; flex-direction: column; gap: .875rem; }
-  @media (min-width: 640px) and (max-width: 1023px) { .ct-hero-cards { display: grid; grid-template-columns: 1fr 1fr; } }
-
-  .ct-info-card {
-    display: flex; align-items: center; gap: 1rem;
-    background: rgba(246,242,233,.05);
-    border: 1px solid rgba(246,242,233,.12);
-    backdrop-filter: blur(10px);
-    border-radius: .75rem;
-    padding: 1.1rem 1.25rem;
-    text-decoration: none;
-    transition: background-color .25s ease, border-color .25s ease, transform .25s ease;
+  /* Right-hand hero column: a quiet, minimal contact strip instead of
+     cards — a thin gold rule with inline entries, so it reads as a
+     refined signature line rather than competing UI on the photo. */
+  .ct-hero-side { display: flex; flex-direction: column; justify-content: center; gap: 1.5rem; }
+  .ct-hero-side-note {
+    font-family: var(--font-display); font-size: 2rem; font-weight: 700;
+    color: var(--foreground); line-height: 1.4; max-width: 22rem;
   }
-  .ct-info-card:hover { background: rgba(212,175,55,.08); border-color: rgba(212,175,55,.35); transform: translateY(-2px); }
+  .ct-hero-side-note span { color: var(--gold-dark); }
 
-  .ct-info-icon {
-    width: 2.75rem; height: 2.75rem; border-radius: 50%; flex-shrink: 0;
-    background: linear-gradient(135deg, var(--primary), var(--gold-dark));
-    display: flex; align-items: center; justify-content: center;
+  .ct-contact-strip {
+    display: flex; flex-direction: column; gap: 0;
+    border-top: 1px solid color-mix(in srgb, var(--gold) 35%, transparent);
   }
-  .ct-info-icon svg { width: 1.15rem; height: 1.15rem; stroke: var(--cream); fill: none; stroke-width: 1.8; }
-  .ct-info-icon svg.fill-icon { stroke: none; fill: var(--cream); }
-
-  .ct-info-label { display: block; font-size: .625rem; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: rgba(246,242,233,.45); margin-bottom: .25rem; }
-  .ct-info-value { display: block; font-size: .9375rem; font-weight: 600; color: var(--cream); word-break: break-word; transition: color .2s ease; }
-  .ct-info-card:hover .ct-info-value { color: var(--gold-light); }
+  .ct-contact-item {
+    display: flex; align-items: center; gap: .875rem;
+    padding: .9rem 0;
+    border-bottom: 1px solid color-mix(in srgb, var(--foreground) 10%, transparent);
+    text-decoration: none; color: var(--foreground);
+    transition: gap .25s ease, color .2s ease;
+  }
+  .ct-contact-item:hover { gap: 1.15rem; color: var(--gold-dark); }
+  .ct-contact-item svg { width: 1.05rem; height: 1.05rem; stroke: var(--gold-dark); fill: none; stroke-width: 1.7; flex-shrink: 0; }
+  .ct-contact-item svg.fill-icon { stroke: none; fill: var(--gold-dark); }
+  .ct-contact-item .cs-label { font-size: .625rem; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--muted-foreground); display: block; margin-bottom: .15rem; }
+  .ct-contact-item .cs-value { font-size: .9375rem; font-weight: 600; }
+  .ct-contact-item .cs-arrow { margin-left: auto; width: .8rem; height: .8rem; stroke: var(--muted-foreground); fill: none; stroke-width: 2; flex-shrink: 0; transition: transform .25s ease; }
+  .ct-contact-item:hover .cs-arrow { transform: translateX(3px); stroke: var(--gold-dark); }
 
   /* ================= MAIN LAYOUT ================= */
   .contact-body { padding-block: 4rem 5rem; background: color-mix(in srgb, var(--secondary) 45%, #fff); }
   @media (min-width: 768px) { .contact-body { padding-block: 5rem 5.5rem; } }
 
-  .contact-layout { display: grid; gap: 2rem; grid-template-columns: 1fr; }
-  @media (min-width: 1024px) { .contact-layout { grid-template-columns: 1.3fr 1fr; align-items: start; gap: 2.5rem; } }
-
-  /* ---- form card ---- */
-  .form-card {
-    background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
-    padding: 1.75rem; box-shadow: var(--shadow-elegant);
+  .contact-panel {
+    display: grid; grid-template-columns: 1fr;
+    background: var(--card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-elegant);
+    overflow: hidden;
+    border: 1px solid var(--border);
   }
-  @media (min-width: 640px) { .form-card { padding: 2.75rem; } }
+  @media (min-width: 1024px) { .contact-panel { grid-template-columns: 1.3fr 1fr; } }
 
-  .form-card h2 { font-size: 1.625rem; margin: 0 0 .5rem; color: var(--foreground); }
-  @media (min-width: 640px) { .form-card h2 { font-size: 1.75rem; } }
-  .form-card .sub { color: var(--muted-foreground); font-size: .9375rem; margin: 0 0 2rem; }
+  /* ---- form column ---- */
+  .panel-form { padding: 1.75rem; min-width: 0; }
+  @media (min-width: 640px) { .panel-form { padding: 2.75rem; } }
+
+  .panel-form h2 { font-size: 1.625rem; margin: 0 0 .5rem; color: var(--foreground); }
+  @media (min-width: 640px) { .panel-form h2 { font-size: 1.75rem; } }
+  .panel-form .sub { color: var(--muted-foreground); font-size: .9375rem; margin: 0 0 2rem; }
 
   .alert-success, .alert-warning, .alert-error {
     display: flex; align-items: flex-start; gap: .75rem;
-    border-radius: .75rem; padding: 1rem 1.25rem; font-size: .9rem;
+    border-radius: var(--radius); padding: 1rem 1.25rem; font-size: .9rem;
     margin-bottom: 1.5rem; line-height: 1.5;
   }
   .alert-success svg, .alert-warning svg, .alert-error svg { width: 1.3rem; height: 1.3rem; flex-shrink: 0; margin-top: .05rem; }
-  .alert-success {
-    background: linear-gradient(135deg, var(--primary), var(--primary-light));
-    color: var(--cream); border: 1px solid transparent; border-left: 4px solid var(--gold);
-  }
-  .alert-success svg { stroke: var(--cream); }
-  .alert-warning {
-    background: linear-gradient(135deg, #8a6d1d, var(--gold-dark));
-    color: var(--cream); border-left: 4px solid var(--gold-light);
-  }
-  .alert-warning svg { stroke: var(--cream); }
-  .alert-error { background: rgba(179,38,30,.08); border: 1px solid rgba(179,38,30,.3); border-left: 4px solid #b3261e; color: #8f1f19; }
+  .alert-success { background: color-mix(in srgb, var(--primary) 8%, transparent); border: 1px solid color-mix(in srgb, var(--primary) 25%, transparent); color: var(--primary); }
+  .alert-success svg { stroke: var(--primary); }
+  .alert-warning { background: color-mix(in srgb, var(--gold) 12%, transparent); border: 1px solid color-mix(in srgb, var(--gold) 35%, transparent); color: var(--gold-dark); }
+  .alert-warning svg { stroke: var(--gold-dark); }
+  .alert-error { background: rgba(179,38,30,.06); border: 1px solid rgba(179,38,30,.25); color: #8f1f19; }
   .alert-error svg { stroke: #b3261e; }
   .alert-success strong, .alert-warning strong, .alert-error strong { display: block; margin-bottom: .15rem; }
 
   /* honeypot — never shown to real visitors */
   .hp-field { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
 
-  /* input hidden by real Django field, mirrored by the flag widget below */
   .real-input-mirror {
-    position: absolute !important;
-    width: 1px !important; height: 1px !important;
-    padding: 0 !important; margin: -1px !important;
-    overflow: hidden !important; opacity: 0 !important;
-    pointer-events: none !important;
+    position: absolute !important; width: 1px !important; height: 1px !important;
+    padding: 0 !important; margin: -1px !important; overflow: hidden !important;
+    opacity: 0 !important; pointer-events: none !important;
   }
 
   .form-grid { display: grid; gap: 1.25rem; grid-template-columns: 1fr; }
@@ -135,23 +161,27 @@
   .form-field label { font-size: .75rem; text-transform: uppercase; letter-spacing: .1em; color: var(--muted-foreground); }
   .form-field .hint { font-size: .75rem; color: var(--muted-foreground); font-weight: 400; text-transform: none; letter-spacing: 0; margin-top: -.15rem; }
 
+  /* all field surfaces: exactly .5rem radius, per the theme's own token */
   .form-field input,
   .form-field select,
   .form-field textarea {
-    width: 100%; border-radius: .625rem; border: 1px solid var(--border);
+    width: 100%; border-radius: .5rem; border: 1px solid var(--border);
     background: var(--secondary); color: var(--foreground);
     padding: .75rem .9rem; font-size: .9375rem; font-family: inherit;
-    transition: border-color .2s ease, box-shadow .2s ease;
+    transition: border-color .2s ease, box-shadow .2s ease, background-color .2s ease;
     box-sizing: border-box;
   }
+  .form-field input:hover, .form-field select:hover, .form-field textarea:hover { background: var(--card); }
   .form-field input:focus, .form-field select:focus, .form-field textarea:focus {
-    outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 12%, transparent);
+    outline: none; border-color: var(--gold-dark); background: var(--card);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--gold) 18%, transparent);
   }
   .form-field textarea { resize: vertical; min-height: 8rem; }
 
   .field-error { color: #b3261e; font-size: .8125rem; margin-top: -.15rem; }
-  .form-field input.is-invalid,
-  .phone-field-wrap.is-invalid { border-color: #b3261e !important; box-shadow: 0 0 0 3px rgba(179,38,30,.08) !important; }
+  .form-field input.is-invalid, .phone-field-wrap.is-invalid {
+    border-color: #b3261e !important; box-shadow: 0 0 0 3px rgba(179,38,30,.08) !important;
+  }
 
   .form-submit { margin-top: 1.5rem; }
   .form-submit .btn-solid { width: 100%; }
@@ -159,22 +189,24 @@
   .btn-solid:disabled { opacity: .7; cursor: not-allowed; }
   @keyframes ct-spin { to { transform: rotate(360deg); } }
 
-  /* ---- phone / whatsapp country-code widget ---- */
+  /* ---- phone / whatsapp country-code widget — same .5rem radius ---- */
   .phone-field-wrap {
     position: relative; display: flex; align-items: stretch;
-    border-radius: .625rem; border: 1px solid var(--border); background: var(--secondary);
-    transition: border-color .2s ease, box-shadow .2s ease;
+    border-radius: .5rem; border: 1px solid var(--border); background: var(--secondary);
+    transition: border-color .2s ease, box-shadow .2s ease, background-color .2s ease;
   }
+  .phone-field-wrap:hover { background: var(--card); }
   .phone-field-wrap:focus-within {
-    border-color: var(--primary); box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 12%, transparent);
+    border-color: var(--gold-dark); background: var(--card);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--gold) 18%, transparent);
   }
   .phone-flag-btn {
     display: flex; align-items: center; gap: .4rem;
     padding: 0 .65rem; border: none; border-right: 1px solid var(--border);
     background: transparent; cursor: pointer; font-family: inherit; font-size: .875rem;
-    color: var(--foreground); white-space: nowrap; flex-shrink: 0; border-radius: .625rem 0 0 .625rem;
+    color: var(--foreground); white-space: nowrap; flex-shrink: 0; border-radius: .5rem 0 0 .5rem;
   }
-  .phone-flag-btn:hover { background: color-mix(in srgb, var(--primary) 6%, transparent); }
+  .phone-flag-btn:hover { background: color-mix(in srgb, var(--gold) 10%, transparent); }
   .phone-flag-btn .flag-emoji { font-size: 1.05rem; line-height: 1; }
   .phone-flag-btn .dial-code { font-size: .75rem; font-weight: 600; color: var(--gold-dark); }
   .phone-flag-btn .chevron {
@@ -191,7 +223,7 @@
 
   .phone-dropdown {
     position: absolute; top: calc(100% + 6px); left: 0; width: 19rem; max-width: calc(100vw - 3rem);
-    background: var(--card); border: 1px solid var(--border); border-radius: .625rem;
+    background: var(--card); border: 1px solid var(--border); border-radius: .5rem;
     box-shadow: var(--shadow-elegant); z-index: 60; display: none; flex-direction: column; max-height: 20rem;
   }
   .phone-dropdown.open { display: flex; }
@@ -201,7 +233,7 @@
   .phone-dropdown__list { overflow-y: auto; flex: 1; }
   .phone-dropdown__item { display: flex; align-items: center; gap: .625rem; padding: .625rem .875rem; cursor: pointer; font-size: .8125rem; color: var(--foreground); transition: background-color .15s ease; }
   .phone-dropdown__item:hover { background: var(--secondary); }
-  .phone-dropdown__item.selected { background: color-mix(in srgb, var(--primary) 8%, transparent); color: var(--primary); font-weight: 600; }
+  .phone-dropdown__item.selected { background: color-mix(in srgb, var(--gold) 12%, transparent); color: var(--gold-dark); font-weight: 600; }
   .phone-dropdown__item .di-flag { font-size: 1.05rem; flex-shrink: 0; }
   .phone-dropdown__item .di-name { flex: 1; }
   .phone-dropdown__item .di-code { font-size: .6875rem; color: var(--muted-foreground); font-weight: 600; }
@@ -216,7 +248,7 @@
     display: inline-flex; align-items: center; justify-content: center; cursor: pointer;
     transition: background-color .15s ease, border-color .15s ease;
   }
-  .same-as-phone input[type="checkbox"]:checked { background: var(--primary); border-color: var(--primary); }
+  .same-as-phone input[type="checkbox"]:checked { background: var(--gold-dark); border-color: var(--gold-dark); }
   .same-as-phone input[type="checkbox"]:checked::after {
     content: ''; width: .3rem; height: .55rem;
     border-right: 2px solid var(--cream); border-bottom: 2px solid var(--cream);
@@ -227,78 +259,206 @@
     text-transform: none; letter-spacing: 0; margin: 0;
   }
 
-  /* ---- info panel ---- */
-  .info-card {
-    background: var(--ink); color: var(--cream); border-radius: var(--radius);
-    padding: 1.75rem; box-shadow: var(--shadow-elegant); display: flex; flex-direction: column; gap: 1.75rem;
+  /* ---- info panel (right column of the merged panel) — light, elegant ---- */
+  .panel-rail {
+    background: linear-gradient(165deg, color-mix(in srgb, var(--gold) 6%, #fff) 0%, var(--secondary) 100%);
+    color: var(--foreground);
+    padding: 1.75rem; min-width: 0;
+    display: flex; flex-direction: column; gap: 1.75rem;
+    border-left: 1px solid var(--border);
   }
-  @media (min-width: 640px) { .info-card { padding: 2.5rem; } }
-  .info-card h3 { font-size: 1.375rem; margin: 0; color: var(--cream); }
-  @media (min-width: 640px) { .info-card h3 { font-size: 1.5rem; } }
-  .info-card .sub { font-size: .875rem; color: rgba(246,242,233,.65); line-height: 1.7; margin-top: -1.25rem; }
+  @media (min-width: 640px) { .panel-rail { padding: 2.5rem; } }
+  @media (max-width: 1023px) { .panel-rail { border-left: none; border-top: 1px solid var(--border); } }
+  .panel-rail h3 { font-family: var(--font-display); font-size: 1.5rem; margin: 0; color: var(--foreground); }
+  .panel-rail .sub { font-size: .875rem; color: var(--muted-foreground); line-height: 1.7; margin-top: -1.25rem; }
 
   .trust-list { display: flex; flex-direction: column; gap: 1.1rem; }
   .trust-item { display: flex; gap: .85rem; align-items: flex-start; }
   .trust-icon {
     width: 2.25rem; height: 2.25rem; border-radius: 50%; flex-shrink: 0; margin-top: .1rem;
-    background: rgba(246,242,233,.08); border: 1px solid rgba(246,242,233,.15);
+    background: var(--card); border: 1px solid color-mix(in srgb, var(--gold) 35%, var(--border));
     display: flex; align-items: center; justify-content: center;
   }
-  .trust-icon svg { width: .95rem; height: .95rem; stroke: var(--gold); fill: none; stroke-width: 2; }
-  .trust-heading { display: block; font-size: .8125rem; font-weight: 700; color: var(--cream); margin-bottom: .2rem; }
-  .trust-desc { font-size: .8125rem; color: rgba(246,242,233,.65); line-height: 1.6; }
+  .trust-icon svg { width: .95rem; height: .95rem; stroke: var(--gold-dark); fill: none; stroke-width: 2; }
+  .trust-heading { display: block; font-size: .8125rem; font-weight: 700; color: var(--foreground); margin-bottom: .2rem; }
+  .trust-desc { font-size: .8125rem; color: var(--muted-foreground); line-height: 1.6; }
 
-  .info-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 1.1rem; }
-  .info-list li { display: flex; gap: .85rem; align-items: flex-start; font-size: .9rem; color: rgba(246,242,233,.85); }
-  .info-list li a { color: rgba(246,242,233,.85); }
-  .info-list li a:hover { color: var(--gold); }
-  .info-list svg { width: 1.15rem; height: 1.15rem; color: var(--gold); flex-shrink: 0; margin-top: .1rem; }
-  .info-list strong { display: block; color: var(--cream); font-size: .8125rem; text-transform: uppercase; letter-spacing: .08em; margin-bottom: .2rem; }
+  .rail-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 1.1rem; }
+  .rail-list li { display: flex; gap: .85rem; align-items: flex-start; font-size: .9rem; color: var(--muted-foreground); }
+  .rail-list li a { color: var(--muted-foreground); }
+  .rail-list li a:hover { color: var(--gold-dark); }
+  .rail-list svg { width: 1.15rem; height: 1.15rem; color: var(--gold-dark); flex-shrink: 0; margin-top: .1rem; }
+  .rail-list strong { display: block; color: var(--foreground); font-size: .8125rem; text-transform: uppercase; letter-spacing: .08em; margin-bottom: .2rem; }
 
-  .hours { border-top: 1px solid rgba(246,242,233,.12); padding-top: 1.5rem; display: grid; gap: .5rem; }
-  .hours div { display: flex; justify-content: space-between; font-size: .875rem; color: rgba(246,242,233,.8); gap: 1rem; }
-  .hours span:last-child { color: var(--cream); font-weight: 500; text-align: right; }
+  .rail-hours { border-top: 1px solid var(--border); padding-top: 1.5rem; display: grid; gap: .5rem; }
+  .rail-hours div { display: flex; justify-content: space-between; font-size: .875rem; color: var(--muted-foreground); gap: 1rem; }
+  .rail-hours span:last-child { color: var(--foreground); font-weight: 500; text-align: right; }
 
-  .social-row { display: flex; flex-wrap: wrap; gap: .75rem; border-top: 1px solid rgba(246,242,233,.12); padding-top: 1.5rem; }
-  .social-row a {
-    width: 2.25rem; height: 2.25rem; border-radius: 9999px; background: rgba(246,242,233,.1); color: var(--cream);
+  .rail-socials { display: flex; flex-wrap: wrap; gap: .75rem; border-top: 1px solid var(--border); padding-top: 1.5rem; }
+  .rail-socials a {
+    width: 2.25rem; height: 2.25rem; border-radius: 9999px; background: var(--card); border: 1px solid var(--border); color: var(--foreground);
     display: inline-flex; align-items: center; justify-content: center;
-    transition: background-color .2s ease, color .2s ease;
+    transition: background-color .2s ease, color .2s ease, border-color .2s ease;
   }
-  .social-row a:hover { background: var(--gold); color: var(--ink); }
-  .social-row svg { width: 1rem; height: 1rem; }
+  .rail-socials a:hover { background: var(--gold); border-color: var(--gold); color: var(--ink); }
+  .rail-socials svg { width: 1rem; height: 1rem; }
 
-  /* ---- map section (side panel + embed, like a landmark card) ---- */
-  .map-section { background: var(--card); border-top: 1px solid var(--border); }
-  .map-inner { display: grid; grid-template-columns: 1fr; min-height: 22rem; }
-  @media (min-width: 900px) { .map-inner { grid-template-columns: 22rem 1fr; min-height: 26rem; } }
+  /* ================= CAREERS — dark ink plate, blueprint bg, ledger-style form ================= */
+  .careers-section { position: relative; background: var(--primary); overflow: hidden; padding-block: 5.5rem; }
+  .careers-bg {
+    position: absolute; inset: 0; z-index: 0;
+    background-image: url("{% static 'img/career-bg.png' %}");
+    background-size: cover; background-position: left bottom; background-repeat: no-repeat;
+    opacity: .95;
+  }
+  .careers-scrim {
+    position: absolute; inset: 0; z-index: 1;
+    background: linear-gradient(180deg, rgba(10,42,32,.55) 0%, rgba(10,42,32,.88) 65%, var(--primary) 100%);
+  }
+  .careers-inner {
+    position: relative; z-index: 2;
+    max-width: var(--max-width); margin-inline: auto; padding-inline: 1.25rem;
+    display: grid; grid-template-columns: 1fr; gap: 3rem;
+  }
+  @media (min-width: 768px)  { .careers-inner { padding-inline: 2rem; } }
+  @media (min-width: 1280px) { .careers-inner { padding-inline: 3rem; } }
+  @media (min-width: 1024px) { .careers-inner { grid-template-columns: .95fr 1.15fr; align-items: start; gap: 4rem; } }
+
+  .careers-copy .eyebrow { color: var(--gold); }
+  .careers-title {
+    font-family: var(--font-display); font-weight: 500;
+    font-size: clamp(1.9rem, 3.4vw, 2.75rem); line-height: 1.2;
+    color: var(--cream); margin: .75rem 0 1.25rem;
+  }
+  .careers-title strong { color: var(--gold-light); font-weight: 600; }
+  .careers-lead { color: rgba(246,242,233,.75); font-size: .9375rem; line-height: 1.75; max-width: 32rem; }
+
+  .careers-vacancies-title { margin-top: 1.75rem; font-size: .8125rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--gold); }
+  .careers-vacancy-list { list-style: none; margin: .875rem 0 0; padding: 0; display: grid; gap: .625rem; }
+  .careers-vacancy-list li { display: flex; align-items: baseline; gap: .625rem; font-size: .9375rem; color: var(--cream); }
+  .careers-vacancy-list li::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--gold); flex-shrink: 0; }
+  .careers-note { margin-top: 1.5rem; font-size: .875rem; color: rgba(246,242,233,.65); line-height: 1.7; }
+
+  /* form — underline inputs, no boxes, echoes the client's reference design */
+  .careers-form { display: grid; gap: 1.75rem; }
+  .careers-form-grid { display: grid; gap: 1.75rem 2rem; grid-template-columns: 1fr; }
+  @media (min-width: 640px) { .careers-form-grid { grid-template-columns: 1fr 1fr; } }
+  .careers-field { display: flex; flex-direction: column; gap: .5rem; min-width: 0; }
+  .careers-field.full { grid-column: 1 / -1; }
+  .careers-field label { font-size: .6875rem; text-transform: uppercase; letter-spacing: .14em; color: rgba(246,242,233,.55); }
+  .careers-field input,
+  .careers-field textarea {
+    width: 100%; background: transparent; border: none;
+    border-bottom: 1px solid rgba(246,242,233,.3);
+    color: var(--cream); font-family: inherit; font-size: .9375rem;
+    padding: .5rem .1rem; transition: border-color .2s ease; box-sizing: border-box;
+  }
+  .careers-field input::placeholder, .careers-field textarea::placeholder { color: rgba(246,242,233,.4); }
+  .careers-field input:focus, .careers-field textarea:focus { outline: none; border-color: var(--gold); }
+  .careers-field textarea { resize: vertical; min-height: 6rem; }
+
+  .careers-phone-wrap { display: flex; align-items: flex-end; gap: .6rem; border-bottom: 1px solid rgba(246,242,233,.3); transition: border-color .2s ease; }
+  .careers-phone-wrap:focus-within { border-color: var(--gold); }
+  .careers-phone-flag { display: flex; align-items: center; gap: .3rem; padding-bottom: .5rem; font-size: .875rem; color: var(--cream); background: none; border: none; cursor: pointer; font-family: inherit; }
+  .careers-phone-wrap input { border-bottom: none; flex: 1; }
+
+  .careers-file {
+    display: flex; align-items: center; justify-content: space-between; gap: .75rem;
+    border-bottom: 1px solid rgba(246,242,233,.3); padding-bottom: .5rem; cursor: pointer;
+    transition: border-color .2s ease;
+  }
+  .careers-file:hover, .careers-file:focus-within { border-color: var(--gold); }
+  .careers-file-label { font-size: .875rem; color: rgba(246,242,233,.55); }
+  .careers-upload-icon {
+    width: 1.75rem; height: 1.75rem; border-radius: 50%; border: 1px solid var(--gold);
+    display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  }
+  .careers-upload-icon svg { width: .8rem; height: .8rem; stroke: var(--gold); fill: none; stroke-width: 2; }
+  .careers-file input[type="file"] { position: absolute; width: 1px; height: 1px; overflow: hidden; opacity: 0; }
+
+  .careers-submit-row { display: flex; justify-content: flex-end; margin-top: .5rem; }
+  .careers-submit {
+    display: inline-flex; align-items: center; justify-content: center; gap: .4rem;
+    width: 6.25rem; height: 6.25rem; border-radius: 50%;
+    border: 1px solid var(--gold); background: transparent; color: var(--cream);
+    font-family: inherit; font-size: .875rem; font-weight: 600; letter-spacing: .01em;
+    cursor: pointer; transition: background-color .25s ease, color .25s ease, transform .25s ease;
+  }
+  .careers-submit:hover { background: var(--gold); color: var(--ink); transform: scale(1.04); }
+  .careers-submit:disabled { opacity: .7; cursor: not-allowed; transform: none; }
+
+  /* ================= MAP — premium ink plate, gold-bracketed frame ================= */
+  .map-section {
+   background: linear-gradient(
+        180deg,
+        #f8f4ee 0%,
+        #f2ece4 100%
+    );
+    position: relative;
+    overflow: hidden;
+    padding-block: 5rem;
+  }
+  .map-section::before {
+    content:'';
+    position:absolute;
+    inset:0;
+    background:
+        radial-gradient(circle at 15% 20%, rgba(212,175,55,.08), transparent 40%),
+        radial-gradient(circle at 85% 80%, rgba(212,175,55,.05), transparent 45%);
+    pointer-events:none;
+  }
+  .map-inner {
+    position: relative; z-index: 1;
+    max-width: var(--max-width); margin-inline: auto; padding-inline: 1.25rem;
+    display: grid; grid-template-columns: 1fr; gap: 2.5rem;
+  }
+  @media (min-width: 768px)  { .map-inner { padding-inline: 2rem; } }
+  @media (min-width: 1280px) { .map-inner { padding-inline: 3rem; } }
+  @media (min-width: 900px)  { .map-inner { grid-template-columns: 21rem 1fr; align-items: stretch; gap: 3rem; } }
 
   .map-info {
-    background: var(--ink); color: var(--cream);
-    padding: 3rem 2.25rem; display: flex; flex-direction: column; justify-content: center; gap: 2rem;
-    position: relative; overflow: hidden;
+    color: var(--foreground);
+    padding: 1rem 0;
+    display: flex; flex-direction: column; justify-content: center; gap: 1.75rem;
   }
-  .map-info::before {
-    content: ''; position: absolute; inset: 0;
-    background: radial-gradient(120% 100% at 0% 0%, color-mix(in srgb, var(--gold) 14%, transparent), transparent 60%);
-    pointer-events: none;
+  .map-info-logo { display: none; }
+  .map-info-title { font-family: var(--font-display); font-size: clamp(1.75rem, 3vw, 2.25rem); font-weight: 500; color: var(--foreground); line-height: 1.25; }
+  .map-info-title span { color: var(--gold-dark); }
+
+  .map-addr-item { display: flex; align-items: flex-start; gap: .875rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
+  .map-addr-item svg { width: 1.15rem; height: 1.15rem; stroke: var(--gold); fill: none; stroke-width: 1.6; flex-shrink: 0; margin-top: .15rem; }
+  .map-addr-label { font-size: .625rem; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--muted-foreground); display: block; margin-bottom: .25rem; }
+  .map-addr-value { font-size: .875rem; color: var(--foreground); line-height: 1.65; }
+
+  .map-hours { display: flex; flex-direction: column; gap: .5rem; padding-top: 1.5rem; border-top: 1px solid var(--border); }
+  .map-hours-title { font-size: .625rem; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--gold-dark); margin-bottom: .25rem; }
+  .map-hours-row { display: flex; justify-content: space-between; font-size: .8125rem; color: var(--muted-foreground); gap: .5rem; }
+  .map-hours-row span:last-child { color: var(--foreground); font-weight: 500; text-align: right; }
+
+  .map-embed {
+    position: relative;
+    padding: .9rem;
+   background: #ffffff;
+    border: 1px solid color-mix(in srgb, var(--gold) 25%, var(--border));
+    box-shadow: var(--shadow-elegant);
+    border-radius: var(--radius);
+    min-height: 24rem;
   }
-  .map-info-title { font-family: var(--font-display); font-size: 1.5rem; font-weight: 500; color: var(--cream); line-height: 1.3; position: relative; }
-  .map-info-title span { color: var(--gold); }
+  .map-embed iframe {
+    width: 100%; height: 100%; min-height: 22rem; border: none; display: block;
+    border-radius: calc(var(--radius) - .2rem);
+    filter: grayscale(.3) saturate(.7) brightness(.9) contrast(1.05);
+  }
+  @media (min-width: 900px) {
+    .map-embed { min-height: 26rem; }
+    .map-embed iframe { min-height: 24rem; }
+  }
 
-  .map-addr-item { display: flex; align-items: flex-start; gap: .875rem; position: relative; }
-  .map-addr-item svg { width: 1.15rem; height: 1.15rem; stroke: var(--gold); fill: none; stroke-width: 1.8; flex-shrink: 0; margin-top: .15rem; }
-  .map-addr-label { font-size: .625rem; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: rgba(246,242,233,.45); display: block; margin-bottom: .25rem; }
-  .map-addr-value { font-size: .875rem; color: rgba(246,242,233,.85); line-height: 1.6; }
-
-  .map-hours { display: flex; flex-direction: column; gap: .5rem; position: relative; padding-top: 1.5rem; border-top: 1px solid rgba(246,242,233,.12); }
-  .map-hours-title { font-size: .625rem; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--gold); margin-bottom: .25rem; }
-  .map-hours-row { display: flex; justify-content: space-between; font-size: .8125rem; color: rgba(246,242,233,.65); gap: .5rem; }
-  .map-hours-row span:last-child { color: rgba(246,242,233,.92); font-weight: 500; text-align: right; }
-
-  .map-embed { position: relative; }
-  .map-embed iframe { width: 100%; height: 100%; border: none; display: block; min-height: 22rem; }
-  @media (min-width: 900px) { .map-embed iframe { min-height: 26rem; } }
+  .map-corner { position: absolute; width: 26px; height: 26px; border: 1.5px solid var(--gold); pointer-events: none; z-index: 2; }
+  .map-corner--tl { top: .55rem; left: .55rem; border-right: none; border-bottom: none; }
+  .map-corner--tr { top: .55rem; right: .55rem; border-left: none; border-bottom: none; }
+  .map-corner--bl { bottom: .55rem; left: .55rem; border-right: none; border-top: none; }
+  .map-corner--br { bottom: .55rem; right: .55rem; border-left: none; border-top: none; }
 </style>
 {% endblock %}
 
@@ -306,6 +466,8 @@
 
 <!-- ================= HERO ================= -->
 <section class="ct-hero">
+  <div class="ct-hero-photo" aria-hidden="true"></div>
+  <div class="ct-hero-scrim" aria-hidden="true"></div>
   <div class="container-page">
     <div class="ct-hero-inner">
 
@@ -323,33 +485,32 @@
         </p>
       </div>
 
-      <div class="ct-hero-cards reveal">
-        <a href="tel:+971556399212" class="ct-info-card">
-          <div class="ct-info-icon">
+      <div class="ct-hero-side reveal">
+        <p class="ct-hero-side-note">Prefer to reach us directly? <span>Call, email or message us on WhatsApp.</span></p>
+
+        <div class="ct-contact-strip">
+          <a href="tel:+971556399212" class="ct-contact-item">
             <svg viewBox="0 0 24 24"><path d="M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233 14 14 0 0 0 6.392 6.384"/></svg>
-          </div>
-          <div><span class="ct-info-label">Call Us</span><span class="ct-info-value">+971 55 639 9212</span></div>
-        </a>
+            <span><span class="cs-label">Call Us</span><span class="cs-value">+971 55 639 9212</span></span>
+            <svg class="cs-arrow" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </a>
 
-        <a href="mailto:hello@spacesmithrealestate.com" class="ct-info-card">
-          <div class="ct-info-icon">
+          <a href="mailto:hello@spacesmithrealestate.com" class="ct-contact-item">
             <svg viewBox="0 0 24 24"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
-          </div>
-          <div><span class="ct-info-label">Email Us</span><span class="ct-info-value">hello@spacesmithrealestate.com</span></div>
-        </a>
+            <span><span class="cs-label">Email Us</span><span class="cs-value">hello@spacesmithrealestate.com</span></span>
+            <svg class="cs-arrow" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </a>
 
-        <a href="https://wa.me/971556399212" target="_blank" rel="noopener noreferrer" class="ct-info-card">
-          <div class="ct-info-icon">
+          <a href="https://wa.me/971556399212" target="_blank" rel="noopener noreferrer" class="ct-contact-item">
             <svg viewBox="0 0 24 24" class="fill-icon"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884M20.885 3.488A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413"/></svg>
-          </div>
-          <div><span class="ct-info-label">WhatsApp</span><span class="ct-info-value">+971 55 639 9212</span></div>
-        </a>
+            <span><span class="cs-label">WhatsApp</span><span class="cs-value">+971 55 639 9212</span></span>
+            <svg class="cs-arrow" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </a>
 
-        <div class="ct-info-card" style="cursor:default;">
-          <div class="ct-info-icon">
+          <div class="ct-contact-item" style="cursor:default;">
             <svg viewBox="0 0 24 24"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+            <span><span class="cs-label">Office</span><span class="cs-value">Royal Class Building, DIP First</span></span>
           </div>
-          <div><span class="ct-info-label">Office</span><span class="ct-info-value">Royal Class Building, DIP First</span></div>
         </div>
       </div>
 
@@ -357,13 +518,13 @@
   </div>
 </section>
 
-<!-- ================= FORM + INFO ================= -->
+<!-- ================= FORM + INFO — merged, light two-tone panel ================= -->
 <section class="contact-body">
   <div class="container-page">
-    <div class="contact-layout">
+    <div class="contact-panel reveal">
 
-      <!-- ---- form ---- -->
-      <div class="form-card reveal">
+      <!-- ---- form column ---- -->
+      <div class="panel-form">
         <h2>Send us a message</h2>
         <p class="sub">Fields marked with an asterisk are required. Our team replies within one working day.</p>
 
@@ -482,12 +643,12 @@
         </form>
       </div>
 
-      <!-- ---- info panel ---- -->
-      <div style="display:flex; flex-direction:column; gap:1.5rem;">
+      <!-- ---- light, elegant contact rail, same panel ---- -->
+      <div class="panel-rail">
 
-        <div class="info-card reveal" data-delay="80">
+        <div>
           <h3>Why work with Spacesmith</h3>
-          <div class="trust-list">
+          <div class="trust-list" style="margin-top:1.25rem;">
             <div class="trust-item">
               <div class="trust-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg></div>
               <div><span class="trust-heading">Reply within one working day</span><span class="trust-desc">Every enquiry reaches a real advisor — no automated hand-offs.</span></div>
@@ -503,46 +664,46 @@
           </div>
         </div>
 
-        <div class="info-card reveal" data-delay="140">
-          <h3>Get in touch directly</h3>
-          <ul class="info-list">
-            <li>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
-              <div><strong>Office</strong>117, Royal Class Building, Dubai Investment Park First, Dubai, UAE</div>
-            </li>
-            <li>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233 14 14 0 0 0 6.392 6.384"/></svg>
-              <div><strong>Phone</strong><a href="tel:+971556399212">+971 55 639 9212</a></div>
-            </li>
-            <li>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
-              <div><strong>Email</strong><a href="mailto:hello@spacesmithrealestate.com">hello@spacesmithrealestate.com</a></div>
-            </li>
-          </ul>
+        <div style="border-top:1px solid var(--border); padding-top:1.75rem;">
+        <h3>Get in touch directly</h3>
+        <ul class="rail-list">
+          <li>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+            <div><strong>Office</strong>117, Royal Class Building, Dubai Investment Park First, Dubai, UAE</div>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233 14 14 0 0 0 6.392 6.384"/></svg>
+            <div><strong>Phone</strong><a href="tel:+971556399212">+971 55 639 9212</a></div>
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+            <div><strong>Email</strong><a href="mailto:hello@spacesmithrealestate.com">hello@spacesmithrealestate.com</a></div>
+          </li>
+        </ul>
 
-          <div class="hours">
-            <div><span>Sunday – Thursday</span><span>9:00 AM – 7:00 PM</span></div>
-            <div><span>Friday</span><span>2:00 PM – 7:00 PM</span></div>
-            <div><span>Saturday</span><span>By appointment</span></div>
-          </div>
+        <div class="rail-hours">
+          <div><span>Sunday – Thursday</span><span>9:00 AM – 7:00 PM</span></div>
+          <div><span>Friday</span><span>2:00 PM – 7:00 PM</span></div>
+          <div><span>Saturday</span><span>By appointment</span></div>
+        </div>
 
-          <div class="social-row">
-            <a href="https://www.facebook.com/share/1NWKKRnPZX/" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
-            </a>
-            <a href="https://www.instagram.com/spacesmith_realestate" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>
-            </a>
-            <a href="https://www.linkedin.com/company/spacesmith-real-estate/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect width="4" height="12" x="2" y="9"/><circle cx="4" cy="4" r="2"/></svg>
-            </a>
-            <a href="https://youtube.com/@spacesmithrealestate" target="_blank" rel="noopener noreferrer" aria-label="YouTube">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 17a24.12 24.12 0 0 1 0-10 2 2 0 0 1 1.4-1.4 49.56 49.56 0 0 1 16.2 0A2 2 0 0 1 21.5 7a24.12 24.12 0 0 1 0 10 2 2 0 0 1-1.4 1.4 49.55 49.55 0 0 1-16.2 0A2 2 0 0 1 2.5 17"/><path d="m10 15 5-3-5-3z"/></svg>
-            </a>
-            <a href="https://www.tiktok.com/@spacesmithrealestate" target="_blank" rel="noopener noreferrer" aria-label="TikTok">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5"/></svg>
-            </a>
-          </div>
+        <div class="rail-socials">
+          <a href="https://www.facebook.com/share/1NWKKRnPZX/" target="_blank" rel="noopener noreferrer" aria-label="Facebook">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+          </a>
+          <a href="https://www.instagram.com/spacesmith_realestate" target="_blank" rel="noopener noreferrer" aria-label="Instagram">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>
+          </a>
+          <a href="https://www.linkedin.com/company/spacesmith-real-estate/" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect width="4" height="12" x="2" y="9"/><circle cx="4" cy="4" r="2"/></svg>
+          </a>
+          <a href="https://youtube.com/@spacesmithrealestate" target="_blank" rel="noopener noreferrer" aria-label="YouTube">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 17a24.12 24.12 0 0 1 0-10 2 2 0 0 1 1.4-1.4 49.56 49.56 0 0 1 16.2 0A2 2 0 0 1 21.5 7a24.12 24.12 0 0 1 0 10 2 2 0 0 1-1.4 1.4 49.55 49.55 0 0 1-16.2 0A2 2 0 0 1 2.5 17"/><path d="m10 15 5-3-5-3z"/></svg>
+          </a>
+          <a href="https://www.tiktok.com/@spacesmithrealestate" target="_blank" rel="noopener noreferrer" aria-label="TikTok">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5"/></svg>
+          </a>
+        </div>
         </div>
 
       </div>
@@ -551,7 +712,77 @@
   </div>
 </section>
 
-<!-- ================= MAP ================= -->
+<!-- ================= CAREERS — dark ink plate, blueprint bg ================= -->
+<section class="careers-section">
+  <div class="careers-bg" aria-hidden="true"></div>
+  <div class="careers-scrim" aria-hidden="true"></div>
+  <div class="careers-inner">
+
+    <div class="careers-copy reveal">
+      <p class="eyebrow">Careers</p>
+      <h2 class="careers-title">Fill out the form to <strong>explore career opportunities</strong> with us.</h2>
+      <p class="careers-lead">
+        Spacesmith Real Estate is growing, and we're looking for talented professionals to join
+        our dynamic team. Explore current opportunities and become part of a company that values
+        growth, expertise, and results.
+      </p>
+
+      <p class="careers-vacancies-title">Current Vacancies</p>
+      <ul class="careers-vacancy-list">
+        <li>Sales Agent — 1 to 2 years UAE experience</li>
+        <li>Sales Manager — 4 to 5 years UAE experience</li>
+      </ul>
+
+      <p class="careers-note">Bring your passion, skills, and ambition — let's shape the future of real estate in Dubai together.</p>
+    </div>
+
+    <form class="careers-form reveal" method="post" enctype="multipart/form-data" action="" id="careersForm">
+      {% csrf_token %}
+      <div class="careers-form-grid">
+        <div class="careers-field">
+          <label for="careerName">Name</label>
+          <input type="text" id="careerName" name="name" required>
+        </div>
+
+        <div class="careers-field">
+          <label for="careerEmail">Email</label>
+          <input type="email" id="careerEmail" name="email" required>
+        </div>
+
+        <div class="careers-field">
+          <label for="careerPhone">Phone Number *</label>
+          <div class="careers-phone-wrap">
+            <button type="button" class="careers-phone-flag" aria-label="Country code">🇦🇪 +971</button>
+            <input type="tel" id="careerPhone" name="phone" placeholder="50 123 4567" required>
+          </div>
+        </div>
+
+        <div class="careers-field">
+          <label for="careerCv">Upload CV</label>
+          <label class="careers-file" for="careerCv">
+            <span class="careers-file-label">PDF or Word, up to 5MB</span>
+            <span class="careers-upload-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 8l5-5 5 5M5 21h14"/></svg>
+            </span>
+            <input type="file" id="careerCv" name="cv" accept=".pdf,.doc,.docx">
+          </label>
+        </div>
+
+        <div class="careers-field full">
+          <label for="careerMessage">Message</label>
+          <textarea id="careerMessage" name="message" rows="3"></textarea>
+        </div>
+      </div>
+
+      <div class="careers-submit-row">
+        <button type="submit" class="careers-submit">Submit</button>
+      </div>
+    </form>
+
+  </div>
+</section>
+
+<!-- ================= MAP — premium ink plate ================= -->
 <section class="map-section">
   <div class="map-inner">
     <div class="map-info reveal">
@@ -574,6 +805,10 @@
     </div>
 
     <div class="map-embed">
+      <span class="map-corner map-corner--tl"></span>
+      <span class="map-corner map-corner--tr"></span>
+      <span class="map-corner map-corner--bl"></span>
+      <span class="map-corner map-corner--br"></span>
       <iframe
         src="https://www.google.com/maps?q=Dubai+Investment+Park+First,+Dubai,+UAE&output=embed"
         loading="lazy"
@@ -627,7 +862,6 @@
     this.dropdown = document.getElementById(opts.dropdownId);
     this.searchEl = document.getElementById(opts.searchId);
     this.listEl   = document.getElementById(opts.listId);
-    // the real Django-rendered field, visually hidden but submitted with the form
     this.realInput = document.getElementById(opts.realInputId);
     this.selected = COUNTRIES[0];
     if (this.realInput) this.realInput.removeAttribute('required');
@@ -656,7 +890,6 @@
       if (!self.dropdown.contains(e.target) && e.target !== self.btn) self._close();
     });
 
-    // restore value if the page re-rendered after a validation error
     var existing = this.realInput ? this.realInput.value : '';
     if (existing && existing.charAt(0) === '+') {
       var match = null;
@@ -723,7 +956,6 @@
     realInputId: waWrapEl ? waWrapEl.dataset.target : null
   });
 
-  // "same as phone" convenience checkbox
   var sameChk = document.getElementById('sameAsPhone');
   sameChk.addEventListener('change', function () {
     if (this.checked) {
@@ -744,15 +976,8 @@
     }
   });
 
-  // lightweight client-side validation (server-side Django validation is still authoritative)
-  function showErr(wrapEl, errEl, msg) {
-    if (wrapEl) wrapEl.classList.add('is-invalid');
-    if (errEl) errEl.textContent = msg;
-  }
-  function clearErr(wrapEl, errEl) {
-    if (wrapEl) wrapEl.classList.remove('is-invalid');
-    if (errEl) errEl.textContent = '';
-  }
+  function showErr(wrapEl, errEl, msg) { if (wrapEl) wrapEl.classList.add('is-invalid'); if (errEl) errEl.textContent = msg; }
+  function clearErr(wrapEl, errEl) { if (wrapEl) wrapEl.classList.remove('is-invalid'); if (errEl) errEl.textContent = ''; }
 
   document.getElementById('contactForm').addEventListener('submit', function (e) {
     var valid = true;
@@ -791,15 +1016,28 @@
       valid = false;
     }
 
-    if (!valid) {
-      e.preventDefault();
-      return;
-    }
+    if (!valid) { e.preventDefault(); return; }
 
     var btn = document.getElementById('submitBtn');
     btn.disabled = true;
     btn.innerHTML = 'Sending&hellip; <svg viewBox="0 0 24 24" style="animation:ct-spin 1s linear infinite;width:1rem;height:1rem;stroke:currentColor;fill:none;stroke-width:2;flex-shrink:0;"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>';
   });
+
+  /* ---- Careers form: show selected CV filename, simple submit state ---- */
+  var cvInput = document.getElementById('careerCv');
+  if (cvInput) {
+    cvInput.addEventListener('change', function () {
+      var label = document.querySelector('.careers-file-label');
+      if (label) label.textContent = this.files[0] ? this.files[0].name : 'PDF or Word, up to 5MB';
+    });
+  }
+  var careersForm = document.getElementById('careersForm');
+  if (careersForm) {
+    careersForm.addEventListener('submit', function () {
+      var b = careersForm.querySelector('.careers-submit');
+      if (b) { b.disabled = true; b.textContent = 'Sending…'; }
+    });
+  }
 
 })();
 </script>

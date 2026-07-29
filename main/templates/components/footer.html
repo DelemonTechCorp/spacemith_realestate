@@ -4,9 +4,31 @@
   /* =====================================================================
      FOOTER — uses base.html tokens (--ink, --cream, --gold, --font-display)
      ===================================================================== */
-  .footer { background: var(--ink); color: var(--cream); }
+  .footer { position: relative; overflow: hidden; background: var(--ink); color: var(--cream); }
+
+  /* full-bleed background photo behind the whole footer, with a dark
+     scrim layered on top so the columns of text stay fully legible.
+     Save the image to your project's static/img/career-bg.png. */
+  .footer__logo-mark {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background-image: url("{% static 'img/career-bg.png' %}");
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    pointer-events: none;
+  }
+  .footer__scrim {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background: linear-gradient(180deg, rgba(11,21,18,.76) 0%, rgba(11,21,18,.74) 100%);
+    pointer-events: none;
+  }
 
   .footer__grid {
+    position: relative; z-index: 1;
     display: grid;
     gap: 3rem;
     padding-block: 4rem;
@@ -126,7 +148,7 @@
   .footer__social svg { width: 1rem; height: 1rem; }
 
   /* ---- Bottom bar ---- */
-  .footer__bottom { border-top: 1px solid rgba(246,242,233,.1); }
+  .footer__bottom { position: relative; z-index: 1; border-top: 1px solid rgba(246,242,233,.1); }
   .footer__bottom-inner {
     padding-block: 1.5rem;
     display: flex; flex-direction: column;
@@ -145,12 +167,15 @@
 </style>
 
 <footer class="footer">
+  <div class="footer__logo-mark" aria-hidden="true"></div>
+  <div class="footer__scrim" aria-hidden="true"></div>
+
   <div class="container-page footer__grid">
 
     <!-- Brand -->
     <div>
       <a href="{% url 'home' %}" class="footer__brand-row">
-        <img src="{% static 'img/logo.png' %}" alt="Spacesmith Real Estate">
+        <img src="{% static 'img/logo-ss.png' %}" alt="Spacesmith Real Estate">
         <div>
           <p class="footer__brand-name">spacesmith</p>
           <p class="footer__brand-sub">Real Estate</p>

@@ -93,3 +93,40 @@ class Testimonial(models.Model):
     def __str__(self):
         return self.name
     
+    
+    
+    
+    
+
+class InstagramHighlight(models.Model):
+    """
+    One tile in the homepage 'Our Latest Highlights' grid.
+    Kept intentionally tiny — this is NOT a live Instagram API integration,
+    it's just a manually-curated set of thumbnails + links, editable in admin.
+    """
+    thumbnail = models.ImageField(
+        upload_to="instagram/",
+        help_text="Portrait crop works best (4:5). Export a still frame if it's a Reel."
+    )
+    permalink = models.URLField(
+        help_text="Link to the actual Instagram post/reel.",
+        blank=True,
+    )
+    caption = models.CharField(
+        max_length=140,
+        blank=True,
+        help_text="Optional — used as image alt text only, not shown on the card."
+    )
+    order = models.PositiveSmallIntegerField(
+        default=0,
+        help_text="Lower numbers show first."
+    )
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+ 
+    class Meta:
+        ordering = ["order", "-created_at"]
+ 
+    def __str__(self):
+        return self.caption or f"Instagram highlight #{self.pk}"
+    
