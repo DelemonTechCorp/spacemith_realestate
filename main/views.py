@@ -8,7 +8,7 @@ from properties.models import City, District, GroupedApartment, Property, Proper
 from django.db.models import Case, IntegerField, Q, Value, When
 from blogs.models import BlogPost
 from properties.models import DeveloperCompany
-from .models import InstagramHighlight 
+from .models import InstagramHighlight, Testimonial, Newsletter
  
 
 
@@ -64,7 +64,7 @@ def home(request):
         'featured_properties': featured_properties,
         'latest_posts': latest_posts,
         'meta_title': 'Spacesmith Real Estate | We Find Your Space',
-        'meta_description': 'Off-plan launches and ready properties across Dubai.',
+        'meta_description': 'Discover off-plan launches and ready properties across Dubai. Explore luxury apartments, villas, and investment opportunities with SpaceSmith Real Estate.',
         'canonical': 'https://spacesmithrealestate.com/',
         "instagram_highlights": InstagramHighlight.objects.filter(is_active=True)[:4],
         
@@ -82,8 +82,8 @@ from django.shortcuts import redirect, render
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 
-from .forms import GeneralEnquiryForm          # adjust import path if needed
-from .models import GeneralEnquiry             # adjust import path if needed
+from .forms import GeneralEnquiryForm, CareerApplicationForm          # adjust import path if needed
+from .models import GeneralEnquiry, CareerApplication           # adjust import path if needed
 
 logger = logging.getLogger(__name__)
 
@@ -178,9 +178,156 @@ def contact(request):
     
 # ----------------------------------------------contact------------------------------------------
     
+# ----------------------------------------------CAREER------------------------------------------
     
     
+def _send_career_admin_email(application):
+    """Notify admin of a new job application, with CV attached if provided."""
+    subject = f"New Job Application from {application.name} | Spacesmith Real Estate"
+    html    = render_to_string('emails/career_admin.html', {'application': application})
+    text    = strip_tags(html)
+    msg     = EmailMultiAlternatives(subject, text, FROM_EMAIL, [ADMIN_EMAIL])
+    msg.attach_alternative(html, 'text/html')
+
+    if application.email:
+        msg.reply_to = [application.email]   # admin can hit reply and land in the applicant's inbox
+
+    if application.cv:
+        try:
+            application.cv.open('rb')
+            msg.attach(application.cv.name.split('/')[-1], application.cv.read(), None)
+        finally:
+            application.cv.close()
+
+    msg.send(fail_silently=False)
+
+
+def _send_career_client_email(application):
+    """Send confirmation email to the applicant."""
+    subject = "We've received your application — Spacesmith Real Estate"
+    html    = render_to_string('emails/career_client.html', {'application': application})
+    text    = strip_tags(html)
+    msg     = EmailMultiAlternatives(subject, text, FROM_EMAIL, [application.email])
+    msg.attach_alternative(html, 'text/html')
+    msg.send(fail_silently=True)   # don't block if the client's email bounces
+
+
+def careers(request):
+    if request.method == 'POST':
+        form = CareerApplicationForm(request.POST, request.FILES)
+
+        if form.is_valid():
+            application = form.save(commit=False)
+            application.source = 'Careers — Contact Page'
+            application.save()
+
+            admin_sent = True
+            try:
+                _send_career_admin_email(application)
+            except Exception as exc:
+                logger.error("Career admin email failed: %s", exc)
+                admin_sent = False
+
+            try:
+                _send_career_client_email(application)
+            except Exception as exc:
+                logger.error("Career client email failed: %s", exc)
+
+            if admin_sent:
+                messages.success(
+                    request,
+                    "Thanks for applying! Our team will review your application and get in touch if there's a match."
+                )
+            else:
+                messages.warning(
+                    request,
+                    "Your application was received but we encountered a technical issue. "
+                    "Please call us directly at +971 55 639 9212."
+                )
+        else:
+            messages.error(request, "Please fill in your name, email and phone number correctly.")
+
+        return redirect('contact')
+
+    return redirect('contact')
     
+# ----------------------------------------------CAREER------------------------------------------
+
+
+# ----------------------------------------------NEWSLETTER------------------------------------------
+from django.http import JsonResponse
+from django.views.decorators.http import require_POST
+from django.core.validators import validate_email
+from django.core.exceptions import ValidationError
+
+
+def _send_newsletter_admin_email(email, subscribed_at):
+    """Notify admin of a new newsletter subscriber."""
+    html = render_to_string('emails/newsletter_admin.html', {
+        'subscriber_email': email,
+        'subscribed_at': subscribed_at,
+    })
+    text = strip_tags(html)
+
+    msg = EmailMultiAlternatives(
+        subject=f"New Newsletter Subscriber: {email}",
+        body=text,
+        from_email=FROM_EMAIL,
+        to=[ADMIN_EMAIL],
+    )
+    msg.attach_alternative(html, 'text/html')
+    msg.send(fail_silently=False)
+
+
+@require_POST
+def subscribe_newsletter(request):
+    email = request.POST.get('email', '').strip().lower()
+
+    if not email:
+        status, message = 'error', 'Please enter a valid email.'
+    else:
+        try:
+            validate_email(email)
+        except ValidationError:
+            status, message = 'error', 'Please enter a valid email address.'
+        else:
+            newsletter, created = Newsletter.objects.get_or_create(
+                email=email,
+                defaults={'is_active': True},
+            )
+
+            if created:
+                status, message = 'success', 'Thank you for subscribing!'
+                try:
+                    _send_newsletter_admin_email(email, newsletter.created_at)
+                except Exception as exc:
+                    logger.error("Newsletter admin email failed: %s", exc)
+
+            elif not newsletter.is_active:
+                newsletter.is_active = True
+                newsletter.save(update_fields=['is_active'])
+                status, message = 'success', "Welcome back — you're subscribed again!"
+                try:
+                    _send_newsletter_admin_email(email, timezone.now())
+                except Exception as exc:
+                    logger.error("Newsletter admin email failed: %s", exc)
+
+            else:
+                status, message = 'exists', 'You are already subscribed.'
+
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({'status': status, 'message': message})
+
+    if status == 'success':
+        messages.success(request, message)
+    else:
+        messages.info(request, message)
+    return redirect(request.META.get('HTTP_REFERER', '/'))
+
+# ----------------------------------------------NEWSLETTER------------------------------------------
+# ---------------------------------------------news letter-------------------------------------------------
+
+
     
 def about(request):
     """Spacesmith About Page — story, vision/mission/values, and team."""
@@ -193,3 +340,17 @@ def about(request):
         ),
         'canonical': 'https://spacesmithrealestate.com/about/',
     })
+    
+    
+def privacy_policy(request):
+    return render(request, 'privacy-policy.html')
+
+
+def faq(request):
+    """
+    Render the FAQ page with category-based accordion interface.
+    
+    URL: /faq/
+    Template: pages/faq.html
+    """
+    return render(request, 'faq.html')

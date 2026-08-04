@@ -57,11 +57,11 @@
   }
   .logo__img {
     width: auto;
-    height: 300px;          /* was height:40vh — that blew the header apart */
-    max-width: 200px;
+    height: 200px;
+    max-width: 400px;
     object-fit: contain;
   }
-  @media (max-width: 480px) { .logo__img { height: 250px; max-width: 180px; } }
+  @media (max-width: 480px) { .logo__img { height: 150px; max-width: 180px; } }
 
   /* ---- Desktop nav ---- */
   .nav-desktop { display: none; align-items: center; gap: .25rem; }
@@ -74,6 +74,9 @@
     font-weight: 500;
     color: color-mix(in srgb, var(--foreground) 78%, transparent);
     transition: color .2s ease;
+    border: none;
+    background: none;
+    cursor: pointer;
   }
   .nav-link:hover,
   .nav-link.is-active { color: var(--primary); }
@@ -90,6 +93,77 @@
   }
   .nav-link:hover::after,
   .nav-link.is-active::after { transform: scaleX(1); }
+
+  /* ---- Dropdown ---- */
+  .nav-dropdown {
+    position: relative;
+  }
+
+  .dropdown-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+}
+
+.dropdown-arrow {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+  transition: transform .2s ease;
+  stroke-width: 2.5;
+}
+
+.dropdown-trigger[aria-expanded="true"] .dropdown-arrow {
+  transform: rotate(180deg);
+}
+
+
+
+  .dropdown-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background: var(--background);
+    border: 1px solid var(--border);
+    border-radius: .5rem;
+    min-width: 160px;
+    box-shadow: 0 4px 12px rgba(11, 21, 18, .12);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-8px);
+    transition: opacity .2s ease, visibility .2s ease, transform .2s ease;
+    z-index: 999;
+    margin-top: .5rem;
+  }
+
+  .nav-dropdown:hover .dropdown-menu,
+  .nav-dropdown.is-open .dropdown-menu {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+  }
+
+  .dropdown-link {
+    display: block;
+    padding: .75rem 1rem;
+    font-family: var(--font-body);
+    font-size: .875rem;
+    font-weight: 500;
+    color: color-mix(in srgb, var(--foreground) 78%, transparent);
+    text-decoration: none;
+    transition: color .2s ease, background-color .2s ease;
+    border: none;
+    background: none;
+    cursor: pointer;
+    width: 100%;
+    text-align: left;
+  }
+
+  .dropdown-link:hover,
+  .dropdown-link.is-active {
+    color: var(--primary);
+    background-color: color-mix(in srgb, var(--primary) 8%, transparent);
+  }
 
   /* ---- Desktop actions ---- */
   .header-actions { display: none; align-items: center; gap: 1rem; }
@@ -168,6 +242,57 @@
   .mobile-nav .btn-primary { margin-top: .75rem; padding: .75rem 1.25rem; }
   .mobile-nav .phone-link  { margin-top: 1rem; padding: .25rem .5rem; }
 
+  /* ---- Mobile dropdown ---- */
+  .mobile-dropdown-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .5rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    width: 100%;
+    padding: .75rem .5rem;
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--foreground);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .mobile-dropdown-trigger::after {
+    content: "▼";
+    font-size: .5rem;
+    transition: transform .2s ease;
+  }
+
+  .mobile-dropdown-trigger[aria-expanded="true"]::after {
+    transform: rotate(180deg);
+  }
+
+  .mobile-dropdown-menu {
+    display: none;
+    background: color-mix(in srgb, var(--foreground) 4%, transparent);
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .mobile-dropdown-trigger[aria-expanded="true"] ~ .mobile-dropdown-menu {
+    display: flex;
+  }
+
+  .mobile-dropdown-link {
+    padding: .75rem .5rem .75rem 1.5rem;
+    font-size: .95rem;
+    color: color-mix(in srgb, var(--foreground) 78%, transparent);
+    border-bottom: 1px solid var(--border);
+    text-decoration: none;
+  }
+
+  .mobile-dropdown-link:hover,
+  .mobile-dropdown-link.is-active {
+    color: var(--primary);
+  }
+
   /* =====================================================================
      OVERLAY MODE — pages with a full-bleed dark hero add
      {% block body_class %}has-hero{% endblock %}.
@@ -195,6 +320,22 @@
     border-color: var(--gold);
     color: var(--ink);
   }
+
+  body.has-hero .site-header:not(.is-scrolled) .dropdown-menu {
+    background: rgba(246, 242, 233, .95);
+    border-color: rgba(246, 242, 233, .3);
+  }
+
+  body.has-hero .site-header:not(.is-scrolled) .dropdown-link {
+    color: var(--ink);
+  }
+
+  body.has-hero .site-header:not(.is-scrolled) .dropdown-link:hover,
+  body.has-hero .site-header:not(.is-scrolled) .dropdown-link.is-active {
+    color: var(--primary);
+    background-color: rgba(11, 21, 18, .06);
+  }
+
   /* Inner pages clear the fixed header. Hero pages sit under it. */
   body:not(.has-hero) main { padding-top: var(--nav-height); }
 
@@ -211,44 +352,133 @@
   <div class="container-page header-bar">
 
     <a href="{% url 'home' %}" class="logo" aria-label="Spacesmith Real Estate — home">
-      <img class="logo__img" src="{% static 'img/Space_smith_logo.png' %}"
+      <img class="logo__img" src="{% static 'img/Space_smith_logo.webp' %}"
            alt="Spacesmith Real Estate" width="190" height="44">
     </a>
 
     <nav class="nav-desktop" aria-label="Main navigation">
-      <!-- <a href="{% url 'home' %}" class="nav-link {% if request.path == '/' %}is-active{% endif %}">Home</a> -->
-      <a href="{% url 'properties:offplan_properties' %}" class="nav-link {% if '/off-plan' in request.path %}is-active{% endif %}">Off Plan</a>
-      <a href="{% url 'properties:ready_properties' %}" class="nav-link {% if '/ready' in request.path %}is-active{% endif %}">Ready</a>
-      <a href="{% url 'properties:developer_list' %}" class="nav-link {% if '/developer_list' in request.path %}is-active{% endif %}">Developers</a>
-      <a href="{% url 'properties:district_list' %}" class="nav-link {% if '/district_list' in request.path %}is-active{% endif %}">Areas</a>
-      <a href="{% url 'blogs:event_list' %}" class="nav-link {% if '/events' in request.path %}is-active{% endif %}">Events</a>
-      <a href="{% url 'blogs:blog_list' %}" class="nav-link {% if '/insights' in request.path %}is-active{% endif %}">Insights</a>
-      <a href="{% url 'about' %}" class="nav-link {% if '/about' in request.path %}is-active{% endif %}">About</a>
+
+      <a href="{% url 'home' %}"
+         class="nav-link {% if request.path == '/' %}is-active{% endif %}">
+        Home
+      </a>
+
+      <a href="{% url 'about' %}"
+         class="nav-link {% if '/about' in request.path %}is-active{% endif %}">
+        About
+      </a>
+
+      <a href="{% url 'properties:offplan_properties' %}"
+         class="nav-link {% if '/off-plan' in request.path %}is-active{% endif %}">
+        Off Plan
+      </a>
+
+      <a href="{% url 'properties:ready_properties' %}"
+         class="nav-link {% if '/ready' in request.path %}is-active{% endif %}">
+        Ready
+      </a>
+
+      <a href="{% url 'properties:district_list' %}"
+         class="nav-link {% if '/district_list' in request.path %}is-active{% endif %}">
+        Areas
+      </a>
+
+      <a href="{% url 'properties:developer_list' %}"
+         class="nav-link {% if '/developer_list' in request.path %}is-active{% endif %}">
+        Developers
+      </a>
+
+      <!-- Resources Dropdown -->
+      <div class="nav-dropdown" id="resourcesDropdown">
+        <button class="nav-link dropdown-trigger"
+                type="button"
+                aria-label="Resources menu"
+                aria-expanded="false"
+                aria-haspopup="true"
+                aria-controls="resourcesMenu">
+
+          <span>Resources</span>
+
+          <svg class="dropdown-arrow"
+               viewBox="0 0 24 24"
+               fill="none"
+               stroke="currentColor"
+               stroke-width="2"
+               stroke-linecap="round"
+               stroke-linejoin="round"
+               aria-hidden="true">
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+        </button>
+
+        <div class="dropdown-menu" id="resourcesMenu">
+          <a href="{% url 'blogs:blog_list' %}"
+             class="dropdown-link {% if '/insights' in request.path %}is-active{% endif %}">
+            Insights
+          </a>
+
+          <a href="{% url 'blogs:event_list' %}"
+             class="dropdown-link {% if '/events' in request.path %}is-active{% endif %}">
+            Events
+          </a>
+
+          <a href="{% url 'faq' %}"
+             class="dropdown-link {% if '/faqs' in request.path %}is-active{% endif %}">
+            FAQs
+          </a>
+        </div>
+      </div>
+
     </nav>
 
     <div class="header-actions">
       <a href="tel:+{{ phone_number }}" class="phone-link">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <svg viewBox="0 0 24 24"
+             fill="none"
+             stroke="currentColor"
+             stroke-width="2"
+             stroke-linecap="round"
+             stroke-linejoin="round"
+             aria-hidden="true">
           <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/>
         </svg>
+
         {{ contact_phone }}
       </a>
-      <a href="{% url 'contact' %}" class="btn-primary">Book a Viewing</a>
+
+      <a href="{% url 'contact' %}" class="btn-primary">
+        Book a Viewing
+      </a>
     </div>
 
-    <button class="menu-toggle" id="menuToggle" type="button"
-            aria-label="Toggle menu" aria-expanded="false" aria-controls="mobilePanel">
-      <svg class="icon-open" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-           stroke-width="2" stroke-linecap="round" aria-hidden="true">
-        <line x1="4" y1="6"  x2="20" y2="6"/>
+    <button class="menu-toggle"
+            id="menuToggle"
+            type="button"
+            aria-label="Toggle menu"
+            aria-expanded="false"
+            aria-controls="mobilePanel">
+
+      <svg class="icon-open"
+           viewBox="0 0 24 24"
+           fill="none"
+           stroke="currentColor"
+           stroke-width="2"
+           stroke-linecap="round"
+           aria-hidden="true">
+        <line x1="4" y1="6" x2="20" y2="6"/>
         <line x1="4" y1="12" x2="20" y2="12"/>
         <line x1="4" y1="18" x2="20" y2="18"/>
       </svg>
-      <svg class="icon-close" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-           stroke-width="2" stroke-linecap="round" aria-hidden="true">
-        <line x1="6"  y1="6" x2="18" y2="18"/>
-        <line x1="18" y1="6" x2="6"  y2="18"/>
+
+      <svg class="icon-close"
+           viewBox="0 0 24 24"
+           fill="none"
+           stroke="currentColor"
+           stroke-width="2"
+           stroke-linecap="round"
+           aria-hidden="true">
+        <line x1="6" y1="6" x2="18" y2="18"/>
+        <line x1="18" y1="6" x2="6" y2="18"/>
       </svg>
     </button>
 
@@ -256,22 +486,81 @@
 
   <div class="mobile-panel" id="mobilePanel">
     <nav class="container-page mobile-nav" aria-label="Mobile navigation">
-      <a href="{% url 'home' %}" class="mobile-link {% if request.path == '/' %}is-active{% endif %}">Home</a>
-      <a href="{% url 'properties:offplan_properties' %}" class="mobile-link {% if '/off-plan' in request.path %}is-active{% endif %}">Off Plan</a>
-      <a href="{% url 'properties:ready_properties' %}" class="mobile-link {% if '/ready' in request.path %}is-active{% endif %}">Ready</a>
-      <a href="{% url 'properties:developer_list' %}" class="mobile-link {% if '/developer_list' in request.path %}is-active{% endif %}">Developers</a>
-      <a href="{% url 'properties:district_list' %}" class="mobile-link {% if '/district_list' in request.path %}is-active{% endif %}">Areas</a>
-      <a href="{% url 'blogs:event_list' %}" class="mobile-link {% if '/events' in request.path %}is-active{% endif %}">Events</a>
-      <a href="{% url 'blogs:blog_list' %}" class="mobile-link {% if '/insights' in request.path %}is-active{% endif %}">Insights</a>
-      <a href="{% url 'about' %}" class="mobile-link {% if '/about' in request.path %}is-active{% endif %}">About Us</a>
-      <a href="{% url 'contact' %}" class="btn-primary">Book a Viewing</a>
+
+      <a href="{% url 'home' %}"
+         class="mobile-link {% if request.path == '/' %}is-active{% endif %}">
+        Home
+      </a>
+
+      <a href="{% url 'about' %}"
+         class="mobile-link {% if '/about' in request.path %}is-active{% endif %}">
+        About Us
+      </a>
+
+      <a href="{% url 'properties:offplan_properties' %}"
+         class="mobile-link {% if '/off-plan' in request.path %}is-active{% endif %}">
+        Off Plan
+      </a>
+
+      <a href="{% url 'properties:ready_properties' %}"
+         class="mobile-link {% if '/ready' in request.path %}is-active{% endif %}">
+        Ready
+      </a>
+
+      <a href="{% url 'properties:district_list' %}"
+         class="mobile-link {% if '/district_list' in request.path %}is-active{% endif %}">
+        Areas
+      </a>
+
+      <a href="{% url 'properties:developer_list' %}"
+         class="mobile-link {% if '/developer_list' in request.path %}is-active{% endif %}">
+        Developers
+      </a>
+
+      <!-- Mobile Resources Dropdown -->
+      <button class="mobile-dropdown-trigger"
+              type="button"
+              id="mobileResourcesTrigger"
+              aria-expanded="false"
+              aria-controls="mobileResourcesMenu">
+        Resources
+      </button>
+
+      <div class="mobile-dropdown-menu" id="mobileResourcesMenu">
+        <a href="{% url 'blogs:blog_list' %}"
+           class="mobile-dropdown-link {% if '/insights' in request.path %}is-active{% endif %}">
+          Insights
+        </a>
+
+        <a href="{% url 'blogs:event_list' %}"
+           class="mobile-dropdown-link {% if '/events' in request.path %}is-active{% endif %}">
+          Events
+        </a>
+
+        <a href="{% url 'faq' %}"
+           class="mobile-dropdown-link {% if '/faqs' in request.path %}is-active{% endif %}">
+          FAQs
+        </a>
+      </div>
+
+      <a href="{% url 'contact' %}" class="btn-primary">
+        Book a Viewing
+      </a>
+
       <a href="tel:+{{ phone_number }}" class="phone-link">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <svg viewBox="0 0 24 24"
+             fill="none"
+             stroke="currentColor"
+             stroke-width="2"
+             stroke-linecap="round"
+             stroke-linejoin="round"
+             aria-hidden="true">
           <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.9.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92z"/>
         </svg>
+
         {{ contact_phone }}
       </a>
+
     </nav>
   </div>
 </header>
@@ -334,6 +623,32 @@
   panel.querySelectorAll('a').forEach(function (link) {
     link.addEventListener('click', function () { setMenu(false); });
   });
+
+  /* ---- Desktop dropdown ---- */
+  var desktopDropdown = document.getElementById('resourcesDropdown');
+  var desktopTrigger = desktopDropdown.querySelector('.dropdown-trigger');
+  
+  desktopTrigger.addEventListener('click', function () {
+    var isOpen = this.getAttribute('aria-expanded') === 'true';
+    desktopDropdown.classList.toggle('is-open', !isOpen);
+    this.setAttribute('aria-expanded', String(!isOpen));
+  });
+
+  document.addEventListener('click', function (e) {
+    if (!desktopDropdown.contains(e.target)) {
+      desktopDropdown.classList.remove('is-open');
+      desktopTrigger.setAttribute('aria-expanded', 'false');
+    }
+  });
+
+  /* ---- Mobile dropdown ---- */
+  var mobileResourcesTrigger = document.getElementById('mobileResourcesTrigger');
+  if (mobileResourcesTrigger) {
+    mobileResourcesTrigger.addEventListener('click', function () {
+      var isOpen = this.getAttribute('aria-expanded') === 'true';
+      this.setAttribute('aria-expanded', String(!isOpen));
+    });
+  }
 
   document.addEventListener('keydown', function (e) {
     if (e.key === 'Escape' && panel.classList.contains('is-open')) {

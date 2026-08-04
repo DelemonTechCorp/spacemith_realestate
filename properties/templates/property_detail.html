@@ -15,7 +15,7 @@
      Radius is fixed at .5rem across the page for a flatter, uniform look.
      ===================================================================== */
 
-  .pd-top { padding-top: 1.25rem; }
+  .pd-top { padding-top: 4.25rem; }
 
   /* Nothing inside a grid cell may set its own intrinsic width, or the
      whole row blows past the viewport on small screens. */
@@ -757,6 +757,11 @@
         <form class="pd-form" method="post" novalidate>
           {% csrf_token %}
 
+          <div style="position:absolute;left:-9999px;" aria-hidden="true">
+  <label for="id_website">Website</label>
+  <input type="text" name="website" id="id_website" tabindex="-1" autocomplete="off">
+</div>
+
           <div>
             <label class="pd-label" for="id_name">Full name</label>
             <input class="pd-input" type="text" id="id_name" name="name" required
@@ -867,7 +872,7 @@
           <span class="pd-devcard__label">Developer</span>
           <span class="pd-devcard__name">{{ property.developer_company.name }}</span>
           <a class="pd-devcard__link"
-             href="{% url 'properties:property_list' %}?developer={{ property.developer_company.slug }}">
+             href="{% url 'properties:developer_detail' slug=property.developer_company.slug %}">
             View projects
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                  stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>

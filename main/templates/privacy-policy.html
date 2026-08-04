@@ -1,0 +1,1092 @@
+{% extends 'base.html' %}
+
+{% block title %}Privacy Policy | Spacesmith Real Estate{% endblock %}
+{% block meta_description %}Our privacy policy outlines how Spacesmith Real Estate collects, uses, and protects your personal information in compliance with UAE data protection laws.{% endblock %}
+{% block canonical %}{{ request.build_absolute_uri }}/privacy-policy/{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* =====================================================================
+     Privacy Policy — Luxury Legal Design
+     Signature: Serif eyebrow numbering + serif section anchors with
+     refined spacing, a 2-column legal grid on desktop, and gold
+     accent borders throughout.
+     ===================================================================== */
+
+  /* ---- HERO: Luxury dark foundation ---- */
+  .policy-hero {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: var(--cream);
+    padding-block: 3rem 2.5rem;
+    margin-bottom: 2rem;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  /* Subtle decorative element - hidden on mobile */
+  .policy-hero::before {
+    content: "";
+    position: absolute;
+    top: -40%; right: -10%;
+    width: 300px; height: 300px;
+    background: radial-gradient(circle, rgba(212, 175, 55, .08) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+    display: none;
+  }
+
+  .policy-hero::after {
+    content: "";
+    position: absolute;
+    bottom: -30%; left: -5%;
+    width: 250px; height: 250px;
+    background: radial-gradient(circle, rgba(212, 175, 55, .06) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+    display: none;
+  }
+
+  @media (min-width: 480px) {
+    .policy-hero {
+      padding-block: 3.5rem 3rem;
+      margin-bottom: 2.5rem;
+    }
+    .policy-hero::before,
+    .policy-hero::after {
+      display: block;
+    }
+  }
+
+  @media (min-width: 640px) {
+    .policy-hero {
+      padding-block: 4.5rem 3.5rem;
+      margin-bottom: 3rem;
+    }
+  }
+
+  @media (min-width: 768px) {
+    .policy-hero { padding-block: 8rem 6rem; margin-bottom: 6rem; }
+  }
+
+  @media (min-width: 1024px) {
+    .policy-hero { padding-block: 10rem 7rem; }
+  }
+
+  .policy-hero__content {
+    max-width: var(--max-width);
+    margin-inline: auto;
+    padding-inline: 1rem;
+    position: relative;
+    z-index: 2;
+  }
+  @media (min-width: 374px) { .policy-hero__content { padding-inline: 1.25rem;  } }
+  @media (min-width: 375px) { .policy-hero__content { padding-inline: 1.1rem;  } }
+  @media (min-width: 640px) { .policy-hero__content { padding-inline: 1.75rem; } }
+  @media (min-width: 768px) { .policy-hero__content { padding-inline: 2rem; } }
+  @media (min-width: 1280px) { .policy-hero__content { padding-inline: 3rem; } }
+
+  .policy-hero__eyebrow {
+    font-family: var(--font-display);
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--gold);
+    margin: 0 0 0.75rem;
+    font-weight: 400;
+    opacity: 0.95;
+  }
+
+  @media (min-width: 375px) {
+    .policy-hero__eyebrow {
+      font-size: 0.75rem;
+      margin-bottom: 0.875rem;
+    }
+  }
+
+  @media (min-width: 640px) {
+    .policy-hero__eyebrow {
+      font-size: 0.8125rem;
+      margin-bottom: 1rem;
+    }
+  }
+
+  .policy-hero h1 {
+    font-family: var(--font-display);
+    font-size: 1.75rem;
+    font-weight: 500;
+    line-height: 1.08;
+    margin: 0 0 1rem;
+    color: var(--cream);
+    letter-spacing: -0.015em;
+    word-break: break-word;
+  }
+
+  @media (min-width: 375px) {
+    .policy-hero h1 {
+      font-size: 2rem;
+      margin-bottom: 1.125rem;
+    }
+  }
+
+  @media (min-width: 480px) {
+    .policy-hero h1 {
+      font-size: 2.25rem;
+    }
+  }
+
+  @media (min-width: 640px) {
+    .policy-hero h1 {
+      font-size: clamp(2.25rem, 6vw, 3.5rem);
+    }
+  }
+
+  @media (min-width: 768px) {
+    .policy-hero h1 {
+      font-size: clamp(2.75rem, 6vw, 4rem);
+      margin-bottom: 1.5rem;
+    }
+  }
+
+  .policy-hero p {
+    font-size: 0.9375rem;
+    max-width: 100%;
+    margin: 0;
+    color: rgba(246, 242, 233, 0.92);
+    line-height: 1.65;
+    font-weight: 400;
+  }
+
+  @media (min-width: 375px) {
+    .policy-hero p {
+      font-size: 1rem;
+      line-height: 1.7;
+    }
+  }
+
+  @media (min-width: 640px) {
+    .policy-hero p {
+      font-size: clamp(1rem, 3vw, 1.125rem);
+      max-width: 60rem;
+      line-height: 1.75;
+    }
+  }
+
+  /* ---- METADATA BANNER ---- */
+  .policy-meta {
+    background: rgba(212, 175, 55, .04);
+    border: 1px solid rgba(212, 175, 55, .15);
+    border-left: 3px solid var(--gold);
+    border-radius: .5rem;
+    padding: 1rem;
+    margin: 0 0 2rem 0;
+    width: 100%;
+    box-sizing: border-box;
+  }
+
+  @media (min-width: 375px) {
+    .policy-meta { padding: 1.25rem; margin-bottom: 2.5rem; }
+  }
+
+  @media (min-width: 640px) {
+    .policy-meta { padding: 1.5rem; margin-bottom: 3rem; }
+  }
+
+  @media (min-width: 768px) {
+    .policy-meta { padding: 1.75rem 2rem; margin-bottom: 4rem; }
+  }
+
+  .policy-meta p {
+    margin: 0 0 0.5rem;
+    font-size: 0.8125rem;
+    color: var(--muted-foreground);
+    line-height: 1.5;
+  }
+
+  @media (min-width: 375px) {
+    .policy-meta p { font-size: 0.875rem; margin-bottom: 0.625rem; }
+  }
+
+  @media (min-width: 640px) {
+    .policy-meta p { font-size: 0.9375rem; line-height: 1.6; }
+  }
+
+  .policy-meta p:last-child { margin-bottom: 0; }
+  .policy-meta strong { color: var(--primary); font-weight: 600; }
+
+  /* ---- MAIN WRAPPER: 2-column on desktop ---- */
+  .policy-wrapper {
+    width: 100%;
+    max-width: var(--max-width);
+    margin-inline: auto;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2rem;
+    padding-inline: 1rem;
+    padding-block: 2.5rem 2.5rem;
+  }
+  @media (max-width:374px){
+  .policy-wrapper {
+    padding-inline:  1.25rem;
+  }
+}
+
+  @media (min-width: 375px) {
+    .policy-wrapper { 
+      padding-inline: 0.9rem;
+      gap: 2.5rem;
+      padding-block: 2.5rem 3.5rem;
+    }
+  }
+
+  @media (min-width: 480px) {
+    .policy-wrapper { 
+      padding-inline: 1.5rem;
+      gap: 2.75rem;
+    }
+  }
+
+  @media (min-width: 640px) {
+    .policy-wrapper { 
+      padding-inline: 1.75rem;
+      gap: 3rem;
+      padding-block: 3rem 3.5rem;
+    }
+  }
+
+  @media (min-width: 768px) { 
+    .policy-wrapper { 
+      padding-inline: 2rem;
+      padding-block: 3.5rem 5rem;
+    }
+  }
+
+  @media (min-width: 1280px) { 
+    .policy-wrapper { 
+      padding-inline: 3rem;
+    }
+  }
+  
+  @media (min-width: 1024px) {
+    .policy-wrapper {
+      grid-template-columns: 1fr 300px;
+      gap: 3.5rem;
+      padding-block: 4rem 6rem;
+    }
+  }
+
+  @media (min-width: 1280px) {
+    .policy-wrapper {
+      grid-template-columns: 1fr 320px;
+      gap: 5rem;
+    }
+  }
+
+  /* ---- TOC: Sidebar or mobile accordion ---- */
+  .policy-toc {
+    grid-column: 1 / -1;
+    order: -1;
+    background: var(--secondary);
+    border: 1px solid var(--border);
+    border-radius: .5rem;
+    padding: 0.875rem;
+    margin-bottom: 1.25rem;
+  }
+
+@media (max-width:374px){
+
+  .policy-toc {
+      padding: 1rem 1.25rem;
+  }
+
+  .policy-toc ul {
+      grid-template-columns: 1fr;
+  }
+
+}
+
+  @media (min-width: 375px) {
+    .policy-toc { 
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+    }
+  }
+
+  @media (min-width: 640px) {
+    .policy-toc { 
+      padding: 1.25rem;
+      margin-bottom: 1.75rem;
+    }
+  }
+
+  @media (min-width: 768px) {
+    .policy-toc { 
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .policy-toc {
+      grid-column: 2;
+      grid-row: 1 / -1;
+      position: sticky;
+      top: calc(var(--nav-height) + 2rem);
+      height: fit-content;
+      order: 0;
+      padding: 1.75rem;
+      margin-bottom: 0;
+    }
+  }
+
+  @media (min-width: 1280px) {
+    .policy-toc { padding: 2rem; }
+  }
+
+  .policy-toc__title {
+    font-family: var(--font-display);
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--primary);
+    margin: 0 0 0.75rem;
+    font-weight: 600;
+  }
+
+  @media (min-width: 375px) {
+    .policy-toc__title { font-size: 0.7rem; margin-bottom: 0.875rem; }
+  }
+
+  @media (min-width: 640px) {
+    .policy-toc__title { font-size: 0.75rem; margin-bottom: 1rem; }
+  }
+
+  @media (min-width: 1024px) {
+    .policy-toc__title { font-size: 0.8125rem; margin-bottom: 1.25rem; }
+  }
+
+  .policy-toc ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 0.25rem 0.75rem;
+  }
+
+  @media (min-width: 375px) {
+    .policy-toc ul { gap: 0.35rem 0.875rem; }
+  }
+
+  @media (min-width: 640px) {
+    .policy-toc ul { grid-template-columns: repeat(2, 1fr); gap: 0.5rem 1rem; }
+  }
+
+  @media (min-width: 1024px) {
+    .policy-toc ul { 
+      grid-template-columns: 1fr;
+      gap: 0;
+    }
+  }
+
+  .policy-toc li { margin: 0; }
+
+  .policy-toc a {
+    display: block;
+    padding: 0.35rem 0 0.35rem 0.45rem;
+    font-size: 0.65rem;
+    color: var(--muted-foreground);
+    border-left: 2px solid transparent;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    position: relative;
+  }
+
+  @media (min-width: 375px) {
+    .policy-toc a { 
+      padding: 0.4rem 0 0.4rem 0.5rem;
+      font-size: 0.7rem;
+    }
+  }
+
+  @media (min-width: 640px) {
+    .policy-toc a { 
+      padding: 0.5rem 0 0.5rem 0.75rem;
+      font-size: 0.75rem;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .policy-toc a { 
+      padding: 0.625rem 0 0.625rem 1rem;
+      font-size: 0.8125rem;
+    }
+  }
+
+  .policy-toc a:hover {
+    color: var(--primary);
+    border-left-color: var(--gold);
+  }
+
+  .policy-toc a.active {
+    color: var(--primary);
+    border-left-color: var(--gold);
+    font-weight: 500;
+  }
+
+  /* ---- MAIN CONTENT ---- */
+  .policy-content {
+    grid-column: 1 / -1;
+    width: 100%;
+  }
+  @media (min-width: 1024px) {
+    .policy-content { 
+      grid-column: 1;
+    }
+  }
+
+  /* ---- SECTION STYLING ---- */
+  .policy-section {
+    margin-bottom: 2.5rem;
+    scroll-margin-top: calc(var(--nav-height) + 2rem);
+  }
+
+  @media (min-width: 375px) {
+    .policy-section { margin-bottom: 3rem; }
+  }
+
+  @media (min-width: 640px) {
+    .policy-section { margin-bottom: 3.5rem; }
+  }
+
+  @media (min-width: 768px) {
+    .policy-section { margin-bottom: 4.5rem; }
+  }
+
+  .policy-section:last-of-type {
+    margin-bottom: 0;
+  }
+
+  .policy-section h2 {
+    font-family: var(--font-display);
+    font-size: 1.4rem;
+    font-weight: 500;
+    margin: 0 0 1rem;
+    color: var(--primary);
+    line-height: 1.15;
+    letter-spacing: -.015em;
+    position: relative;
+    padding-left: 0;
+  }
+
+  @media (min-width: 375px) {
+    .policy-section h2 {
+      font-size: 1.55rem;
+      margin-bottom: 1.125rem;
+    }
+  }
+
+  @media (min-width: 640px) {
+    .policy-section h2 {
+      font-size: clamp(1.5rem, 5vw, 1.75rem);
+      margin-bottom: 1.25rem;
+    }
+  }
+
+  @media (min-width: 768px) {
+    .policy-section h2 { margin-bottom: 1.5rem; }
+  }
+
+  /* Serif numbering before h2 */
+  .policy-section h2::before {
+    content: attr(data-num);
+    display: block;
+    font-family: var(--font-display);
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: .15em;
+    color: var(--gold);
+    margin-bottom: 0.3rem;
+    font-weight: 400;
+  }
+
+  @media (min-width: 375px) {
+    .policy-section h2::before {
+      font-size: 0.7rem;
+      margin-bottom: 0.375rem;
+    }
+  }
+
+  @media (min-width: 640px) {
+    .policy-section h2::before {
+      font-size: clamp(0.7rem, 2vw, 0.875rem);
+      margin-bottom: 0.5rem;
+    }
+  }
+
+  .policy-section h3 {
+    font-family: var(--font-display);
+    font-size: 1.05rem;
+    font-weight: 500;
+    margin: 1.5rem 0 0.75rem;
+    color: var(--primary);
+    line-height: 1.2;
+  }
+
+  @media (min-width: 375px) {
+    .policy-section h3 {
+      font-size: 1.15rem;
+      margin: 1.625rem 0 0.8rem;
+    }
+  }
+
+  @media (min-width: 640px) {
+    .policy-section h3 {
+      font-size: clamp(1.1rem, 4vw, 1.25rem);
+      margin: 1.75rem 0 0.875rem;
+    }
+  }
+
+  @media (min-width: 768px) {
+    .policy-section h3 { margin: 2rem 0 1rem; }
+  }
+
+  .policy-section h3:first-of-type {
+    margin-top: 0;
+  }
+
+  .policy-section p {
+    margin: 0.875rem 0;
+    color: var(--muted-foreground);
+    line-height: 1.75;
+    font-size: 0.9375rem;
+  }
+
+  @media (min-width: 375px) {
+    .policy-section p {
+      font-size: 0.9625rem;
+      line-height: 1.8;
+    }
+  }
+
+  @media (min-width: 640px) {
+    .policy-section p { 
+      font-size: clamp(0.95rem, 2vw, 1rem);
+      line-height: 1.8;
+      margin: 1rem 0;
+    }
+  }
+
+  @media (min-width: 768px) {
+    .policy-section p { margin: 1.125rem 0; }
+  }
+
+  .policy-section p:first-of-type {
+    margin-top: 0;
+  }
+
+  .policy-section ul, .policy-section ol {
+    margin: 1rem 0 1rem 1.5rem;
+    color: var(--muted-foreground);
+    line-height: 1.8;
+    font-size: 0.9375rem;
+  }
+
+  @media (min-width: 375px) {
+    .policy-section ul, .policy-section ol {
+      margin: 1.125rem 0 1.125rem 1.625rem;
+      font-size: 0.9625rem;
+    }
+  }
+
+  @media (min-width: 640px) {
+    .policy-section ul, .policy-section ol { 
+      margin: 1.25rem 0 1.25rem 1.75rem;
+      font-size: clamp(0.95rem, 2vw, 1rem);
+      line-height: 1.85;
+    }
+  }
+
+  @media (min-width: 768px) {
+    .policy-section ul, .policy-section ol { 
+      margin: 1.5rem 0 1.5rem 2rem;
+      line-height: 1.9;
+    }
+  }
+
+  .policy-section li {
+    margin-bottom: 0.65rem;
+    font-size: 0.9375rem;
+  }
+
+  @media (min-width: 375px) {
+    .policy-section li {
+      margin-bottom: 0.7rem;
+      font-size: 0.9625rem;
+    }
+  }
+
+  @media (min-width: 640px) {
+    .policy-section li { 
+      margin-bottom: 0.75rem;
+      font-size: clamp(0.95rem, 2vw, 1rem);
+    }
+  }
+
+  @media (min-width: 768px) {
+    .policy-section li { margin-bottom: .875rem; }
+  }
+
+  .policy-section li strong {
+    color: var(--primary);
+    font-weight: 600;
+  }
+
+  .policy-section a {
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: 500;
+    border-bottom: 1px solid rgba(10, 42, 32, .2);
+    transition: border-color .2s ease, color .2s ease;
+  }
+  .policy-section a:hover {
+    color: var(--primary-dark);
+    border-bottom-color: var(--primary);
+  }
+
+  /* ---- HIGHLIGHT BOXES ---- */
+  .policy-highlight {
+    background: linear-gradient(135deg, rgba(212, 175, 55, .06) 0%, rgba(212, 175, 55, .02) 100%);
+    border: 1px solid rgba(212, 175, 55, .2);
+    border-left: 4px solid var(--gold);
+    border-radius: .5rem;
+    padding: 1.5rem;
+    margin: 2rem 0;
+    position: relative;
+  }
+  @media (min-width: 768px) {
+    .policy-highlight { padding: 2rem; margin: 2.5rem 0; }
+  }
+
+  .policy-highlight::before {
+    content: "✦";
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    font-size: 1.25rem;
+    color: var(--gold);
+    opacity: .4;
+  }
+  @media (min-width: 768px) {
+    .policy-highlight::before { top: 1.25rem; right: 1.5rem; font-size: 1.5rem; }
+  }
+
+  .policy-highlight p {
+    margin: 0;
+    font-weight: 500;
+    color: var(--primary);
+    font-size: clamp(0.95rem, 2vw, 1rem);
+  }
+
+  /* ---- CONTACT SECTION ---- */
+  .policy-contact {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: var(--cream);
+    border-radius: .5rem;
+    padding: 2rem 1.5rem;
+    margin-top: 4rem;
+    position: relative;
+    overflow: hidden;
+  }
+  @media (min-width: 640px) {
+    .policy-contact { padding: 2.5rem; }
+  }
+  @media (min-width: 768px) {
+    .policy-contact { padding: 3rem; margin-top: 5rem; }
+  }
+
+  .policy-contact::before {
+    content: "";
+    position: absolute;
+    top: 0; right: 0;
+    width: 150px; height: 150px;
+    background: radial-gradient(circle, rgba(212, 175, 55, .1) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+  @media (min-width: 768px) {
+    .policy-contact::before { width: 200px; height: 200px; }
+  }
+
+  .policy-contact > * { position: relative; z-index: 1; }
+
+  .policy-contact h3 {
+    font-size: clamp(1.1rem, 4vw, 1.375rem);
+    margin: 0 0 1rem;
+    color: var(--cream);
+    font-family: var(--font-display);
+  }
+  @media (min-width: 768px) {
+    .policy-contact h3 { margin: 0 0 1.25rem; }
+  }
+
+  .policy-contact p {
+    margin: 0.625rem 0;
+    color: rgba(246, 242, 233, .92);
+    font-size: clamp(0.9375rem, 2vw, 1rem);
+    line-height: 1.6;
+  }
+  @media (min-width: 768px) {
+    .policy-contact p { margin: 0.75rem 0; }
+  }
+
+  .policy-contact a {
+    color: var(--gold);
+    border-bottom: 1px solid rgba(212, 175, 55, .4);
+    text-decoration: none;
+    transition: opacity .2s ease;
+  }
+  .policy-contact a:hover {
+    opacity: .85;
+  }
+
+  /* ---- DIVIDER ---- */
+  .policy-divider {
+    height: 1px;
+    background: linear-gradient(to right, transparent, var(--border), transparent);
+    margin: 2.5rem 0;
+  }
+  @media (min-width: 768px) {
+    .policy-divider { margin: 3rem 0; }
+  }
+
+  /* ---- REDUCED MOTION ---- */
+  @media (prefers-reduced-motion: reduce) {
+    .policy-toc a { transition: none; }
+    .policy-section a { transition: none; }
+  }
+
+
+  /* ===== Small Mobile Fix 320px ===== */
+
+@media (max-width:374px){
+
+  .policy-hero__content {
+    padding-inline:1.25rem;
+  }
+
+  .policy-wrapper {
+    padding-inline:1.25rem;
+  }
+
+  .policy-toc {
+    padding:1rem 1.25rem;
+  }
+
+  .policy-toc ul {
+    grid-template-columns:1fr;
+  }
+
+  .policy-section h2 {
+    font-size:1.3rem;
+  }
+
+  .policy-contact {
+    padding:1.5rem 1rem;
+  }
+
+}
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- ================= HERO ================= -->
+<section class="policy-hero">
+  <div class="policy-hero__content">
+    <p class="policy-hero__eyebrow">Legal &amp; Transparency</p>
+    <h1>Privacy Policy</h1>
+    <p>At Spacesmith Real Estate, we believe transparency builds trust. This policy explains exactly how we collect, use, and protect your personal information in compliance with UAE data protection standards.</p>
+  </div>
+</section>
+
+<!-- ================= MAIN CONTENT ================= -->
+<div class="policy-wrapper">
+
+    <!-- ---- TABLE OF CONTENTS ---- -->
+    <nav class="policy-toc" id="tocNav">
+      <h3 class="policy-toc__title">Contents</h3>
+      <ul>
+        <li><a href="#overview" class="toc-link">Overview</a></li>
+        <li><a href="#information-we-collect" class="toc-link">Information We Collect</a></li>
+        <li><a href="#how-we-use" class="toc-link">How We Use Your Information</a></li>
+        <li><a href="#cookies" class="toc-link">Cookies &amp; Tracking</a></li>
+        <li><a href="#data-sharing" class="toc-link">Data Sharing</a></li>
+        <li><a href="#your-rights" class="toc-link">Your Rights</a></li>
+        <li><a href="#security" class="toc-link">Data Security</a></li>
+        <li><a href="#retention" class="toc-link">Data Retention</a></li>
+        <li><a href="#contact" class="toc-link">Contact Us</a></li>
+      </ul>
+    </nav>
+
+    <!-- ---- MAIN POLICY ---- -->
+    <article class="policy-content">
+
+      <div class="policy-meta">
+        <p><strong>Last Updated:</strong> August 1, 2026</p>
+        <p>This policy applies to all Spacesmith Real Estate services and websites.</p>
+      </div>
+
+      <!-- ---- SECTION: OVERVIEW ---- -->
+      <section class="policy-section" id="overview">
+        <h2 data-num="Overview">Who We Are</h2>
+        <p>Spacesmith Real Estate LLC is a boutique real estate consultancy based in Dubai, United Arab Emirates, specializing in luxury residential and commercial property advisory across the Emirates. We handle sensitive client information—investment preferences, property portfolios, financial details—with the utmost care and discretion.</p>
+        <p>This Privacy Policy applies to our website (spacesmithrealestate.com), mobile applications, WhatsApp communications, email, phone interactions, and any service we provide. By engaging with Spacesmith, you agree to the practices outlined in this policy.</p>
+        <div class="policy-highlight">
+          <p><strong>Jurisdiction &amp; Compliance:</strong> This policy complies with UAE personal data protection standards and international best practices. If you are located outside the UAE, local privacy laws may provide additional rights.</p>
+        </div>
+      </section>
+
+      <!-- ---- SECTION: INFORMATION WE COLLECT ---- -->
+      <section class="policy-section" id="information-we-collect">
+        <h2 data-num="Data Collection">What Information We Gather</h2>
+        <p>We collect information in three ways: what you tell us, what we observe about how you interact with our services, and what trusted partners share with us.</p>
+
+        <h3>Information You Provide Directly</h3>
+        <ul>
+          <li><strong>Contact Information:</strong> name, email address, phone number, WhatsApp number, postal address</li>
+          <li><strong>Property Preferences:</strong> location interests, property type, budget range, investment timeline</li>
+          <li><strong>Account Information:</strong> login credentials, profile information if you register on our platform</li>
+          <li><strong>Inquiry & Communication:</strong> messages sent via contact forms, emails, WhatsApp, or phone calls</li>
+          <li><strong>Payment Information:</strong> for services rendered, processed securely via third-party payment gateways</li>
+        </ul>
+
+        <h3>Information Collected Automatically</h3>
+        <ul>
+          <li><strong>Browsing Data:</strong> pages visited, time spent, navigation paths, referral sources</li>
+          <li><strong>Device Information:</strong> IP address, browser type, device type, operating system</li>
+          <li><strong>Cookies &amp; Trackers:</strong> via Google Analytics, Google Tag Manager, Meta Pixel (see Cookies section)</li>
+          <li><strong>Location Data:</strong> approximate location (not precise) based on IP address, used to improve local service recommendations</li>
+        </ul>
+
+        <h3>Information from Third Parties</h3>
+        <ul>
+          <li><strong>Lead Enrichment Services:</strong> demographic and business data to improve lead quality</li>
+          <li><strong>Social Media:</strong> publicly available information if you interact with us on Facebook, Instagram, LinkedIn, or TikTok</li>
+          <li><strong>CRM &amp; Integration Partners:</strong> property data, market analytics, and client relationship tools</li>
+        </ul>
+      </section>
+
+      <!-- ---- SECTION: HOW WE USE ---- -->
+      <section class="policy-section" id="how-we-use">
+        <h2 data-num="Usage">How We Use Your Data</h2>
+        <p>Your information enables us to deliver our core service: connecting you with properties and investment opportunities that match your goals. We process data only for legitimate, clearly defined purposes:</p>
+
+        <h3>Service Delivery</h3>
+        <ul>
+          <li>Responding to inquiries and processing property requests</li>
+          <li>Providing property listings, market insights, and advisory services</li>
+          <li>Processing transactions and managing client relationships</li>
+          <li>Sending transactional emails (confirmations, invoices, updates)</li>
+        </ul>
+
+        <h3>Marketing &amp; Communications</h3>
+        <ul>
+          <li>Sending newsletters, property alerts, and market updates (with your consent)</li>
+          <li>Targeted advertising via Meta, Google, and other platforms</li>
+          <li>Personalizing website content based on browsing behavior</li>
+          <li>Following up on inquiries and nurturing leads</li>
+        </ul>
+
+        <h3>Analytics &amp; Improvement</h3>
+        <ul>
+          <li>Analyzing website traffic to improve user experience</li>
+          <li>Understanding property interests and market demand</li>
+          <li>Testing new features and optimizing our services</li>
+          <li>Creating anonymized, aggregated reports</li>
+        </ul>
+
+        <h3>Legal &amp; Compliance</h3>
+        <ul>
+          <li>Complying with UAE legal and regulatory obligations</li>
+          <li>Preventing fraud and ensuring platform security</li>
+          <li>Defending legal claims and protecting our rights</li>
+        </ul>
+      </section>
+
+      <!-- ---- SECTION: COOKIES ---- -->
+      <section class="policy-section" id="cookies">
+        <h2 data-num="Tracking">Cookies &amp; Site Analytics</h2>
+
+        <h3>What Are Cookies?</h3>
+        <p>Cookies are small text files stored on your browser. We use them to recognize you, remember preferences, and track how you interact with our website.</p>
+
+        <h3>Types of Cookies We Use</h3>
+        <ul>
+          <li><strong>Essential Cookies:</strong> Required for basic site functionality (e.g., security, navigation)</li>
+          <li><strong>Analytics Cookies:</strong> Google Analytics – tracks visitor behavior to improve our website</li>
+          <li><strong>Marketing Cookies:</strong> Meta Pixel, Google Ads – used to deliver targeted advertising and measure campaign performance</li>
+          <li><strong>Preference Cookies:</strong> Remember your language, theme, and UI preferences</li>
+        </ul>
+
+        <h3>Third-Party Tracking</h3>
+        <ul>
+          <li><strong>Google Tag Manager (GTM):</strong> Manages and deploys analytics and marketing tags</li>
+          <li><strong>Meta Pixel:</strong> Tracks conversions for Facebook/Instagram advertising</li>
+          <li><strong>Google Analytics:</strong> Provides website traffic and user behavior insights</li>
+        </ul>
+
+        <h3>Cookie Consent &amp; Control</h3>
+        <p>Most browsers allow you to refuse cookies or alert you when they are being sent. You can also use browser settings to delete cookies or clear your browsing history. However, disabling cookies may limit your ability to use certain features of our website.</p>
+      </section>
+
+      <!-- ---- SECTION: DATA SHARING ---- -->
+      <section class="policy-section" id="data-sharing">
+        <h2 data-num="Sharing">Who We Share Data With</h2>
+
+        <h3>We Do NOT Sell Your Data</h3>
+        <p>Spacesmith Real Estate does not sell, trade, or rent your personal information to third parties for marketing purposes.</p>
+
+        <h3>We May Share Your Data With</h3>
+        <ul>
+          <li><strong>Service Providers:</strong> Payment processors, email service providers (Brevo), CRM systems, hosting providers</li>
+          <li><strong>Marketing Partners:</strong> Google, Meta, and other advertising platforms (for targeted campaigns)</li>
+          <li><strong>Legal &amp; Regulatory:</strong> Government authorities if required by law</li>
+          <li><strong>Business Partners:</strong> Property developers, investors, and co-agents (only when necessary for service delivery)</li>
+        </ul>
+
+        <h3>International Data Transfers</h3>
+        <p>Your data may be processed and stored on servers located outside the UAE. We ensure appropriate safeguards are in place when transferring data internationally, including standard contractual clauses and data protection agreements.</p>
+      </section>
+
+      <!-- ---- SECTION: YOUR RIGHTS ---- -->
+      <section class="policy-section" id="your-rights">
+        <h2 data-num="Rights">Your Privacy Rights &amp; Control</h2>
+        <p>Depending on your location and applicable laws, you may have the following rights:</p>
+
+        <h3>Right to Access</h3>
+        <p>You can request a copy of all personal data we hold about you.</p>
+
+        <h3>Right to Correction</h3>
+        <p>You can ask us to correct inaccurate or incomplete information.</p>
+
+        <h3>Right to Deletion</h3>
+        <p>You can request deletion of your personal data, subject to legal obligations or legitimate business needs.</p>
+
+        <h3>Right to Opt-Out</h3>
+        <p>You can unsubscribe from marketing emails, promotional SMS, and targeted advertising at any time by clicking "unsubscribe" in communications or contacting us directly.</p>
+
+        <h3>Right to Data Portability</h3>
+        <p>You can request your data in a structured, machine-readable format for transfer to another service provider.</p>
+
+        <h3>Right to Withdraw Consent</h3>
+        <p>Where we rely on your consent for processing, you can withdraw that consent at any time.</p>
+
+        <h3>How to Exercise Your Rights</h3>
+        <p>To exercise any of these rights, please contact us at <strong>privacy@spacesmithrealestate.com</strong> with clear details of your request. We will respond within 30 days.</p>
+      </section>
+
+      <!-- ---- SECTION: SECURITY ---- -->
+      <section class="policy-section" id="security">
+        <h2 data-num="Security">How We Protect Your Information</h2>
+        <p>We treat your data with the same confidentiality and security we would apply to our own. Our security infrastructure includes:</p>
+        <ul>
+          <li>Encrypted connections (HTTPS) for all web traffic</li>
+          <li>Secure password policies and access controls</li>
+          <li>Regular security audits and vulnerability assessments</li>
+          <li>Limited access to personal data (only authorized personnel)</li>
+          <li>Data protection agreements with service providers</li>
+        </ul>
+        <p class="policy-highlight">While we implement robust security practices, no system is 100% secure. If you suspect a data breach, please notify us immediately at the contact details below.</p>
+      </section>
+
+      <!-- ---- SECTION: RETENTION ---- -->
+      <section class="policy-section" id="retention">
+        <h2 data-num="Retention">How Long We Keep Your Data</h2>
+        <p>We retain personal information for as long as necessary to provide our services and fulfill the purposes outlined in this policy:</p>
+        <ul>
+          <li><strong>Client Data:</strong> Retained for the duration of the business relationship + 5 years (for legal/tax compliance)</li>
+          <li><strong>Inquiry Data:</strong> Retained for 2 years unless you request deletion</li>
+          <li><strong>Marketing Preferences:</strong> Updated based on consent changes</li>
+          <li><strong>Website Analytics:</strong> Aggregate data retained indefinitely; individual tracking data deleted after 26 months</li>
+          <li><strong>Cookies:</strong> Deleted based on expiration dates set by browser</li>
+        </ul>
+      </section>
+
+      <div class="policy-divider"></div>
+
+      <!-- ---- SECTION: CONTACT ---- -->
+      <section class="policy-section" id="contact">
+        <h2 data-num="Contact">Questions or Concerns</h2>
+        <p>We're transparent about how we handle data. If you have privacy questions, requests, or concerns, please reach out:</p>
+        
+        <div class="policy-contact">
+          <h3>Contact Spacesmith Privacy Team</h3>
+          <p><strong>Email:</strong> <a href="mailto:privacy@spacesmithrealestate.com">privacy@spacesmithrealestate.com</a></p>
+          <p><strong>Phone:</strong> <a href="tel:+971556399212">+971 55 6399 212</a></p>
+          <p><strong>WhatsApp:</strong> <a href="https://wa.me/971556399212">Message us on WhatsApp</a></p>
+
+          <h3 style="margin-top: 2.25rem;">Mailing Address</h3>
+          <p>Spacesmith Real Estate LLC<br>
+          117, Royal Class Building<br>
+          Dubai Investment Park First<br>
+          Dubai, UAE</p>
+
+          <p style="margin-top: 1.75rem; font-size: .9375rem;">
+            <strong>Response time:</strong> We aim to respond to all privacy requests within 30 days. If you're unsatisfied with our response, you may escalate to the relevant data protection authority.
+          </p>
+        </div>
+      </section>
+
+      <!-- ---- SECTION: UPDATES ---- -->
+      <section class="policy-section">
+        <h2 data-num="Updates">Policy Changes</h2>
+        <p>As our business evolves and privacy regulations change, we may update this policy. We'll always update the "Last Updated" date and notify you of material changes via email when required.</p>
+        <p>Continued use of our services after updates means you accept the revised terms. We encourage you to review this policy regularly.</p>
+      </section>
+
+    </article>
+
+</div>
+
+<script>
+  (function () {
+    // ---- Scroll spy: highlight active TOC link ---- 
+    var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var tocLinks = document.querySelectorAll('.toc-link');
+    var sections = document.querySelectorAll('[id^="overview"], [id^="information"], [id^="how-we-use"], [id^="cookies"], [id^="data-sharing"], [id^="your-rights"], [id^="security"], [id^="retention"], [id^="contact"]');
+
+    if ('IntersectionObserver' in window && tocLinks.length > 0) {
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (entry) {
+          var id = entry.target.id;
+          var link = document.querySelector('a[href="#' + id + '"]');
+          if (!link) return;
+
+          if (entry.isIntersecting) {
+            tocLinks.forEach(function (l) { l.classList.remove('active'); });
+            link.classList.add('active');
+          }
+        });
+      }, { threshold: 0.2, rootMargin: '0px 0px -60% 0px' });
+
+      sections.forEach(function (el) { if (el) io.observe(el); });
+    }
+
+    // ---- Smooth scroll to hash on click ---- 
+    tocLinks.forEach(function (link) {
+      link.addEventListener('click', function (e) {
+        e.preventDefault();
+        var href = this.getAttribute('href');
+        var target = document.querySelector(href);
+        if (target) {
+          window.scrollTo({
+            top: target.offsetTop - (parseInt(getComputedStyle(document.documentElement).getPropertyValue('--nav-height')) || 80),
+            behavior: reduced ? 'auto' : 'smooth'
+          });
+        }
+      });
+    });
+  })();
+</script>
+
+{% endblock %}

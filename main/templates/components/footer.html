@@ -8,12 +8,12 @@
 
   /* full-bleed background photo behind the whole footer, with a dark
      scrim layered on top so the columns of text stay fully legible.
-     Save the image to your project's static/img/career-bg.png. */
+     Save the image to your project's static/img/career-bg.webp. */
   .footer__logo-mark {
     position: absolute;
     inset: 0;
     z-index: 0;
-    background-image: url("{% static 'img/career-bg.png' %}");
+    background-image: url("{% static 'img/career-bg.webp' %}");
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
@@ -23,7 +23,7 @@
     position: absolute;
     inset: 0;
     z-index: 0;
-    background: linear-gradient(180deg, rgba(11,21,18,.76) 0%, rgba(11,21,18,.74) 100%);
+    background: linear-gradient(180deg, rgba(11,21,18,.86) 0%, rgba(11,21,18,.84) 100%);
     pointer-events: none;
   }
 
@@ -175,7 +175,7 @@
     <!-- Brand -->
     <div>
       <a href="{% url 'home' %}" class="footer__brand-row">
-        <img src="{% static 'img/logo-ss.png' %}" alt="Spacesmith Real Estate">
+        <img src="{% static 'img/logo-ss.webp' %}" alt="Spacesmith Real Estate">
         <div>
           <p class="footer__brand-name">spacesmith</p>
           <p class="footer__brand-sub">Real Estate</p>
@@ -192,13 +192,13 @@
     <div>
       <h4 class="footer__heading">Explore</h4>
       <ul class="footer__links">
-        <li><a href="">Home</a></li>
-        <li><a href="">About</a></li>
-        <li><a href="">Off Plan</a></li>
-        <li><a href="">Ready Properties</a></li>
+        <li><a href="{% url 'home' %}">Home</a></li>
+        <li><a href="{% url 'about' %}">About</a></li>
+        <li><a href="{% url 'properties:offplan_properties' %}">Off Plan</a></li>
+        <li><a href="{% url 'properties:ready_properties' %}">Ready Properties</a></li>
         {# TODO: swap for {% url 'blog_list' %} once confirmed #}
-        <li><a href="">Insights</a></li>
-        <li><a href="">Contact</a></li>
+        <li><a href="{% url 'blogs:blog_list' %}">Insights</a></li>
+        <li><a href="{% url 'contact' %}">Contact</a></li>
       </ul>
     </div>
 
@@ -232,7 +232,7 @@
       </p>
 
       {# Wire the action to your subscribe view, then delete the JS handler below. #}
-      <form class="footer__form" id="newsletterForm" method="post" action="" autocomplete="off">
+      <form class="footer__form" id="newsletterForm" method="post" action="{% url 'subscribe_newsletter' %}" autocomplete="off">
         {% csrf_token %}
         <label for="newsletterEmail" class="sr-only" hidden>Email address</label>
         <input type="email" id="newsletterEmail" name="email" required placeholder="you@email.com">
@@ -265,8 +265,8 @@
     <div class="container-page footer__bottom-inner">
       <p id="footerCopy">&copy; Spacesmith Real Estate LLC. All rights reserved.</p>
       <div class="footer__legal">
-        <a href="/privacy-policy/">Privacy Policy</a>
-        <a href="/faq/">FAQ</a>
+        <a href="{% url 'privacy-policy' %}">Privacy Policy</a>
+        <a href="{% url 'faq' %}">FAQ</a>
       </div>
     </div>
   </div>
@@ -280,13 +280,44 @@
       ' Spacesmith Real Estate LLC. All rights reserved.';
   }
 
-  /* Remove this block once the form posts to a real view. */
   var form = document.getElementById('newsletterForm');
   var msg  = document.getElementById('newsletterMsg');
-  if (form && !form.getAttribute('action')) {
+  if (form) {
     form.addEventListener('submit', function (e) {
       e.preventDefault();
-      if (msg) msg.textContent = 'Subscribe endpoint not connected yet.';
+      var btn = form.querySelector('button[type="submit"]');
+      var csrf = form.querySelector('[name=csrfmiddlewaretoken]').value;
+
+      if (msg) { msg.style.color = 'var(--gold)'; msg.textContent = ''; }
+      if (btn) btn.disabled = true;
+
+      fetch(form.action, {
+        method: 'POST',
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest',
+          'X-CSRFToken': csrf,
+        },
+        body: new FormData(form),
+      })
+        .then(function (res) { return res.json(); })
+        .then(function (data) {
+          if (msg) {
+            msg.textContent = data.message;
+            msg.style.color = data.status === 'success' ? 'var(--gold)' : 'rgba(246,242,233,.7)';
+          }
+          if (data.status === 'success') {
+            form.reset();
+          }
+        })
+        .catch(function () {
+          if (msg) {
+            msg.textContent = 'Something went wrong. Please try again.';
+            msg.style.color = '#e08a80';
+          }
+        })
+        .finally(function () {
+          if (btn) btn.disabled = false;
+        });
     });
   }
 })();

@@ -4,7 +4,7 @@ from .models import PropertyEnquiry
 
 class PropertyEnquiryForm(forms.ModelForm):
     """
-    Enquiry form used on the SKC property detail page.
+    Enquiry form used on the spacesmith property detail page.
 
     Notes:
     - `phone` / `whatsapp` arrive already assembled with country code
@@ -12,9 +12,17 @@ class PropertyEnquiryForm(forms.ModelForm):
     - `message` is optional (model has blank=True, default='').
     """
 
+    website = forms.CharField(required=False, widget=forms.HiddenInput)   # honey pot
+    
     class Meta:
         model = PropertyEnquiry
         fields = ['name', 'email', 'phone', 'whatsapp', 'message']
+    
+    # honey pot   
+    def clean_website(self):
+        if self.cleaned_data.get('website'):
+            raise forms.ValidationError('Spam detected.')
+        return ''
 
     def clean_name(self):
         name = (self.cleaned_data.get('name') or '').strip()

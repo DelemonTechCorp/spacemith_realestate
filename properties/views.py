@@ -584,7 +584,7 @@ def property_detail(request, slug):
         meta_title = _pick([property_obj.meta_title, property_obj.title])
     else:
         meta_title = _pick([
-            f'{property_obj.title} | {district}, {city} | {BRAND}',
+            f'{property_obj.title} {city} | {BRAND}',
             f'{property_obj.title} | {district}, {city}',
             f'{property_obj.title} | {district}',
             f'{property_obj.title} | {BRAND}',
@@ -596,12 +596,13 @@ def property_detail(request, slug):
     status = property_obj.property_status.name.lower() if property_obj.property_status else 'residential'
 
     meta_description = _describe(
-        property_obj.meta_description or (
-            f'{property_obj.title} is a {status} development by {developer} in '
-            f'{district}, {city}. Starting from {price_str}.'
-        ),
-        filler=f'Payment plans and availability from {BRAND}.',
-    )
+    property_obj.meta_description or (
+        f'{property_obj.title} is a {status} development by {developer} '
+        f'in {district}, {city}. Discover luxury residences, modern amenities, '
+        f'investment opportunities and flexible payment plans. Starting from {price_str}.'
+    ),
+    filler=f'Contact {BRAND} for latest availability.'
+)
 
     # Final guarantee — nothing leaves this view outside the display windows.
     meta_title, meta_description, seo_report = _audit_seo(
@@ -1650,7 +1651,7 @@ def district_detail(request, slug):
     price_bit = (f' from AED {int(low_price):,}' if low_price else '')
     base_description = admin_copy or (
         f'Browse {area_total} propert{"y" if area_total == 1 else "ies"} for sale '
-        f'in {name}, {city}{price_bit} — off-plan and ready homes with payment plans.'
+        f'in {name}, {city}{price_bit} — off-plan and ready homes with flexible payment plans, premium amenities, and investment opportunities in Dubai.'
     )
     meta_description = _describe(
         strip_tags(base_description),

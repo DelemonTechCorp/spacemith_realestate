@@ -81,7 +81,7 @@
 
   .hero__title {
     font-family: var(--font-display);
-    font-size: clamp(2.25rem, 7vw, 4.5rem);
+    font-size: clamp(2rem, 7vw, 4.1rem);
     line-height: 1.05;
     color: var(--cream);
     margin: 1.25rem 0 0;
@@ -110,7 +110,7 @@
     border: 1px solid rgba(246,242,233,.18);
     backdrop-filter: blur(14px);
     -webkit-backdrop-filter: blur(14px);
-    border-radius: 1.25rem;
+    border-radius: .5rem;
     padding: 1.125rem;
   }
   @media (min-width: 640px) {
@@ -135,7 +135,7 @@
   .filter .field select,
   .filter .field input {
     height: 2.75rem;
-    border-radius: .625rem;
+    border-radius: .5rem;
     border: 1px solid rgba(246,242,233,.25);
     background: rgba(11,21,18,.4);
     color: var(--cream);
@@ -256,15 +256,16 @@
         We find your space
       </span>
 
-      <h1 class="hero__title">
-        Smart homes.<br>
-        <span class="accent">Strong investments.</span>
-      </h1>
+     <h1 class="hero__title hero__title--inline">
+  Smart Homes <span class="separator">|</span>
+  Strong Investments <span class="separator">|</span>
+  <span class="accent">Future-Ready Living</span>
+</h1>
 
-      <p class="hero__copy">
+      <!-- <p class="hero__copy">
         Spacesmith connects you with off-plan launches and ready homes across Dubai —
         backed by market insight, legal due diligence and honest advice.
-      </p>
+      </p> -->
     </div>
 
     <!-- ---- Search: submits to the property list page ---- -->
@@ -454,28 +455,23 @@
 
 <!-- ---------------------------------------------------section 2----------------------------------------------- -->
 
+
 <style>
 
   .trust {
     position: relative;
     isolation: isolate;
     overflow: hidden;
-     padding-top: 4rem;
+    padding-top: 4rem;
     padding-bottom: 2rem;
-    /* Not flat white — a barely-there warm wash gives the white cards in
-       later sections something to sit against. */
     background:
       radial-gradient(120% 90% at 50% -10%, color-mix(in srgb, var(--primary) 5%, transparent), transparent 60%),
       linear-gradient(180deg, #fffefb 0%, var(--background) 55%);
   }
-  @media (min-width: 1024px) { 
-    .trust { 
-        padding-top: 4rem;
-        padding-bottom: 3rem;
-    }
-}
- 
-  /* ---- Wordmark watermark ---- */
+  @media (min-width: 1024px) {
+    .trust { padding-top: 4rem; padding-bottom: 3rem; }
+  }
+
   .trust__watermark {
     position: absolute;
     top: 0; left: 50%;
@@ -487,8 +483,7 @@
     pointer-events: none;
     z-index: -2;
   }
- 
-  /* ---- Hairline grid, bottom-right: the drafting table under the deal ---- */
+
   .trust::after {
     content: "";
     position: absolute; right: 0; bottom: 0;
@@ -501,26 +496,23 @@
     -webkit-mask-image: radial-gradient(75% 75% at 92% 92%, #000, transparent 72%);
             mask-image: radial-gradient(75% 75% at 92% 92%, #000, transparent 72%);
   }
- 
+
   .trust__grid {
     position: relative;
     display: grid;
-    gap: 3.5rem;
+    gap: 1rem;
     grid-template-columns: 1fr;
-    align-items: center;
+    align-items: start;
   }
+  /* Left = text, middle = logo, right = features.
+     align-items: start keeps all three columns flush with the top of
+     the section instead of vertically centering against the tallest one. */
   @media (min-width: 1024px) {
-    .trust__grid { grid-template-columns: 1.02fr 0.98fr 0.72fr; gap: 2.5rem; }
+    .trust__grid { grid-template-columns: 1fr 1.2fr 0.5fr; gap: 1rem; }
   }
-  @media (min-width: 1280px) { .trust__grid { gap: 4rem; } }
- 
-  /* =====================================================================
-     COPY
-     ===================================================================== */
+  @media (min-width: 1280px) { .trust__grid { gap:1rem; } }
+
   .trust__eyebrow {
-    display: flex;
-    align-items: center;
-    gap: .875rem;
     margin: 0 0 1.5rem;
     font-size: .6875rem;
     font-weight: 600;
@@ -528,25 +520,16 @@
     letter-spacing: .32em;
     color: var(--primary);
   }
-  .trust__eyebrow::before {
-    content: "";
-    width: 2.75rem; height: 1px;
-    background: var(--gold);
-    transform-origin: left;
-    animation: ruleIn .9s cubic-bezier(.2,.8,.2,1) both;
-  }
-  @keyframes ruleIn { from { transform: scaleX(0); } to { transform: scaleX(1); } }
- 
+
   .trust__headline {
     margin: 0 0 1.75rem;
     font-family: var(--font-display);
     font-weight: 500;
-    font-size: clamp(2.5rem, 5.6vw, 4rem);
+    font-size: clamp(2rem, 5.6vw, 3.5rem);
     line-height: 1.02;
     letter-spacing: -.01em;
     color: var(--primary);
   }
-  /* "Opportunity" carries the gold — the one word the section is about */
   .trust__headline em {
     display: block;
     font-style: normal;
@@ -560,208 +543,265 @@
     animation: goldDrift 7s linear infinite;
   }
   @keyframes goldDrift { to { background-position: 220% center; } }
- 
+
   .trust__text {
     margin: 0;
-    max-width: 40ch;
-    font-size: .9375rem;
+    max-width: 66ch;
+    font-size: .9rem;
     line-height: 1.75;
     color: var(--muted-foreground);
     text-wrap: pretty;
   }
   .trust__text + .trust__text { margin-top: 1.25rem; }
- 
-  /* ---- Read More: the ring fills from the centre ---- */
-  .trust__readmore {
+
+.trust__readmore {
     position: relative;
-    display: inline-grid;
-    place-items: center;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .5rem;
+
     margin-top: 2.5rem;
-    width: 6.5rem; height: 6.5rem;
-    border-radius: 50%;
-    color: var(--primary);
-    font-size: .75rem;
-    font-weight: 600;
-    letter-spacing: .08em;
-    text-transform: uppercase;
-    transition: color .4s ease;
-  }
-  .trust__readmore span { position: relative; z-index: 1; }
-  .trust__readmore::before {
-    content: "";
-    position: absolute; inset: 0;
-    border-radius: 50%;
-    border: 1px solid color-mix(in srgb, var(--primary) 30%, transparent);
-    transition: border-color .4s ease;
-  }
-  .trust__readmore::after {
-    content: "";
-    position: absolute; inset: 0;
-    border-radius: 50%;
-    background: var(--primary);
-    transform: scale(0);
-    transition: transform .45s cubic-bezier(.2,.8,.2,1);
-  }
-  .trust__readmore:hover { color: var(--primary-foreground); }
-  .trust__readmore:hover::after  { transform: scale(1); }
-  .trust__readmore:hover::before { border-color: var(--gold); }
- 
-  /* =====================================================================
-     LOGO + ORBIT — the signature
-     ===================================================================== */
-  .trust__logo {
-    position: relative;
-    display: grid;
-    place-items: center;
-    aspect-ratio: 1;
-  }
-  .trust__logo img {
+
+    border-radius: 9999px;
+    padding: .75rem 1.5rem;
+
+        background: var(--primary);
+    color: var(--primary-foreground);
+    font-family: inherit;
+    font-size: .875rem;
+    font-weight: 500;
+    line-height: 1;
+
+    white-space: nowrap;
+    cursor: pointer;
+
+    border: 1px solid var(--primary);
+
+    transition:
+        background-color .2s ease,
+        color .2s ease,
+        filter .2s ease,
+        transform .2s ease;
+}
+
+.trust__readmore span {
     position: relative;
     z-index: 1;
-    width: 74%;
-    max-width: 26rem;
-    height: auto;
-    object-fit: contain;
-    filter: drop-shadow(0 24px 48px color-mix(in srgb, var(--primary) 20%, transparent));
-  }
- 
-  /* The orbit from the mark, redrawn full scale. Tilted to match the
-     ellipse, one turn every 40s — slow enough to read as ambient. */
-  .trust__orbit {
-    position: absolute;
-    inset: 4%;
-    border-radius: 50%;
-    border: 1px solid color-mix(in srgb, var(--gold) 42%, transparent);
-    border-bottom-color: transparent;
-    border-right-color: color-mix(in srgb, var(--gold) 14%, transparent);
-    rotate: x 62deg;
-    animation: orbitSpin 40s linear infinite;
-  }
-  .trust__orbit--outer {
-    inset: -4%;
-    border-color: color-mix(in srgb, var(--primary) 14%, transparent);
-    border-top-color: color-mix(in srgb, var(--gold) 30%, transparent);
-    animation-duration: 64s;
-    animation-direction: reverse;
-  }
-  @keyframes orbitSpin { to { rotate: x 62deg z 360deg; } }
- 
-  /* Warm halo so the mark sits in light rather than on flat white */
-  .trust__logo::before {
-    content: "";
-    position: absolute;
-    inset: 8%;
-    z-index: 0;
-    border-radius: 50%;
-    background: radial-gradient(circle,
-      color-mix(in srgb, var(--gold) 13%, transparent) 0%,
-      color-mix(in srgb, var(--gold) 4%, transparent) 45%,
-      transparent 70%);
-  }
- 
+}
+
+.trust__readmore:hover {
+    background: var(--primary-dark);    
+}
+
+
   /* =====================================================================
-     FEATURES
+     LOGO — desktop: fills its (wider) column, allowed to bleed slightly
+     past the column edge for more visual weight. Top-aligned so it
+     starts level with the heading, not vertically centered. Static,
+     no rings, no animation.
      ===================================================================== */
-  .trust__features { display: flex; flex-direction: column; }
- 
-  .trust__feature {
+
+  /* Align left, centre and right blocks from the same top position */
+  .trust__copy,
+  .trust__logo,
+  .trust__features {
+    align-self: start;
+    margin-top: 0;
+  }
+     
+  .trust__logo {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
     position: relative;
-    padding-block: 1.5rem;
-    transition: padding-left .4s cubic-bezier(.2,.8,.2,1);
+    top: -40px;
+  }
+
+  .trust__logo img {
+    display: block;
+    width: 110%;
+    max-width: none;
+    height: auto;
+    transform: scale(1.25);
+  }
+
+  /* =====================================================================
+     FEATURES — icon + one-line title only, thin dividers
+     ===================================================================== */
+  .trust__features { 
+    display: flex; 
+    flex-direction: column; 
+  }
+
+  .trust__feature {
+    padding-block: 1.5rem; 
   }
   .trust__feature + .trust__feature { border-top: 1px solid var(--border); }
   .trust__feature:first-child { padding-top: 0; }
   .trust__feature:last-child  { padding-bottom: 0; }
- 
-  /* gold marker draws down the left edge on hover */
-  .trust__feature::before {
-    content: "";
-    position: absolute;
-    left: 0; top: 1.5rem; bottom: 1.5rem;
-    width: 2px;
-    background: var(--gold);
-    transform: scaleY(0);
-    transform-origin: top;
-    transition: transform .4s cubic-bezier(.2,.8,.2,1);
-  }
-  .trust__feature:hover { padding-left: 1.25rem; }
-  .trust__feature:hover::before { transform: scaleY(1); }
- 
+
   .trust__icon {
-    width: 2.5rem; height: 2.5rem;
-    margin-bottom: 1rem;
+    width: 2rem; height: 2rem;
+    margin-bottom: .625rem;
     color: var(--gold);
-    transition: transform .4s cubic-bezier(.2,.8,.2,1);
   }
   .trust__icon svg { width: 100%; height: 100%; }
-  .trust__feature:hover .trust__icon { transform: translateY(-3px); }
- 
+
   .trust__feature-title {
     margin: 0;
     font-family: var(--font-display);
     font-weight: 600;
-    font-size: 1.375rem;
-    line-height: 1.25;
+    font-size: 1.6rem;
+    line-height: 1.3;
     color: var(--primary);
   }
-  .trust__feature-note {
-    margin: .5rem 0 0;
-    font-size: .8125rem;
-    line-height: 1.55;
-    color: var(--muted-foreground);
-  }
- 
+
   /* =====================================================================
-     RESPONSIVE
+     RESPONSIVE — TABLET (640px - 1023px)
      ===================================================================== */
-  /* Tablet: mark on top across both columns, features in a row below */
   @media (min-width: 640px) and (max-width: 1023px) {
-    .trust__grid { grid-template-columns: 1fr 1fr; gap: 1.5rem; }
-    .trust__logo { order: -1; grid-column: 1 / -1; max-width: 22rem; margin-inline: auto; }
+
+    .trust__grid {
+      display: grid;
+      grid-template-columns: 1fr 0.8fr;
+      gap: 1rem;
+      align-items: start;
+    }
+
+    /* Text left */
+    .trust__copy {
+      grid-column: 1;
+    }
+
+    /* Logo right */
+    .trust__logo {
+      grid-column: 2;
+      grid-row: 1;
+      top: 0;
+    }
+
+    .trust__logo img {
+      width: 100%;
+      transform: none;
+    }
+
+    /* Features bottom full width */
     .trust__features {
       grid-column: 1 / -1;
+      display: flex;
       flex-direction: row;
-      flex-wrap: wrap;
-      gap: 0 2.5rem;
+      justify-content: space-between;
+      margin-top: 2rem;
     }
-    .trust__feature { flex: 1 1 13rem; padding-top: 1.5rem; }
-    .trust__feature + .trust__feature { border-top: 1px solid var(--border); }
+
+    .trust__feature {
+      flex: 1;
+    }
+
   }
- 
+
+  /* =====================================================================
+     RESPONSIVE — MOBILE (max-width: 639px)
+     ===================================================================== */
   @media (max-width: 639px) {
-    .trust { padding-block: 2rem 2.5rem; }
-    .trust__logo { order: -1; max-width: 17rem; margin-inline: auto; }
-    .trust__text { max-width: none; }
-    .trust__readmore { width: 5.5rem; height: 5.5rem; font-size: .6875rem; }
-    .trust__watermark { width: 150%; opacity: .05; }
+
+    .trust {
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Grid becomes a standard block container */
+    .trust__grid {
+      display: block;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* ─────────────────────────────────────────────────────────
+       LOGO WATERMARK — positioned absolutely behind grid content
+       - z-index: -1 places it behind .trust__grid (z-index: 1)
+       - opacity applied to img tag ensures no interference
+       - positioned in bottom-right corner
+       ───────────────────────────────────────────────────────── */
+    .trust__logo {
+      position: absolute;
+      bottom: -100px;
+      right: -120px;
+      width: 350px;
+      height: 350px;
+      margin: 0;
+      padding: 0;
+      z-index: -1;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .trust__logo img {
+      width: 100%;
+      height: auto;
+      opacity: 0.08;
+      transform: none;
+      filter: blur(0.3px);
+    }
+
+    /* Text content sits above watermark */
+    .trust__copy {
+      position: relative;
+      z-index: 2;
+      margin-bottom: 2rem;
+    }
+
+    /* Features sit above watermark */
+    .trust__features {
+      position: relative;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      margin-top: 0;
+    }
+
+    .trust__feature {
+      width: 100%;
+      padding-block: 1.25rem;
+    }
+    
+    .trust__feature:first-child {
+      padding-top: 0;
+    }
+    
+    .trust__feature:last-child {
+      padding-bottom: 0;
+    }
+    .trust__feature-title{ font-weight: 600; font-size: 1.2rem; };
+   
+
   }
- 
+
   @media (prefers-reduced-motion: reduce) {
-    .trust__orbit,
-    .trust__headline em,
-    .trust__eyebrow::before { animation: none; }
-    .trust__feature:hover { padding-left: 0; }
-    .trust__feature:hover .trust__icon { transform: none; }
+    .trust__headline em { animation: none; }
   }
+
 </style>
- 
- 
+
 {# ─────────────────────────── MARKUP ─────────────────────────── #}
 <section class="trust">
-  <img class="trust__watermark" src="{% static 'img/watermark-text.png' %}"
+  <img class="trust__watermark" src="{% static 'img/watermark-text.webp' %}"
        alt="" aria-hidden="true" loading="lazy">
- 
+
   <div class="container-page trust__grid">
- 
-    <!-- ---- Copy ---- -->
+
     <div class="trust__copy reveal">
       <p class="trust__eyebrow">Spacesmith Real Estate</p>
- 
+
       <h2 class="trust__headline">
         Where Trust Meets
         <em>Opportunity</em>
       </h2>
- 
+
       <p class="trust__text">
         Choosing a property is one of life's most meaningful decisions. It isn't
         really about buying or selling &ndash; it's about confidence, security and
@@ -774,21 +814,17 @@
         a life or growing a portfolio, we focus on long-term value and relationships
         built on trust &ndash; because the right decision starts with the right partner.
       </p>
- 
+
       <a href="{% url 'about' %}" class="trust__readmore"><span>Read More</span></a>
     </div>
- 
-    <!-- ---- Logo + orbit ---- -->
+
     <div class="trust__logo reveal" data-delay="120">
-      <span class="trust__orbit trust__orbit--outer" aria-hidden="true"></span>
-      <span class="trust__orbit" aria-hidden="true"></span>
-      <img src="{% static 'img/logo-ss.png' %}" alt="Spacesmith Real Estate"
+      <img src="{% static 'img/logo-ss.webp' %}" alt="Spacesmith Real Estate"
            width="520" height="520" loading="lazy">
     </div>
- 
-    <!-- ---- Features ---- -->
+
     <div class="trust__features reveal" data-delay="200">
- 
+
       <div class="trust__feature">
         <div class="trust__icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"
@@ -800,9 +836,8 @@
           </svg>
         </div>
         <h3 class="trust__feature-title">Experienced Team</h3>
-        <p class="trust__feature-note">RERA-certified advisors who know the market street by street.</p>
       </div>
- 
+
       <div class="trust__feature">
         <div class="trust__icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"
@@ -815,9 +850,8 @@
           </svg>
         </div>
         <h3 class="trust__feature-title">Tailored Property<br>Solutions</h3>
-        <p class="trust__feature-note">Shortlists built around your budget, timeline and plans.</p>
       </div>
- 
+
       <div class="trust__feature">
         <div class="trust__icon">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3"
@@ -830,12 +864,11 @@
             <path d="M12.4 3.6H15v2.6"/>
           </svg>
         </div>
-        <h3 class="trust__feature-title">Trusted Market Insights</h3>
-        <p class="trust__feature-note">DLD transaction data behind every price we quote.</p>
+        <h3 class="trust__feature-title">Trusted Market<br>Insights</h3>
       </div>
- 
+
     </div>
- 
+
   </div>
 </section>
  
@@ -1053,7 +1086,7 @@
     margin: .75rem 0 .9375rem;
   }
   .pcard__meta span {
-    padding: .1875rem .5rem; border-radius: .375rem;
+    padding: .1875rem .5rem; border-radius: .5rem;
     background: var(--secondary);
     font-size: .6875rem; color: var(--muted-foreground);
   }
@@ -1089,7 +1122,7 @@
 
     <div class="section-head reveal">
       <div>
-        <p class="eyebrow">Featured Collection</p>
+        <p class="trust__eyebrow">Featured Collection</p>
         <h2 class="section-title">Latest Properties</h2>
       </div>
       <a href="{% url 'properties:property_list' %}" class="link-inline">
@@ -1219,14 +1252,14 @@
 }
   .abt__media::after {
     content: ""; position: absolute; inset: 0;
-    border-radius: 1.25rem; pointer-events: none;
+    border-radius: .5rem; pointer-events: none;
     box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ink) 6%, transparent);
   }
 
   .abt__badge {
     position: absolute; left: 1rem; bottom: 1rem;
     background: var(--primary); color: var(--primary-foreground);
-    border-radius: .75rem; padding: .8rem 1.1rem;
+    border-radius: .5rem; padding: .8rem 1.1rem;
     box-shadow: var(--shadow-elegant);
     display: flex; align-items: center; gap: .75rem;
   }
@@ -1310,7 +1343,7 @@
       <!-- media -->
       <div class="abt__media reveal">
         <span class="abt__ribbon">RERA Certified</span>
-        <img src="{% static 'img/home-about-img3.jpg' %}" alt="Waterfront residential development in the UAE"
+        <img src="{% static 'img/home-about-img3.webp' %}" alt="Waterfront residential development in the UAE"
              width="800" height="680" loading="lazy">
         <div class="abt__badge">
           <strong>12+</strong>
@@ -1320,8 +1353,8 @@
 
       <!-- content -->
       <div class="reveal" data-delay="120">
-        <p class="abt__eyebrow">About Spacesmith</p>
-        <h2 class="abt__title">A modern brokerage,<br>built on trust.</h2>
+        <p class="trust__eyebrow">About Spacesmith</p>
+        <h2 class="abt__title">A Modern Brokerage,<br>Built On Trust.</h2>
 
         <p class="abt__lead">
           Founded on the belief that finding a home should be a considered, human
@@ -1358,10 +1391,10 @@
 
         <div class="abt__cta">
           <a href="{% url 'contact' %}" class="btn-solid">
-            Speak with an advisor
+            Speak With An Advisor
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
           </a>
-          <a href="" class="btn-ghost">Explore off-plan</a>
+          <a href="{% url 'properties:offplan_properties' %}" class="btn-ghost">Explore Off-Plan</a>
         </div>
       </div>
 
@@ -1447,7 +1480,7 @@
     position: relative;
     height: 100%;
     padding: 2rem;
-    border-radius: 1rem;
+    border-radius: .5rem;
     background: var(--card);
     border: 1px solid var(--border);
     transition: border-color .3s ease, box-shadow .3s ease;
@@ -1458,7 +1491,7 @@
   }
   .service__icon {
     width: 3rem; height: 3rem;
-    border-radius: .75rem;
+    border-radius: .5rem;
     background: color-mix(in srgb, var(--primary) 10%, transparent);
     color: var(--primary);
     display: flex; align-items: center; justify-content: center;
@@ -1508,8 +1541,8 @@
   <div class="container-page">
 
     <div class="reveal narrow">
-      <p class="eyebrow">What we do</p>
-      <h2 class="section-title">Complete real estate, <br> handled with care.</h2>
+      <p class="trust__eyebrow">What we do</p>
+      <h2 class="section-title">Complete Real Estate, <br> Handled With Care.</h2>
     </div>
 
     <div class="services__grid">
@@ -1609,7 +1642,7 @@
     height: 100%;
     margin: 0;
     padding: 2rem;
-    border-radius: 1rem;
+    border-radius: .5rem;
     background: rgba(246,242,233,.04);
     border: 1px solid rgba(246,242,233,.10);
     backdrop-filter: blur(4px);
@@ -1639,7 +1672,7 @@
     <div class="section-head reveal">
       <div>
         <p class="eyebrow">Client Stories</p>
-        <h2 class="section-title">Trusted by families <br> and investors alike.</h2>
+        <h2 class="section-title">Trusted By Families <br> And Investors Alike.</h2>
       </div>
       <div class="rating">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 2.6 5.3 5.9.9-4.3 4.1 1 5.8L12 16.4 6.8 19.1l1-5.8L3.5 9.2l5.9-.9L12 3Z"/></svg>
@@ -1805,11 +1838,11 @@
 
     <div class="section-head reveal">
       <div>
-        <p class="eyebrow">Insights</p>
-        <h2 class="section-title">From our journal</h2>
+        <p class="trust__eyebrow">Insights</p>
+        <h2 class="section-title">From Our Journal</h2>
       </div>
       <a href="{% url 'blogs:blog_list' %}" class="link-inline">
-        View all articles
+        View All Articles
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
              stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <path d="M5 12h14M13 6l6 6-6 6"/>
@@ -1891,7 +1924,7 @@
   }
   .insta__follow:hover { color: var(--primary); }
   .insta__follow-icon {
-    width: 1.75rem; height: 1.75rem; border-radius: .6rem;
+    width: 1.75rem; height: 1.75rem; border-radius: .5rem;
     display: flex; align-items: center; justify-content: center;
     background: radial-gradient(circle at 30% 107%,
       #fdf497 0%, #fdf497 5%, #fd5949 45%, #d6249f 60%, #285AEB 90%);
@@ -1910,7 +1943,7 @@
     position: relative;
     display: block;
     aspect-ratio: 4 / 5;
-    border-radius: .875rem;
+    border-radius: .5rem;
     overflow: hidden;
     background: var(--secondary);
   }
@@ -1968,7 +2001,7 @@
  
     <div class="section-head reveal">
       <div>
-        <p class="eyebrow">Instagram Feed</p>
+        <p class="trust__eyebrow">Instagram Feed</p>
         <h2 class="section-title">Our Latest Highlights</h2>
       </div>
       <a href="https://instagram.com/spacesmithrealestate" target="_blank" rel="noopener" class="insta__follow">
@@ -2126,6 +2159,7 @@
     padding: 2.75rem 2rem 2rem;
     background: var(--ink);
     border: 1px solid rgba(212,175,55,.25);
+    border-radius: .5rem;
     box-shadow: 0 30px 60px -25px rgba(11,21,18,.45);
   }
 
@@ -2244,7 +2278,7 @@
 
     <!-- ---- Copy ---- -->
     <div class="reveal">
-      <p class="cta-band__eyebrow">Start the conversation</p>
+      <p class="trust__eyebrow">Start the conversation</p>
 
       <h2 class="cta-band__title">
         Let's build your
@@ -2259,14 +2293,14 @@
 
       <div class="cta-band__actions">
         <a href="{% url 'contact' %}" class="btn-gold">
-          Book a consultation
+          Book a Consultation
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
             <path d="M5 12h14M13 6l6 6-6 6"/>
           </svg>
         </a>
         <a href="{% url 'properties:property_list' %}?status=off-plan" class="btn-line">
-          Explore off-plan
+          Explore Off-Plan
         </a>
       </div>
     </div>

@@ -25,14 +25,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY    = config('SECRET_KEY', default='your-secret-key-here')
 DEBUG         = config('DEBUG', default=True, cast=bool)
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1,www.skcrealestate.ae,skcrealestate.ae').split(',')
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1,www.spacesmithrealestate.com,spacesmithrealestate.com').split(',')
 
 
 CSRF_TRUSTED_ORIGINS = [
     "http://127.0.0.1:8000",
     "http://localhost:8000",
-    # "https://www.skcrealestate.ae",
-    # "https://skcrealestate.ae",
+    "https://www.spacesmithrealestate.com",
+    "https://spacesmithrealestate.com",
 ]
 
 # ====================
@@ -271,15 +271,14 @@ CONTACT_ADDRESS   = '117, Royal Class Building, Dubai Investment Park First, Dub
 # EMAIL INFO
 # ====================
 
-# EMAIL_BACKEND = config('EMAIL_BACKEND', default='django.core.mail.backends.smtp.EmailBackend')
-# EMAIL_HOST = config('EMAIL_HOST', default='smtp-relay.brevo.com')
-# EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
-# EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
-# EMAIL_USE_SSL = config('EMAIL_USE_SSL', default=False, cast=bool)
-# EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
-# EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
-# DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='SKC Real Estate <sales@skcrealestate.ae>')
-
+EMAIL_BACKEND = config('EMAIL_BACKEND', default='django.core.mail.backends.smtp.EmailBackend')
+EMAIL_HOST = config('EMAIL_HOST', default='smtp-relay.brevo.com')
+EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
+EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
+EMAIL_USE_SSL = config('EMAIL_USE_SSL', default=False, cast=bool)
+EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
+DEFAULT_FROM_EMAIL  = config('DEFAULT_FROM_EMAIL', default='Spacesmith Real Estate <hello@spacesmithrealestate.com>')
 
 
 # ====================

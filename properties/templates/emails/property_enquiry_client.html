@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f3f1ec;font-family:Arial,Helvetica,sans-serif;color:#0b1512;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f3f1ec;padding:28px 14px;">
+    <tr><td align="center">
+      <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border:1px solid #e5e2da;">
+
+        <!-- header -->
+        <tr><td style="background:#0a2a20;padding:34px 36px;text-align:center;">
+          <div style="font-size:12px;letter-spacing:4px;text-transform:uppercase;color:#d4af37;font-weight:bold;">Spacesmith Real Estate</div>
+          <div style="font-size:24px;color:#f6f2e9;margin-top:12px;">Thank you for your enquiry</div>
+        </td></tr>
+        <tr><td style="height:3px;background:#d4af37;line-height:0;font-size:0;">&nbsp;</td></tr>
+
+        <!-- property strip -->
+        <tr><td style="padding:28px 36px 0;">
+          <div style="padding:18px 20px;background:#f7f5ef;border:1px solid #e5e2da;">
+            <div style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#888;margin-bottom:6px;">Your Enquiry</div>
+            <div style="font-size:17px;font-weight:bold;color:#0a2a20;">{{ enquiry.property.title }}</div>
+            <div style="font-size:13px;color:#666;margin-top:4px;">
+              {{ enquiry.property.district.name }}, {{ enquiry.property.city.name }}
+              {% if enquiry.property.compare_starting_price %} · Starting from AED {{ enquiry.property.compare_starting_price|floatformat:0 }}{% endif %}
+            </div>
+          </div>
+        </td></tr>
+
+        <!-- body -->
+        <tr><td style="padding:28px 36px 36px;">
+          <p style="margin:0 0 18px;font-size:15px;color:#0b1512;line-height:1.7;">Dear {{ enquiry.name }},</p>
+          <p style="margin:0 0 18px;font-size:14px;color:#444;line-height:1.75;">
+            Thank you for your interest in <strong>{{ enquiry.property.title }}</strong>. We've received your enquiry, and a Spacesmith advisor will be in touch shortly with the floor plans, full price list and payment plan.
+          </p>
+          <p style="margin:0 0 26px;font-size:14px;color:#444;line-height:1.75;">
+            Every enquiry reaches a real advisor with deep, on-the-ground knowledge of Dubai's communities and off-plan launches — no automated hand-offs, no call centres.
+          </p>
+
+          <div style="padding:22px;background:#f7f5ef;border-left:3px solid #d4af37;margin-bottom:28px;">
+            <div style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#888;margin-bottom:10px;">Need a quicker response?</div>
+            <div style="font-size:14px;color:#0b1512;line-height:1.9;">
+              📞 <a href="tel:+971556399212" style="color:#0a2a20;text-decoration:none;">+971 55 639 9212</a><br>
+              💬 <a href="https://wa.me/971556399212" style="color:#0a2a20;text-decoration:none;">WhatsApp us</a><br>
+              ✉️ <a href="mailto:hello@spacesmithrealestate.com" style="color:#0a2a20;text-decoration:none;">hello@spacesmithrealestate.com</a>
+            </div>
+          </div>
+
+          <p style="margin:0;font-size:14px;color:#444;line-height:1.7;">
+            Warm regards,<br>
+            <strong style="color:#0a2a20;">The Spacesmith Real Estate Team</strong>
+          </p>
+        </td></tr>
+
+        <!-- footer -->
+        <tr><td style="background:#0a2a20;padding:24px 36px;text-align:center;">
+          <div style="font-size:12px;color:rgba(246,242,233,0.7);line-height:1.7;">
+            117, Royal Class Building<br>
+            Dubai Investment Park First, Dubai, UAE
+          </div>
+        </td></tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>

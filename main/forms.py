@@ -1,11 +1,11 @@
 # ============================================================================
-#  SKC REAL ESTATE — GeneralEnquiryForm
+#   — GeneralEnquiryForm
 #  Put this in the forms.py of the app that owns GeneralEnquiry
 #  (likely main/forms.py, since the model uses main.base.TimeStampedModel).
 # ============================================================================
 
 from django import forms
-from .models import GeneralEnquiry
+from .models import GeneralEnquiry, CareerApplication
 
 
 SUBJECT_CHOICES = [
@@ -66,3 +66,41 @@ class GeneralEnquiryForm(forms.ModelForm):
         if len(msg) < 10:
             raise forms.ValidationError('Please add a few more details (at least 10 characters).')
         return msg
+    
+    
+    
+    
+class CareerApplicationForm(forms.ModelForm):
+    # Honeypot — same pattern as GeneralEnquiryForm
+    website = forms.CharField(required=False, widget=forms.HiddenInput)
+
+    class Meta:
+        model  = CareerApplication
+        fields = ['name', 'email', 'phone', 'message', 'cv']
+
+    def clean_website(self):
+        if self.cleaned_data.get('website'):
+            raise forms.ValidationError('Spam detected.')
+        return ''
+
+    def clean_name(self):
+        name = (self.cleaned_data.get('name') or '').strip()
+        if len(name) < 2:
+            raise forms.ValidationError('Please enter your full name.')
+        return name
+
+    def clean_phone(self):
+        phone  = (self.cleaned_data.get('phone') or '').strip()
+        digits = ''.join(c for c in phone if c.isdigit())
+        if len(digits) < 7:
+            raise forms.ValidationError('Please enter a valid phone number.')
+        return phone
+
+    def clean_cv(self):
+        cv = self.cleaned_data.get('cv')
+        if cv:
+            if cv.size > 5 * 1024 * 1024:
+                raise forms.ValidationError('CV must be under 5MB.')
+            if not cv.name.lower().endswith(('.pdf', '.doc', '.docx')):
+                raise forms.ValidationError('CV must be a PDF or Word document.')
+        return cv

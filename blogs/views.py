@@ -276,8 +276,8 @@ def event_list(request):
         # SEO
         'meta_title':       'Events & Launches | Spacesmith Real Estate Dubai',
         'meta_description': (
-            'Behind the scenes with Spacesmith Real Estate — developer launches, '
-            'industry events and team moments across Dubai.'
+            'Explore Spacesmith Real Estate events, Dubai property launches, developer showcases, and industry moments highlighting our expertise in the UAE real estate market.'
+            
         ),
         'meta_keywords':    'Spacesmith events, Dubai property launches, '
                             'real estate events Dubai',

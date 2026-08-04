@@ -1,0 +1,738 @@
+{% extends 'base.html' %}
+
+{% block title %}Dubai Real Estate FAQ | Buying, Selling & Investment Guide{% endblock %}
+{% block meta_description %}Find answers to Dubai real estate questions about buying, selling, renting, off-plan properties, investments, RERA rules, and property ownership.{% endblock %}
+{% block canonical %}{{ request.build_absolute_uri }}{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* =====================================================================
+     FAQ PAGE — Premium Accordion Design
+     Matches WordPress design with enhanced styling
+     ===================================================================== */
+
+  /* ---- HERO ---- */
+  .faq-hero {
+    position: relative;
+    overflow: hidden;
+    background: var(--background);
+    padding-block: calc(var(--nav-height) + 1rem) 3rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  @media (min-width: 768px) {
+    .faq-hero {
+      padding-block: calc(var(--nav-height) + 2rem) 4rem;
+    }
+  }
+
+  .faq-hero__content {
+    max-width: var(--max-width);
+    margin-inline: auto;
+    padding-inline: 1rem;
+  }
+
+  @media (min-width: 640px) {
+    .faq-hero__content { padding-inline: 2rem; }
+  }
+
+  @media (min-width: 1280px) {
+    .faq-hero__content { padding-inline: 3rem; }
+  }
+
+  .faq-hero h1 {
+    font-family: var(--font-display);
+    font-size: 1.75rem;
+    font-weight: 500;
+    line-height: 1.1;
+    margin: 0;
+    color: var(--primary);
+    letter-spacing: -0.015em;
+  }
+
+  @media (min-width: 375px) {
+    .faq-hero h1 { font-size: 2rem; }
+  }
+
+  @media (min-width: 640px) {
+    .faq-hero h1 { font-size: clamp(2rem, 5vw, 2.5rem); }
+  }
+
+  /* ---- MAIN WRAPPER ---- */
+  .faq-wrapper {
+    width: 100%;
+    max-width: var(--max-width);
+    margin-inline: auto;
+    padding-inline: 1rem;
+    padding-block: 2rem 3rem;
+  }
+
+  @media (min-width: 640px) {
+    .faq-wrapper {
+      padding-inline: 2rem;
+      padding-block: 2.5rem 4rem;
+    }
+  }
+
+  @media (min-width: 1280px) {
+    .faq-wrapper {
+      padding-inline: 3rem;
+      padding-block: 3rem 5rem;
+    }
+  }
+
+  /* ---- ACCORDION LIST ---- */
+  .faq-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  @media (min-width: 640px) {
+    .faq-list { gap: 1rem; }
+  }
+
+  /* ---- ACCORDION ITEMS ---- */
+  .faq-item {
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+    background: var(--card);
+  }
+
+  .faq-item:hover {
+    border-color: color-mix(in srgb, var(--primary) 30%, transparent);
+    box-shadow: 0 4px 12px rgba(11, 21, 18, 0.08);
+  }
+
+  .faq-item.open {
+    border-color: var(--gold);
+    box-shadow: 0 8px 20px rgba(11, 21, 18, 0.1);
+    background: linear-gradient(135deg, rgba(212, 175, 55, 0.02) 0%, rgba(246, 242, 233, 0.5) 100%);
+  }
+
+  /* ---- TRIGGER BUTTON ---- */
+  .faq-trigger {
+    width: 100%;
+    padding: 1.25rem 1.5rem;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    font-family: inherit;
+    text-align: left;
+    transition: background-color 0.2s ease;
+  }
+
+  @media (min-width: 640px) {
+    .faq-trigger { padding: 1.5rem 2rem; }
+  }
+
+  .faq-item:hover .faq-trigger {
+    background-color: color-mix(in srgb, var(--primary) 2%, transparent);
+  }
+
+  .faq-item.open .faq-trigger {
+    background-color: transparent;
+  }
+
+  .faq-question {
+    font-size: 2rem;
+    font-weight: 600;
+    color: var(--primary);
+    margin: 0;
+    line-height: 1.7;
+    flex: 1;
+    letter-spacing: 1px;
+     font-family: var(--font-display);
+  }
+
+  @media (min-width: 640px) {
+    .faq-question { font-size: 1.2rem; }
+  }
+    @media (max-width: 640px) {
+    .faq-question { font-size: 1.1rem; }
+  }
+
+  /* ---- ICON ---- */
+  .faq-icon {
+    width: 1.5rem;
+    height: 1.5rem;
+    flex-shrink: 0;
+    color: var(--gold);
+    transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+
+  .faq-item.open .faq-icon {
+    transform: rotate(180deg);
+  }
+
+  /* ---- CONTENT ---- */
+  .faq-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), padding 0.3s ease;
+  }
+
+  .faq-item.open .faq-content {
+    max-height: 1000px;
+    border-top: 1px solid color-mix(in srgb, var(--border) 60%, transparent);
+    padding: 1.5rem;
+  }
+
+  @media (min-width: 640px) {
+    .faq-item.open .faq-content { padding: 2rem; }
+  }
+
+  .faq-answer {
+    color: var(--muted-foreground);
+    font-size: 0.9375rem;
+    line-height: 1.8;
+    margin: 0;
+  }
+
+  @media (min-width: 640px) {
+    .faq-answer { font-size: 1rem; }
+  }
+
+  .faq-answer strong {
+    color: var(--primary);
+    font-weight: 600;
+  }
+
+  .faq-answer ul,
+  .faq-answer ol {
+    margin: 1rem 0 0 1.5rem;
+    padding: 0;
+    color: var(--muted-foreground);
+    line-height: 1.8;
+    font-size: inherit;
+  }
+
+  .faq-answer li {
+    margin-bottom: 0.5rem;
+  }
+
+  .faq-answer li:last-child {
+    margin-bottom: 0;
+  }
+
+  .faq-answer a {
+    color: var(--primary);
+    border-bottom: 1px solid color-mix(in srgb, var(--primary) 20%, transparent);
+    text-decoration: none;
+    transition: border-color 0.2s ease;
+  }
+
+  .faq-answer a:hover {
+    border-bottom-color: var(--primary);
+  }
+
+  /* ---- CTA SECTION ---- */
+  .faq-cta {
+    background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+    color: var(--cream);
+    border-radius: 0.75rem;
+    padding: 2rem 1.5rem;
+    margin-top: 3rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  @media (min-width: 640px) {
+    .faq-cta { padding: 2.5rem; margin-top: 4rem; }
+  }
+
+  @media (min-width: 768px) {
+    .faq-cta { padding: 3rem; margin-top: 5rem; }
+  }
+
+  .faq-cta::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 150px;
+    height: 150px;
+    background: radial-gradient(circle, rgba(212, 175, 55, 0.1) 0%, transparent 70%);
+    border-radius: 50%;
+    pointer-events: none;
+  }
+
+  @media (min-width: 768px) {
+    .faq-cta::before { width: 200px; height: 200px; }
+  }
+
+  .faq-cta > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  .faq-cta h2 {
+    font-family: var(--font-display);
+    font-size: clamp(1.25rem, 4vw, 1.75rem);
+    font-weight: 500;
+    margin: 0 0 1rem;
+    color: var(--cream);
+  }
+
+  .faq-cta p {
+    font-size: clamp(0.95rem, 2vw, 1rem);
+    margin: 0 0 1.75rem;
+    color: rgba(246, 242, 233, 0.92);
+    max-width: 50rem;
+    margin-inline: auto;
+    line-height: 1.7;
+  }
+
+  .faq-cta__buttons {
+    display: flex;
+    gap: 1rem;
+    flex-direction: column;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  @media (min-width: 480px) {
+    .faq-cta__buttons { flex-direction: row; }
+  }
+
+  .faq-cta__buttons a {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.5rem;
+  }
+
+  /* ---- SEARCH/FILTER (Optional) ---- */
+  .faq-search {
+    margin-bottom: 2rem;
+  }
+
+  .faq-search input {
+    width: 100%;
+    padding: 1rem 1.25rem;
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    font-family: inherit;
+    transition: all 0.2s ease;
+  }
+
+  .faq-search input:focus {
+    outline: none;
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(10, 42, 32, 0.1);
+  }
+
+  /* ---- REDUCED MOTION ---- */
+  @media (prefers-reduced-motion: reduce) {
+    .faq-icon { transition: none; }
+    .faq-content { transition: none; }
+    .faq-trigger { transition: none; }
+    .faq-item { transition: none; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- ================= HERO ================= -->
+<section class="faq-hero">
+  <div class="faq-hero__content">
+    <h1>Frequently Asked Questions</h1>
+  </div>
+</section>
+
+<!-- ================= MAIN CONTENT ================= -->
+<div class="faq-wrapper">
+
+  <!-- ACCORDION LIST -->
+  <ul class="faq-list">
+
+    <!-- Item 1 -->
+    <li class="faq-item">
+      <button class="faq-trigger" type="button">
+        <h2 class="faq-question">What is Spacesmith Real Estate in Dubai?</h2>
+        <svg class="faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+      </button>
+      <div class="faq-content">
+        <p class="faq-answer">Spacesmith Real Estate is a licensed Dubai real estate agency offering professional services in property buying, selling, leasing, and real estate investment advisory. We specialize in residential, commercial, and off-plan properties across key locations in Dubai.</p>
+      </div>
+    </li>
+
+    <!-- Item 2 -->
+    <li class="faq-item">
+      <button class="faq-trigger" type="button">
+        <h2 class="faq-question">Is Spacesmith Real Estate a RERA-approved real estate company?</h2>
+        <svg class="faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+      </button>
+      <div class="faq-content">
+        <p class="faq-answer">Yes. Spacesmith Real Estate operates as a Dubai real estate agency registered with the Dubai Land Department (DLD) and follows the regulations established by the Real Estate Regulatory Agency (RERA). This ensures that property transactions are handled professionally, transparently, and according to Dubai’s real estate guidelines.</p>
+      </div>
+    </li>
+
+    <!-- Item 3 -->
+    <li class="faq-item">
+      <button class="faq-trigger" type="button">
+        <h2 class="faq-question">What real estate services does Spacesmith Real Estate provide?</h2>
+        <svg class="faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+      </button>
+      <div class="faq-content">
+        <p class="faq-answer">Our services include:</p>
+        <ul>
+          <li>Buying and selling property in Dubai</li>
+          <li>Residential and commercial property leasing</li>
+          <li>Off-plan property advisory in Dubai</li>
+          <li>Real estate investment consultation</li>
+          <li>Landlord and tenant representation</li>
+          <li>Dubai property market analysis</li>
+        </ul>
+      </div>
+    </li>
+
+    <!-- Item 4 -->
+    <li class="faq-item">
+      <button class="faq-trigger" type="button">
+        <h2 class="faq-question">Can foreigners buy property in Dubai?</h2>
+        <svg class="faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+      </button>
+      <div class="faq-content">
+        <p class="faq-answer">Yes. Foreign nationals can legally buy property in Dubai in designated freehold areas, with full ownership rights and title deed registration.</p>
+      </div>
+    </li>
+
+    <!-- Item 5 -->
+    <li class="faq-item">
+      <button class="faq-trigger" type="button">
+        <h2 class="faq-question">Which are the best freehold areas to buy property in Dubai?</h2>
+        <svg class="faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+      </button>
+      <div class="faq-content">
+        <p class="faq-answer">Popular freehold areas in Dubai include Downtown Dubai, Dubai Marina, Palm Jumeirah, Business Bay, JVC, JVT, and Dubai Hills Estate. Each offers unique advantages depending on your investment goals and lifestyle preferences.</p>
+      </div>
+    </li>
+
+    <!-- Item 6 -->
+    <li class="faq-item">
+      <button class="faq-trigger" type="button">
+        <h2 class="faq-question">What documents are required to buy property in Dubai?</h2>
+        <svg class="faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+      </button>
+      <div class="faq-content">
+        <p class="faq-answer">To purchase real estate in Dubai, buyers generally require:</p>
+        <ul>
+          <li>Passport copy</li>
+          <li>Emirates ID (for UAE resident)</li>
+          <li>Visa copy (if applicable)</li>
+          <li>Proof of funds or bank approval (for financed purchases)</li>
+          <li>Signed Sales Purchase Agreement (SPA) for off-plan properties</li>
+          <li>Memorandum of Understanding (Form F) for resale property transactions</li>
+        </ul>
+      </div>
+    </li>
+
+    <!-- Item 7 -->
+    <li class="faq-item">
+      <button class="faq-trigger" type="button">
+        <h2 class="faq-question">What are the costs involved in buying property in Dubai?</h2>
+        <svg class="faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+      </button>
+      <div class="faq-content">
+        <p class="faq-answer">When buying property in Dubai, buyers should consider several additional costs, including:</p>
+        <ul>
+          <li><strong>4% Dubai Land Department (DLD) fee</strong> — Government registration fee</li>
+          <li><strong>Real estate agency commission</strong> — Usually around 2% of the property value</li>
+          <li><strong>Trustee office fees</strong> — Required for property registration procedures</li>
+          <li><strong>Mortgage-related charges</strong> — Applicable if financing is used</li>
+          <li><strong>Service charges</strong> — Annual maintenance fees that vary depending on the building, community, and property type</li>
+        </ul>
+      </div>
+    </li>
+
+    <!-- Item 8 -->
+    <li class="faq-item">
+      <button class="faq-trigger" type="button">
+        <h2 class="faq-question">How is property ownership registered in Dubai?</h2>
+        <svg class="faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+      </button>
+      <div class="faq-content">
+        <p class="faq-answer">All property transactions in Dubai are registered with the Dubai Land Department through authorized trustee offices, where the buyer receives an official Title Deed confirming ownership.</p>
+      </div>
+    </li>
+
+    <!-- Item 9 -->
+    <li class="faq-item">
+      <button class="faq-trigger" type="button">
+        <h2 class="faq-question">What is a Title Deed in Dubai real estate?</h2>
+        <svg class="faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+      </button>
+      <div class="faq-content">
+        <p class="faq-answer">A Title Deed is the legal ownership document issued by DLD, confirming your property ownership in Dubai. It's the most important document in any real estate transaction.</p>
+      </div>
+    </li>
+
+    <!-- Item 10 -->
+    <li class="faq-item">
+      <button class="faq-trigger" type="button">
+        <h2 class="faq-question">What is Form F in Dubai property transactions?</h2>
+        <svg class="faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+      </button>
+      <div class="faq-content">
+        <p class="faq-answer">Form F, also known as the Memorandum of Understanding (MoU), outlines the terms agreed between buyer and seller in a Dubai real estate transaction, including price, payment schedule, and conditions.</p>
+      </div>
+    </li>
+
+    <!-- Item 11 -->
+    <li class="faq-item">
+      <button class="faq-trigger" type="button">
+        <h2 class="faq-question">What is an off-plan property in Dubai?</h2>
+        <svg class="faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+      </button>
+      <div class="faq-content">
+        <p class="faq-answer">An off-plan property is purchased directly from a developer before project completion, often offering flexible payment plans and competitive pricing. Buyers benefit from potential appreciation before completion.</p>
+      </div>
+    </li>
+
+    <!-- Item 12 -->
+    <li class="faq-item">
+      <button class="faq-trigger" type="button">
+        <h2 class="faq-question">Is it safe to buy off-plan property in Dubai?</h2>
+        <svg class="faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+      </button>
+      <div class="faq-content">
+        <p class="faq-answer">Yes, buying off-plan property in Dubai is considered safe when purchasing from approved developers and registered projects. Dubai’s real estate sector is regulated by the Dubai Land Department (DLD) and RERA. Buyer payments for registered off-plan projects are protected through escrow accounts, where funds are released according to construction progress.</p>
+      </div>
+    </li>
+
+    <!-- Item 13 -->
+    <li class="faq-item">
+      <button class="faq-trigger" type="button">
+        <h2 class="faq-question">What is an escrow account in Dubai real estate?</h2>
+        <svg class="faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+      </button>
+      <div class="faq-content">
+        <p class="faq-answer">An escrow account is a government-regulated account where buyer funds are held securely. Amounts are released to developers based on construction progress milestones, ensuring buyer protection.</p>
+      </div>
+    </li>
+
+    <!-- Item 14 -->
+    <li class="faq-item">
+      <button class="faq-trigger" type="button">
+        <h2 class="faq-question">What documents are required to rent a property in Dubai?</h2>
+        <svg class="faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+      </button>
+      <div class="faq-content">
+        <p class="faq-answer">Tenants typically need:</p>
+        <ul>
+          <li>Passport copy</li>
+          <li>Emirates ID</li>
+          <li>Visa copy</li>
+          <li>Security deposit (5% for unfurnished, 10% for furnished)</li>
+          <li>Ejari registration (mandatory rental contract)</li>
+        </ul>
+      </div>
+    </li>
+
+    <!-- Item 15 -->
+    <li class="faq-item">
+      <button class="faq-trigger" type="button">
+        <h2 class="faq-question">What is Ejari in Dubai?</h2>
+        <svg class="faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+      </button>
+      <div class="faq-content">
+        <p class="faq-answer">Ejari is a mandatory rental contract registration system regulated by RERA that protects both landlords and tenants in Dubai. It provides legal documentation of the tenancy agreement.</p>
+      </div>
+    </li>
+
+    <!-- Item 16 -->
+    <li class="faq-item">
+      <button class="faq-trigger" type="button">
+        <h2 class="faq-question">How much is the security deposit when renting in Dubai?</h2>
+        <svg class="faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+      </button>
+      <div class="faq-content">
+        <p class="faq-answer">In Dubai, security deposits are commonly based on the annual rental amount. Typically, landlords may request around 5% of the annual rent for unfurnished properties and around 10% for furnished properties. The deposit is usually refundable at the end of the tenancy, subject to property condition and the terms of the rental agreement.</p>
+      </div>
+    </li>
+
+    <!-- Item 17 -->
+    <li class="faq-item">
+      <button class="faq-trigger" type="button">
+        <h2 class="faq-question">Is Dubai a good place to invest in real estate?</h2>
+        <svg class="faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+      </button>
+      <div class="faq-content">
+        <p class="faq-answer">Yes. Dubai real estate investment offers high rental yields, tax-free income, strong infrastructure, and long-term capital appreciation. The market remains attractive to both domestic and international investors.</p>
+      </div>
+    </li>
+
+    <!-- Item 18 -->
+    <li class="faq-item">
+      <button class="faq-trigger" type="button">
+        <h2 class="faq-question">What rental returns can investors expect in Dubai?</h2>
+        <svg class="faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+      </button>
+      <div class="faq-content">
+        <p class="faq-answer">Rental returns in Dubai vary depending on the location, property type, demand, and market conditions. Many Dubai communities offer attractive rental yields compared with several global property markets. Areas with strong rental demand, good connectivity, and lifestyle amenities often provide better income potential for investors.</p>
+      </div>
+    </li>
+
+    <!-- Item 19 -->
+    <li class="faq-item">
+      <button class="faq-trigger" type="button">
+        <h2 class="faq-question">Does buying property in Dubai provide residency visa benefits?</h2>
+        <svg class="faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+      </button>
+      <div class="faq-content">
+        <p class="faq-answer">Yes. Property ownership in Dubai may provide eligibility for UAE residency options, subject to the investment value, government requirements, and current visa regulations. Eligible property investors can apply for residency through the relevant authorities after meeting the required conditions.</p>
+      </div>
+    </li>
+
+    <!-- Item 20 -->
+    <li class="faq-item">
+      <button class="faq-trigger" type="button">
+        <h2 class="faq-question">Why work with Spacesmith Real Estate in Dubai?</h2>
+        <svg class="faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+      </button>
+      <div class="faq-content">
+        <p class="faq-answer">We offer expert market knowledge, transparent advice, competitive pricing strategies, and complete end-to-end support for Dubai property buyers, sellers, landlords, and investors. Our team prioritizes your interests and ensures smooth transactions.</p>
+      </div>
+    </li>
+
+    <!-- Item 21 -->
+    <li class="faq-item">
+      <button class="faq-trigger" type="button">
+        <h2 class="faq-question">Does Spacesmith Real Estate provide after-sales support?</h2>
+        <svg class="faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+      </button>
+      <div class="faq-content">
+        <p class="faq-answer">Yes. Our after-sales services include property handover assistance, leasing support, resale advisory, and property management referrals. We're here to support you throughout your ownership journey.</p>
+      </div>
+    </li>
+
+    <!-- Item 22 -->
+    <li class="faq-item">
+      <button class="faq-trigger" type="button">
+        <h2 class="faq-question">How can I contact Spacesmith Real Estate in Dubai?</h2>
+        <svg class="faq-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+      </button>
+      <div class="faq-content">
+        <p class="faq-answer">You can reach us via:</p>
+        <ul>
+          <li><strong>Phone:</strong> +971 55 6399 212</li>
+          <li><strong>Email:</strong> hello@spacesmithrealestate.com</li>
+          <li><strong>WhatsApp:</strong> +971 55 6399 212</li>
+          <li><strong>Address:</strong> 117, Royal Class Building, Dubai Investment Park First, Dubai, UAE</li>
+        </ul>
+        <p style="margin-top: 1rem;">Our experts are ready to assist you with any real estate inquiry.</p>
+      </div>
+    </li>
+
+  </ul>
+
+  <!-- ---- CTA SECTION ---- -->
+  <div class="faq-cta">
+    <h2>Still have questions?</h2>
+    <p>Our team is ready to help. Reach out via WhatsApp, email, or phone for a free consultation.</p>
+    <div class="faq-cta__buttons">
+      <a href="https://wa.me/971556399212?text=Hi%2C%20I%20have%20a%20question%20about%20properties%20at%20Spacesmith" class="btn-solid" target="_blank" rel="noopener noreferrer">
+        Chat on WhatsApp
+      </a>
+      <a href="mailto:hello@spacesmithrealestate.com" class="btn-ghost" style="color: var(--cream);">
+        Send Email
+      </a>
+    </div>
+  </div>
+
+</div>
+
+<!-- ================= ACCORDION SCRIPT ================= -->
+<script>
+  (function () {
+    var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // ---- Accordion toggle ----
+    var triggers = document.querySelectorAll('.faq-trigger');
+    triggers.forEach(function (trigger) {
+      trigger.addEventListener('click', function (e) {
+        e.preventDefault();
+        var item = this.closest('.faq-item');
+        var isOpen = item.classList.contains('open');
+
+        // Close all items
+        document.querySelectorAll('.faq-item.open').forEach(function (el) {
+          el.classList.remove('open');
+        });
+
+        // Toggle current item
+        if (!isOpen) {
+          item.classList.add('open');
+        }
+      });
+    });
+
+    // Close accordion when clicking outside
+    document.addEventListener('click', function (e) {
+      if (!e.target.closest('.faq-item')) {
+        document.querySelectorAll('.faq-item.open').forEach(function (item) {
+          item.classList.remove('open');
+        });
+      }
+    });
+  })();
+</script>
+
+{% endblock %}
