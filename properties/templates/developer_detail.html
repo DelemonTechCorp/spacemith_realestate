@@ -305,7 +305,7 @@
       {% endif %}
 
       <div class="dd-profile__text">
-        <p class="eyebrow">Verified developer</p>
+        <p class="eyebrow">Verified Developer</p>
         <h1 class="dd-name">
           {{ developer.name }}{% if page_obj.number > 1 %}
             <span style="font-size:.4em;letter-spacing:.1em;opacity:.55;">Page {{ page_obj.number }}</span>
@@ -398,7 +398,7 @@
   <div class="container-page">
 
     <div class="dd-props-head">
-      <h2>{{ developer.name }} properties</h2>
+      <h2>{{ developer.name }} Properties</h2>
       <p>
         {{ total_count|intcomma }} propert{{ total_count|pluralize:"y,ies" }}
         {% if page_obj.paginator.num_pages > 1 %}
@@ -474,7 +474,7 @@
         <div class="dd-empty">
           <h2>Nothing listed from {{ developer.name }} right now</h2>
           <p>New releases are added as they launch. In the meantime, browse the rest of the market.</p>
-          <a href="{% url 'properties:property_list' %}" class="btn-solid">Browse all properties</a>
+          <a href="{% url 'properties:property_list' %}" class="btn-solid">Browse All Properties</a>
         </div>
       {% endfor %}
     </div>
@@ -517,7 +517,7 @@
 {% if faqs %}
 <section class="dd-faq">
   <div class="container-page">
-    <h2>{{ developer.name }} questions, answered</h2>
+    <h2>{{ developer.name }} Questions, Answered</h2>
     {% for item in faqs %}
       <details {% if forloop.first %}open{% endif %}>
         <summary>{{ item.q }}</summary>
@@ -533,7 +533,7 @@
 {% if areas %}
 <section class="dd-related">
   <div class="container-page">
-    <h2>Where {{ developer.name }} is building</h2>
+    <h2>Where {{ developer.name }} Is Building</h2>
     <p>
       The community sets the price band, the service charge and the rental
       profile, so it is worth comparing the same developer across areas before
@@ -555,7 +555,7 @@
 {% if siblings %}
 <section class="dd-related">
   <div class="container-page">
-    <h2>Compare other developers</h2>
+    <h2>Compare Other Developers</h2>
     <div class="dd-chiprow">
       {% for dev in siblings %}
         <a href="{% url 'properties:developer_detail' dev.slug %}">

@@ -551,7 +551,7 @@
     <a class="pd-back" href="{{ return_url }}">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6"/></svg>
-      Back to results
+      Back to Results
     </a>
   {% endif %}
 
@@ -619,9 +619,9 @@
       <p class="pd-price">
         {% if property.compare_starting_price %}
           AED {{ property.compare_starting_price|floatformat:0|intcomma }}
-          <small>Starting price</small>
+          <small>Starting Price</small>
         {% else %}
-          Price on request
+          Price on Request
           <small>Enquire for the current price list</small>
         {% endif %}
       </p>
@@ -652,14 +652,14 @@
       <section class="pd-section">
         <h2>About {{ property.title }}</h2>
         <div class="pd-prose pd-clamp" id="pdDesc">{{ property.description|safe }}</div>
-        <button type="button" class="pd-more" id="pdDescMore">Read more</button>
+        <button type="button" class="pd-more" id="pdDescMore">Read More</button>
       </section>
       {% endif %}
 
       <!-- Units -->
       {% if property.grouped_apartments.all %}
       <section class="pd-section">
-        <h2>Units &amp; pricing</h2>
+        <h2>Units &amp; Pricing</h2>
         <div class="pd-tablewrap">
           <table class="pd-units">
             <thead>
@@ -751,7 +751,7 @@
     <!-- ================= SIDEBAR ================= -->
     <aside class="pd-aside">
       <div class="pd-card" id="pdEnquire">
-        <h2>Register your interest</h2>
+        <h2>Register Your Interest</h2>
         <p>Get the floor plans, full price list and payment plan.</p>
 
         <form class="pd-form" method="post" novalidate>
@@ -837,7 +837,7 @@
                       placeholder="I'd like the payment plan and floor plans.">{{ enquiry_form.message.value|default:'' }}</textarea>
           </div>
 
-          <button type="submit" class="btn-solid">Request details</button>
+          <button type="submit" class="btn-solid">Request Details</button>
           <p class="pd-fineprint">
             By submitting you agree to be contacted about this property by
             Spacesmith Real Estate.

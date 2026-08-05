@@ -84,7 +84,7 @@
   margin: 0 0 1rem;
   max-width: 22ch;
 }
-.bl-hero__title em { font-style: italic; color: var(--gold); }
+.bl-hero__title span {  color: var(--gold); }
 .bl-hero__sub {
   max-width: 44rem; margin: 0;
   color: rgba(246,242,233,.72);
@@ -146,7 +146,7 @@
   background-color: var(--secondary);
   padding: 0 2.75rem 0 1.25rem;
   -webkit-appearance: none; appearance: none;
-  font-family: inherit; font-size: .75rem; letter-spacing: .08em; text-transform: uppercase;
+  font-family: inherit; font-size: .875rem; letter-spacing: .08em; 
   color: var(--muted-foreground); cursor: pointer;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23d4af37' stroke-width='1.6' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
@@ -157,8 +157,8 @@
   height: 4rem; padding-inline: 2.25rem;
   border: 0; cursor: pointer;
   background: var(--primary); color: var(--primary-foreground);
-  font-family: inherit; font-size: .75rem; font-weight: 500;
-  letter-spacing: .16em; text-transform: uppercase;
+  font-family: inherit; font-size: .875rem; font-weight: 500;
+  letter-spacing: .16em; 
   transition: background-color .25s ease;
 }
 .bl-toolbar__btn:hover { background: var(--primary-dark); }
@@ -522,7 +522,7 @@
       <span aria-current="page">Insights</span>
     </nav>
 
-    <h1 class="bl-hero__title">Reading the Dubai market, <em>one address at a time</em></h1>
+    <h1 class="bl-hero__title">Reading the Dubai Market, <span>One Address At a Time</span></h1>
 
     <p class="bl-hero__sub">
       Off-plan launches, handover timelines, rental yields and leasing trends — written by the
@@ -783,8 +783,9 @@
 <section class="bl-band">
   <div class="container-page bl-band__inner">
     <div>
-      <p class="eyebrow">Private advisory</p>
-      <h2>Numbers on a specific building, before you commit</h2>
+      <p class="eyebrow" style="font-size: .6875rem; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .32em;">Private Advisory</p>
+      <h2>Numbers On a Specific Building, Before You Commit</h2>
       <p>
         Send us the project, tower or community you are considering. We come back with current
         pricing, payment plan terms, service charge history and a realistic net yield — not a brochure.
@@ -792,7 +793,7 @@
     </div>
     <div>
       <a href="{% url 'contact' %}" class="btn-gold">
-        Talk to an advisor
+        Talk To an Advisor
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
       </a>
     </div>
@@ -805,8 +806,9 @@
   <div class="container-page">
     <div class="bl-intro">
       <div>
-        <p class="eyebrow">Why we publish</p>
-        <h2>Dubai property, explained without the sales pitch</h2>
+        <p class="eyebrow" style="font-size: .6875rem; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .32em;">Why we publish</p>
+        <h2>Dubai Property, Explained Without The Sales Pitch</h2>
       </div>
       <div>
         <p>

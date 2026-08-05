@@ -215,7 +215,7 @@
     <div class="dl-hero-row">
       <div>
         <p class="eyebrow">Trusted partners</p>
-        <h1>Dubai property <span class="accent">developers.</span></h1>
+        <h1>Dubai Property <span class="accent">Developers.</span></h1>
         <p class="dl-hero-sub">
           {% if active_search %}
             <strong>{{ total_count }}</strong> result{{ total_count|pluralize }} for &ldquo;{{ active_search }}&rdquo;.
@@ -228,7 +228,7 @@
 
       <form method="GET" action="{% url 'properties:developer_list' %}" class="dl-search">
         <div class="dl-search-field">
-          <label for="devSearch" class="sr-only">Search developers</label>
+          <label for="devSearch" class="sr-only">Search Developers</label>
           <input type="search" id="devSearch" name="q" value="{{ active_search }}"
                  placeholder="Search developers&hellip;" autocomplete="off">
           <button type="submit" aria-label="Search">
@@ -251,7 +251,7 @@
       {% if with_stock %}
       <div class="dl-stat">
         <strong>{{ with_stock|intcomma }}</strong>
-        <span>Building now</span>
+        <span>Building Now</span>
       </div>
       {% endif %}
     </div>
@@ -261,7 +261,7 @@
 
 <!-- ── INTRO ── -->
 <section class="container-page dl-intro">
-  <h2>The developer decides more than the brochure does</h2>
+  <h2>The Developer Decides More Than The Brochure Does</h2>
   <p>
     In an off-plan market the developer is the product. Two towers can carry the
     same renders, the same amenity list and a near-identical price per square
@@ -290,8 +290,8 @@
 {% if active_search %}
 <div class="dl-filter-bar">
   <div class="container-page dl-filter-inner">
-    <p class="dl-result-text">Showing results for &ldquo;<strong>{{ active_search }}</strong>&rdquo;</p>
-    <a href="{% url 'properties:developer_list' %}" class="btn-ghost">Clear search</a>
+    <p class="dl-result-text">Showing Results For &ldquo;<strong>{{ active_search }}</strong>&rdquo;</p>
+    <a href="{% url 'properties:developer_list' %}" class="btn-ghost">Clear Search</a>
   </div>
 </div>
 {% endif %}
@@ -321,7 +321,7 @@
         <h3>No developers found</h3>
         <p>{% if active_search %}Try a shorter search term.{% else %}Check back soon as we add more partners.{% endif %}</p>
         {% if active_search %}
-          <a href="{% url 'properties:developer_list' %}" class="btn-solid">Show all developers</a>
+          <a href="{% url 'properties:developer_list' %}" class="btn-solid">Show All Developers</a>
         {% endif %}
       </div>
       {% endfor %}
@@ -332,7 +332,7 @@
 <!-- ── CLOSING COPY ── -->
 <section class="dl-outro">
   <div class="container-page">
-    <h2>How to compare two developers on the same unit</h2>
+    <h2>How To Compare Two Developers On The Same Unit</h2>
     <p>
       Line up the payment plans first. A plan weighted towards handover keeps
       more of your capital working elsewhere during construction, while a plan
@@ -353,9 +353,9 @@
       {% for dev in developers|slice:":10" %}
         <a href="{% url 'properties:developer_detail' dev.slug %}">{{ dev.name }}</a>
       {% endfor %}
-      <a href="{% url 'properties:offplan_properties' %}">Off-plan launches</a>
-      <a href="{% url 'properties:ready_properties' %}">Ready properties</a>
-      <a href="{% url 'properties:district_list' %}">Browse by area</a>
+      <a href="{% url 'properties:offplan_properties' %}">Off-Plan Launches</a>
+      <a href="{% url 'properties:ready_properties' %}">Ready Properties</a>
+      <a href="{% url 'properties:district_list' %}">Browse By Area</a>
     </div>
   </div>
 </section>

@@ -486,7 +486,7 @@
       </div>
 
       <div class="adet-actions">
-        <button type="submit" class="btn-solid">Apply filters</button>
+        <button type="submit" class="btn-solid">Apply Filters</button>
         {% if has_filters %}
           <a href="{% url 'properties:district_detail' district.slug %}" class="btn-ghost">Clear all</a>
         {% endif %}
@@ -651,7 +651,7 @@
 {% if faqs %}
 <section class="adet-faq">
   <div class="container-page">
-    <h2>{{ district.name }} questions, answered</h2>
+    <h2>{{ district.name }} Questions, Answered</h2>
     {% for item in faqs %}
       <details {% if forloop.first %}open{% endif %}>
         <summary>{{ item.q }}</summary>
@@ -667,7 +667,7 @@
 {% if siblings %}
 <section class="adet-nearby">
   <div class="container-page">
-    <h2>Other areas in {{ district.city.name }}</h2>
+    <h2>Other Areas in {{ district.city.name }}</h2>
     <p>
       Comparing {{ district.name }} against its neighbours is usually the fastest
       way to confirm a shortlist. Each area below carries its own live inventory,
