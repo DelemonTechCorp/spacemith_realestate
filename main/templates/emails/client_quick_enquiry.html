@@ -1,0 +1,65 @@
+<!-- templates/emails/client_quick_enquiry.html -->
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Thank You for Your Enquiry</title>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; }
+    .container { max-width: 600px; margin: 0 auto; padding: 20px; background: #f9f9f9; }
+    .header { background: #0a2a20; color: #f6f2e9; padding: 30px 20px; border-radius: 8px 8px 0 0; text-align: center; }
+    .header h1 { margin: 0; font-size: 28px; }
+    .body { background: white; padding: 30px 20px; border: 1px solid #e5e2da; }
+    .body p { margin: 0 0 16px; }
+    .checkmark { width: 48px; height: 48px; background: #0a2a20; color: #f6f2e9; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px; margin: 0 auto 16px; }
+    .highlight { background: #f3f1ec; padding: 16px; border-left: 4px solid #d4af37; margin: 20px 0; border-radius: 4px; }
+    .footer { background: #f3f1ec; padding: 20px; border-radius: 0 0 8px 8px; text-align: center; font-size: 12px; color: #666; }
+    .footer p { margin: 0; }
+    .footer a { color: #0a2a20; text-decoration: none; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="checkmark">✓</div>
+      <h1>Thank You!</h1>
+      <p style="margin: 8px 0 0; opacity: 0.9; font-size: 16px;">Your enquiry has been received</p>
+    </div>
+
+    <div class="body">
+      <p>Hi <strong>{{ enquiry.name }}</strong>,</p>
+
+      <p>Thank you for reaching out to Spacesmith Real Estate. We've received your enquiry and appreciate your interest in finding your perfect space in Dubai.</p>
+
+      <div class="highlight">
+        <strong>What happens next?</strong><br>
+        One of our property advisors will review your request and get in touch with you within one business day to discuss your requirements and help you find the ideal property.
+      </div>
+
+      <p>If you have any urgent questions in the meantime, feel free to:</p>
+
+      <ul style="margin: 12px 0; padding-left: 20px;">
+        <li><a href="https://wa.me/971556399212?text=Hi%2C%20I%27m%20interested%20in%20a%20property%20with%20Spacesmith" style="color: #0a2a20; text-decoration: none;">WhatsApp us</a></li>
+        <li><a href="tel:+971556399212" style="color: #0a2a20; text-decoration: none;">Call us</a> at +971 55 639 9212</li>
+        <li>Email us at <a href="mailto:hello@spacesmithrealestate.com" style="color: #0a2a20; text-decoration: none;">hello@spacesmithrealestate.com</a></li>
+      </ul>
+
+      <p>We look forward to helping you find your space!</p>
+
+      <p>
+        Best regards,<br>
+        <strong>The Spacesmith Real Estate Team</strong><br>
+        <em>We Find Your Space</em>
+      </p>
+    </div>
+
+    <div class="footer">
+      <p><strong>Spacesmith Real Estate LLC</strong></p>
+      <p>Royal Class Building, Dubai Investment Park First, Dubai, UAE</p>
+      <p><a href="tel:+971556399212">+971 55 639 9212</a> | <a href="mailto:hello@spacesmithrealestate.com">hello@spacesmithrealestate.com</a></p>
+    </div>
+  </div>
+</body>
+</html>

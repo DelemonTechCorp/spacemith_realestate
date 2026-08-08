@@ -11,6 +11,10 @@ urlpatterns = [
     path('about/',          views.about,          name='about'),
     path('careers/',        views.careers,        name='careers'),
     
+     # ── AJAX FORMS ───────────────────────────────────────────
+    path('quick-enquiry/',  views.quick_enquiry,  name='quick_enquiry'),  # NEW
+
+    
     # ── NEWSLETTER ───────────────────────────────────────────
     path('subscribe-newsletter/', views.subscribe_newsletter, name='subscribe_newsletter'),
     

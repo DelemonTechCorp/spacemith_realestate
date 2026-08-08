@@ -354,3 +354,136 @@ def faq(request):
     Template: pages/faq.html
     """
     return render(request, 'faq.html')
+
+
+
+# Add this to your main/views.py (the existing views file with home, contact, etc.)
+
+from django.http import JsonResponse
+from django.views.decorators.http import require_http_methods
+from django.core.validators import validate_email
+from django.core.exceptions import ValidationError
+from django.template.loader import render_to_string
+from django.utils.html import strip_tags
+from django.core.mail import EmailMultiAlternatives
+from django.conf import settings
+import logging
+
+from .models import GeneralEnquiry
+
+logger = logging.getLogger(__name__)
+
+ADMIN_EMAIL = getattr(settings, 'ADMIN_EMAIL', 'admin@spacesmithrealestate.com')
+FROM_EMAIL  = getattr(settings, 'DEFAULT_FROM_EMAIL', 'Spacesmith Real Estate <hello@spacesmithrealestate.com>')
+
+
+def _send_quick_enquiry_admin_email(enquiry):
+    """Send quick-enquiry notification to admin."""
+    subject = f"New Quick Enquiry from {enquiry.name} | Spacesmith Real Estate"
+    html    = render_to_string('emails/admin_quick_enquiry.html', {'enquiry': enquiry})
+    text    = strip_tags(html)
+    msg     = EmailMultiAlternatives(subject, text, FROM_EMAIL, [ADMIN_EMAIL])
+    msg.attach_alternative(html, 'text/html')
+    msg.send(fail_silently=False)
+
+
+def _send_quick_enquiry_client_email(enquiry):
+    """Send confirmation email to the client."""
+    subject = "Thank You for Your Quick Enquiry — Spacesmith Real Estate"
+    html    = render_to_string('emails/client_quick_enquiry.html', {'enquiry': enquiry})
+    text    = strip_tags(html)
+    msg     = EmailMultiAlternatives(subject, text, FROM_EMAIL, [enquiry.email])
+    msg.attach_alternative(html, 'text/html')
+    msg.send(fail_silently=True)
+
+
+@require_http_methods(["POST"])
+def quick_enquiry(request):
+    """
+    Handle popup enquiry form submission via AJAX.
+    
+    Accepts: POST with name, email, phone, website (honeypot)
+    Returns: JSON { status: 'success'|'error', message: '...' }
+    
+    URL: /quick-enquiry/ (add to urls.py)
+    """
+    
+    name    = request.POST.get('name', '').strip()
+    email   = request.POST.get('email', '').strip().lower()
+    phone   = request.POST.get('phone', '').strip()
+    website = request.POST.get('website', '').strip()  # honeypot
+    
+    # ── HONEYPOT CHECK ──
+    if website:
+        # Bot filled in the hidden "website" field — reject silently
+        return JsonResponse({
+            'status': 'error',
+            'message': 'Please try again.'
+        }, status=400)
+    
+    # ── VALIDATION ──
+    errors = []
+    
+    if not name or len(name) < 2:
+        errors.append('Please enter a valid name.')
+    
+    if not email:
+        errors.append('Email is required.')
+    else:
+        try:
+            validate_email(email)
+        except ValidationError:
+            errors.append('Please enter a valid email.')
+    
+    if not phone or len(phone) < 7:
+        errors.append('Please enter a valid phone number.')
+    
+    if errors:
+        return JsonResponse({
+            'status': 'error',
+            'message': errors[0]  # return first error
+        }, status=400)
+    
+    # ── SAVE TO DATABASE ──
+    try:
+        enquiry = GeneralEnquiry.objects.create(
+            name    = name,
+            email   = email,
+            phone   = phone,
+            subject = 'Quick Enquiry — Website Popup',  # indicate it came from popup
+            message = '',  # no message for popup form
+            source  = 'Website Popup',
+        )
+    except Exception as exc:
+        logger.error("Failed to save quick enquiry: %s", exc)
+        return JsonResponse({
+            'status': 'error',
+            'message': 'Server error. Please try again.'
+        }, status=500)
+    
+    # ── SEND EMAILS (don't block on failure) ──
+    admin_sent = True
+    try:
+        _send_quick_enquiry_admin_email(enquiry)
+    except Exception as exc:
+        logger.error("Admin quick-enquiry email failed: %s", exc)
+        admin_sent = False
+    
+    try:
+        _send_quick_enquiry_client_email(enquiry)
+    except Exception as exc:
+        logger.error("Client quick-enquiry email failed: %s", exc)
+    
+    # ── RESPONSE ──
+    if admin_sent:
+        return JsonResponse({
+            'status': 'success',
+            'message': 'Thank you! We will contact you within one business day.'
+        })
+    else:
+        # Saved to DB but email failed — still consider it success from user perspective
+        # (admin can see it in the dashboard)
+        return JsonResponse({
+            'status': 'success',
+            'message': 'Your enquiry was received. We will be in touch shortly.'
+        })
