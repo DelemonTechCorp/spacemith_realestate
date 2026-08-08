@@ -38,22 +38,9 @@
   @media (min-width: 1024px) { .footer__grid { grid-template-columns: 1.3fr 1fr 1.2fr 1.2fr; } }
 
   /* ---- Brand ---- */
-  .footer__brand-row { display: flex; align-items: center; gap: .75rem; }
-  .footer__brand-row img { height: 3rem; width: 3rem; object-fit: contain; }
-  .footer__brand-name {
-    margin: 0;
-    font-family: var(--font-display);
-    font-size: 1.25rem;
-    line-height: 1;
-    color: var(--cream);
-  }
-  .footer__brand-sub {
-    margin: .25rem 0 0;
-    font-size: .6875rem;
-    text-transform: uppercase;
-    letter-spacing: .18em;
-    color: var(--gold);
-  }
+  .footer__brand-row { display: flex; align-items: center;}
+  .footer__brand-logo { height: 3rem; width: auto; object-fit: contain; }
+  
   .footer__desc {
     margin-top: 1.5rem;
     font-size: .875rem;
@@ -175,11 +162,8 @@
     <!-- Brand -->
     <div>
       <a href="{% url 'home' %}" class="footer__brand-row">
-        <img src="{% static 'img/logo-ss.webp' %}" alt="Spacesmith Real Estate">
-        <div>
-          <p class="footer__brand-name">spacesmith</p>
-          <p class="footer__brand-sub">Real Estate</p>
-        </div>
+        <img src="{% static 'img/logo-2.webp' %}" alt="Spacesmith Real Estate" class="footer__brand-logo">
+        
       </a>
       <p class="footer__desc">
         Spacesmith Real Estate LLC is a Dubai-based consultancy for residential and commercial

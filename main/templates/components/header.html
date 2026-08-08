@@ -57,8 +57,8 @@
   }
   .logo__img {
     width: auto;
-    height: 200px;
-    max-width: 400px;
+    height: 150px;
+    max-width: 200px;
     object-fit: contain;
   }
   @media (max-width: 480px) { .logo__img { height: 150px; max-width: 180px; } }
@@ -352,7 +352,7 @@
   <div class="container-page header-bar">
 
     <a href="{% url 'home' %}" class="logo" aria-label="Spacesmith Real Estate — home">
-      <img class="logo__img" src="{% static 'img/Space_smith_logo.webp' %}"
+      <img class="logo__img" src="{% static 'img/logo-2.webp' %}"
            alt="Spacesmith Real Estate" width="190" height="44">
     </a>
 
@@ -432,6 +432,10 @@
     </nav>
 
     <div class="header-actions">
+
+      <a href="{% url 'contact' %}" class="nav-link {% if '/contact' in request.path %}is-active{% endif %}">
+        Contact
+      </a>
       <a href="tel:+{{ phone_number }}" class="phone-link">
         <svg viewBox="0 0 24 24"
              fill="none"
@@ -446,9 +450,7 @@
         {{ contact_phone }}
       </a>
 
-      <a href="{% url 'contact' %}" class="btn-primary">
-        Book a Viewing
-      </a>
+      
     </div>
 
     <button class="menu-toggle"
@@ -543,8 +545,8 @@
         </a>
       </div>
 
-      <a href="{% url 'contact' %}" class="btn-primary">
-        Book a Viewing
+      <a href="{% url 'contact' %}" class="mobile-link {% if '/contact' in request.path %}is-active{% endif %}">
+        Contact
       </a>
 
       <a href="tel:+{{ phone_number }}" class="phone-link">
@@ -560,6 +562,8 @@
 
         {{ contact_phone }}
       </a>
+
+      
 
     </nav>
   </div>

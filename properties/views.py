@@ -12,7 +12,7 @@ from urllib.parse import urlencode
 
 from django.conf import settings
 from django.core.paginator import Paginator
-from django.db.models import Prefetch, Q, Count
+from django.db.models import Prefetch, Q, Count, Case, IntegerField, Value, When
 from django.shortcuts import redirect, render
 
 from properties.models import (
@@ -30,11 +30,14 @@ BRAND = 'Spacesmith Real Estate'
 PAGE_SIZE = 12
 
 SORT_OPTIONS = {
-    'newest': '-created_at',
-    'oldest': 'created_at',
-    'price_asc': 'price',
-    'price_desc': '-price',
+    'priority': ('dev_priority', '-created_at'),
+    'newest': ('-created_at',),    # tuple, not '-created_at'
+    'oldest': ('created_at',),
+    'price_asc': ('price',),
+    'price_desc': ('-price',),
 }
+
+DEFAULT_SORT = 'priority'
 
 FILTER_KEYS = (
     'city', 'district', 'type', 'developer', 'unit_type',
@@ -45,6 +48,156 @@ FILTER_KEYS = (
 # own canonical. Everything else canonicalises back to the clean URL and goes
 # noindex, so filter combinations don't spawn thousands of thin duplicates.
 INDEXABLE_FACETS = ('city', 'type')
+
+
+
+
+# ─────────────────────────────────────────
+# DEVELOPER PRIORITY — client's builder focus list
+# ─────────────────────────────────────────
+# Order = priority. Each element is a tuple of developer slugs that share a
+# rank (almost always one slug; a couple of the client's names cover more
+# than one row in the table — see the "DHRE" group below). Matching is by
+# slug, taken directly from the developers table, not by name string, so
+# punctuation/typos in `name` (e.g. "Dubai Invesment") can't cause a miss.
+#
+# Anything not listed here falls through to `default=len(DEVELOPER_PRIORITY)`
+# in _priority_annotation(), i.e. sorts after every ranked developer, then by
+# -created_at same as before.
+#
+# NOT CURRENTLY IN THE DEVELOPERS TABLE — from the client's lists but no
+# matching row exists, so they can't be ranked yet. Add them as
+# DeveloperCompany rows (get their slug) and drop the slug in below once
+# they exist, or confirm these are aliases of something already listed:
+#   Tier 1:  Al Barari, Dubai Holding, DIFC
+#   Tier 2:  Ohana Development
+#   Tier 3:  Fakhruddin Properties
+#   Tie-ups: Muraba, CG Developers, Time Properties, Grovy Developers,
+#            Invespy Properties, Savills/DIFC, Sanzen Development,
+#            Jamal Living-Better Homes, SBK Real Estate/Alyakka,
+#            Lapis Properties, Deca Properties, Alishaan Development
+#
+# "Dubai Holding" itself has no row, but three of its subsidiaries named in
+# the tie-up list ("DHRE(Nakheel, Meraas, Dubai Properties, Meydan)") do —
+# they're grouped at one rank below.
+ 
+DEVELOPER_PRIORITY = [
+    # ── TIER 1 ──────────────────────────────────────────────
+    ('binghatti',),
+    ('damac',),
+    ('danube-properties',),
+    ('nshama',),
+    ('emaar',),
+    ('azizi',),
+    ('majid-al-futtaim-group',),
+    ('deyaar',),
+    ('omniyat',),
+    ('arada-properties',),
+    ('wasl',),
+    ('aldar',),
+    ('ellington-properties',),
+    ('sobha',),
+    ('alef-group',),
+    ('imtiaz',),
+    ('dubai-south',),
+ 
+    # ── TIER 2 ──────────────────────────────────────────────
+    ('vincitore',),
+    ('mag',),
+    ('union-properties',),
+    ('samana-developers',),
+    ('select-group',),
+    ('beyond',),
+    ('hre-development',),
+    ('hh',),
+    ('dubai-invesment',),
+ 
+    # ── TIER 3 ──────────────────────────────────────────────
+    ('skyline-builders',),
+    ('aqua-properties',),
+    ('tiger-properties',),
+    ('reportage',),
+    ('object-1',),
+    ('al-ghurair',),
+    ('leos',),
+    ('kasco-development',),
+    ('bnw-developments',),
+    ('reef-luxury-development',),
+    ('peace-homes-development',),
+    ('dugasta',),
+    ('mira-developments',),
+ 
+    # ── WIDER "BUILDER TIE-UPS" ROSTER (new names only — anything already
+    #    ranked in a tier above keeps that tier's rank) ──────
+    ('alhabtoor-group',),
+    ('stamn-development',),
+    ('seven-tides',),
+    ('liv-developers',),
+    ('pantheon-development',),
+    ('prescott',),
+    ('ahs-properties',),
+    ('nakheel', 'meraas', 'dubai-properties', 'meydan'),  # "DHRE" group
+    ('rak-properties',),
+    ('avenew-real-estate',),
+    ('takmeel-real-estate',),
+    ('tarrad-real-estate',),
+    ('emirates-properties',),
+    ('amber',),
+    ('expo-city',),
+    ('gulf-land',),
+    ('meraki-developers',),
+    ('oro24',),
+    ('tabeer-developments',),
+    ('irth',),
+    ('ays-developments',),
+    ('empire-development',),
+    ('anax-developments',),
+    ('major-developments',),
+    ('one-development',),
+    ('mr-eight-development',),
+    ('oksa-developer',),
+    ('symbolic',),
+    ('palma-holding',),
+    ('abou-eid-real-estate',),
+    ('nine-development',),
+    ('iman-developers',),
+]
+ 
+ 
+def _priority_annotation():
+    """
+    Case/When mapping developer_company__slug -> priority rank (0 = highest),
+    for `.annotate(dev_priority=...).order_by('dev_priority', ...)`.
+ 
+    Pure Python list, no DB round trip — cheap to rebuild every request, and
+    there's nothing to cache or invalidate when the developers table changes.
+    """
+    whens = [
+        When(developer_company__slug__in=slugs, then=Value(rank))
+        for rank, slugs in enumerate(DEVELOPER_PRIORITY)
+    ]
+    return Case(*whens, default=Value(len(DEVELOPER_PRIORITY)), output_field=IntegerField())
+
+
+def _developer_priority_annotation():
+    """
+    Same DEVELOPER_PRIORITY list as _priority_annotation(), but for querying
+    DeveloperCompany directly (slug__in=...) rather than through
+    Property.developer_company__slug__in=... — use this one on any queryset
+    whose model IS DeveloperCompany (developer_list, developer_detail's
+    siblings), not a Property queryset.
+    """
+    whens = [
+        When(slug__in=slugs, then=Value(rank))
+        for rank, slugs in enumerate(DEVELOPER_PRIORITY)
+    ]
+    return Case(*whens, default=Value(len(DEVELOPER_PRIORITY)), output_field=IntegerField())
+
+
+
+
+
+
 
 
 # ─────────────────────────────────────────
@@ -148,7 +301,13 @@ def _filtered(qs, active):
     if joined:
         qs = qs.distinct()
 
-    return qs.order_by(SORT_OPTIONS.get(active['sort'], '-created_at'))
+    # Client's tiered builder order is the baseline ranking for every listing
+    # and every filtered result. An explicit ?sort= (price, oldest, ...)
+    # overrides it; the 'priority' sort itself breaks ties by -created_at.
+    qs = qs.annotate(dev_priority=_priority_annotation())
+    order_fields = SORT_OPTIONS.get(active['sort'], SORT_OPTIONS[DEFAULT_SORT])
+    return qs.order_by(*order_fields)
+
 
 
 def _facets(scope, active):
@@ -272,7 +431,7 @@ def property_list(request):
         'active_bedrooms': active['bedrooms'],
         'active_price_min': active['price_min'],
         'active_price_max': active['price_max'],
-        'active_sort': active['sort'] or 'newest',
+        'active_sort': active['sort'] or 'DEFAULT_SORT',
         'active_search': active['q'],
         'has_filters': any(active.values()),
 
@@ -728,7 +887,7 @@ def ready_properties(request):
         'active_bedrooms': active['bedrooms'],
         'active_price_min': active['price_min'],
         'active_price_max': active['price_max'],
-        'active_sort': active['sort'] or 'newest',
+        'active_sort': active['sort'] or 'DEFAULT_SORT',
         'active_search': active['q'],
         'has_filters': any(active.values()),
  
@@ -834,7 +993,7 @@ def offplan_properties(request):
         'active_handover': handover,
         'active_price_min': active['price_min'],
         'active_price_max': active['price_max'],
-        'active_sort': active['sort'] or 'newest',
+        'active_sort': active['sort'] or 'DEFAULT_SORT',
         'active_search': active['q'],
         'has_filters': bool(handover) or any(active.values()),
  
@@ -1024,8 +1183,10 @@ def developer_list(request):
     developers = (
         DeveloperCompany.objects
         .filter(is_active=True)
-        .annotate(prop_count=Count('properties', filter=Q(properties__is_active=True)))
-        .order_by('-prop_count', 'name')
+        .annotate(prop_count=Count('properties', filter=Q(properties__is_active=True)),
+                  dev_priority=_developer_priority_annotation(),
+                  )
+        .order_by('dev_priority', '-prop_count', 'name')
     )
     if search:
         developers = developers.filter(name__icontains=search)
@@ -1173,9 +1334,11 @@ def developer_detail(request, slug):
         DeveloperCompany.objects
         .filter(is_active=True)
         .exclude(pk=developer.pk)
-        .annotate(prop_count=Count('properties', filter=Q(properties__is_active=True)))
+        .annotate(prop_count=Count('properties', filter=Q(properties__is_active=True)),
+                  dev_priority=_developer_priority_annotation(),
+                  )
         .filter(prop_count__gt=0)
-        .order_by('-prop_count', 'name')[:8]
+        .order_by('dev_priority', '-prop_count', 'name')[:8]
     )
 
     base_url = f'{DEVELOPERS_URL}{developer.slug}/'
@@ -1741,7 +1904,7 @@ def district_detail(request, slug):
         'active_bedrooms': active['bedrooms'],
         'active_price_min': active['price_min'],
         'active_price_max': active['price_max'],
-        'active_sort': active['sort'] or 'newest',
+        'active_sort': active['sort'] or 'DEFAULT_SORT',
         'active_search': active['q'],
         'has_filters': has_filters,
  
