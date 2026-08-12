@@ -21,8 +21,8 @@
   "inLanguage": "en-AE",
   "wordCount": {{ word_count|default:0 }},
   {% if post.author %}"author": { "@type": "Person", "name": "{{ post.author.name|escapejs }}" },{% endif %}
-  "publisher": { "@id": "https://spacesmithrealestate.com/#organization" },
-  "isPartOf": { "@id": "https://spacesmithrealestate.com/insights/#blog" }
+  "publisher": { "@id": "https://spacesmith.ae/#organization" },
+  "isPartOf": { "@id": "https://spacesmith.ae/insights/#blog" }
 }
 </script>
 <script type="application/ld+json">
@@ -30,8 +30,8 @@
   "@context": "https://schema.org",
   "@type": "BreadcrumbList",
   "itemListElement": [
-    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://spacesmithrealestate.com/" },
-    { "@type": "ListItem", "position": 2, "name": "Insights", "item": "https://spacesmithrealestate.com/insights/" },
+    { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://spacesmith.ae/" },
+    { "@type": "ListItem", "position": 2, "name": "Insights", "item": "https://spacesmith.ae/insights/" },
     { "@type": "ListItem", "position": 3, "name": "{{ post.title|escapejs }}", "item": "{{ canonical }}" }
   ]
 }

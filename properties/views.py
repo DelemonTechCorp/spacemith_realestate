@@ -25,7 +25,7 @@ from properties.models import (
     PropertyType,
 )
 
-SITE_URL = getattr(settings, 'SITE_URL', 'https://spacesmithrealestate.com').rstrip('/')
+SITE_URL = getattr(settings, 'SITE_URL', 'https://spacesmith.ae').rstrip('/')
 BRAND = 'Spacesmith Real Estate'
 PAGE_SIZE = 12
 

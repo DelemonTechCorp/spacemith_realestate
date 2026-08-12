@@ -65,7 +65,7 @@ def home(request):
         'latest_posts': latest_posts,
         'meta_title': 'Spacesmith Real Estate | We Find Your Space',
         'meta_description': 'Discover off-plan launches and ready properties across Dubai. Explore luxury apartments, villas, and investment opportunities with SpaceSmith Real Estate.',
-        'canonical': 'https://spacesmithrealestate.com/',
+        'canonical': 'https://spacesmith.ae/',
         "instagram_highlights": InstagramHighlight.objects.filter(is_active=True)[:4],
         
     })
@@ -173,7 +173,7 @@ def contact(request):
         'form':        form,
         'meta_title':  'Contact Us | Spacesmith Real Estate',
         'robots':      'index, follow',
-        'canonical':   'https://spacesmithrealestate.com/contact/',
+        'canonical':   'https://spacesmith.ae/contact/',
     })
     
 # ----------------------------------------------contact------------------------------------------
@@ -338,7 +338,7 @@ def about(request):
             'with 12+ years of experience — guiding clients with trust, transparency and market '
             'expertise across the UAE.'
         ),
-        'canonical': 'https://spacesmithrealestate.com/about/',
+        'canonical': 'https://spacesmith.ae/about/',
     })
     
     

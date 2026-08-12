@@ -25,14 +25,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY    = config('SECRET_KEY', default='your-secret-key-here')
 DEBUG         = config('DEBUG', default=True, cast=bool)
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1,www.spacesmithrealestate.com,spacesmithrealestate.com').split(',')
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1,www.spacesmith.ae,spacesmith.ae').split(',')
 
 
 CSRF_TRUSTED_ORIGINS = [
     "http://127.0.0.1:8000",
     "http://localhost:8000",
-    "https://www.spacesmithrealestate.com",
-    "https://spacesmithrealestate.com",
+    "https://www.spacesmith.ae",
+    "https://spacesmith.ae",
 ]
 
 # ====================
@@ -83,7 +83,7 @@ ROOT_URLCONF = 'space_smith.urls'
 # ====================
 
 SITE_NAME        = 'Spacesmith Real Estate'
-SITE_URL         = config('SITE_URL', default='https://spacesmithrealestate.com')
+SITE_URL         = config('SITE_URL', default='https://spacesmith.ae')
 SITE_TAGLINE     = 'We Find Your Space'
 SITE_DESCRIPTION = (
     'Spacesmith Real Estate LLC is a Dubai-based real estate consultancy specializing in '
@@ -383,4 +383,4 @@ SOCIAL_LINKS = {
 # RECAPTCHA_SITE_KEY = config('RECAPTCHA_SITE_KEY', default='')
 # RECAPTCHA_SECRET_KEY = config('RECAPTCHA_SECRET_KEY', default='')
 
-SITE_URL = 'https://spacesmithrealestate.com'
+SITE_URL = 'https://spacesmith.ae'

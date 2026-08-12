@@ -31,6 +31,7 @@
       padding-top: calc(var(--nav-height) + 3rem);
       padding-bottom: 2rem;
     }
+    
   }
 
 /* still image — the thing the visitor actually sees first */
@@ -81,8 +82,8 @@
 
   .hero__title {
     font-family: var(--font-display);
-    font-size: clamp(2rem, 7vw, 4.1rem);
-    line-height: 1.05;
+    font-size: clamp(2.7rem, 8vw, 4.5rem);
+    line-height: 1.2;
     color: var(--cream);
     margin: 1.25rem 0 0;
     text-shadow: 0 2px 24px rgba(11,21,18,.35);
@@ -115,6 +116,7 @@
   }
   @media (min-width: 640px) {
     .filter { grid-template-columns: repeat(2, 1fr); padding: 1.25rem; }
+    .hero__title{line-height: 1.1;}
   }
   /* location · type · bedrooms · price · submit */
   @media (min-width: 1100px) {

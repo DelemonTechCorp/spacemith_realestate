@@ -15,7 +15,7 @@ from .models import BlogPost, Event
 # ─────────────────────────────────────────────────────────────
 #  Site constants
 # ─────────────────────────────────────────────────────────────
-SITE_URL   = "https://spacesmithrealestate.com"
+SITE_URL   = "https://spacesmith.ae"
 BLOG_ROOT  = f"{SITE_URL}/insights/"      # ← must match your ROOT urls.py include prefix
 BRAND      = "Spacesmith Real Estate"
 CACHE_TTL  = 1800                              # 30 minutes

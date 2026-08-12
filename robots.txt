@@ -1,0 +1,47 @@
+# robots.txt for Spacesmith Real Estate
+# https://spacesmith.ae/robots.txt
+
+User-agent: *
+
+# ========================================
+# ADMIN & INTERNAL SYSTEM
+# ========================================
+
+Disallow: /admin/
+Disallow: /ckeditor5/
+
+# ========================================
+# FORM / AJAX ENDPOINTS
+# ========================================
+
+Disallow: /quick-enquiry/
+Disallow: /subscribe-newsletter/
+
+# ========================================
+# PROPERTY FILTER & SEARCH PARAMETERS
+# ========================================
+
+Disallow: /properties/*?*sort=
+Disallow: /properties/*?*district=
+Disallow: /properties/*?*developer=
+Disallow: /properties/*?*unit_type=
+Disallow: /properties/*?*bedrooms=
+Disallow: /properties/*?*price_min=
+Disallow: /properties/*?*price_max=
+Disallow: /properties/*?*handover=
+Disallow: /properties/*?*status=
+Disallow: /properties/*?*q=
+
+# ========================================
+# BLOG SEARCH / SORT PARAMETERS
+# ========================================
+
+Disallow: /insights/?*search=
+Disallow: /insights/?*sort=
+Disallow: /insights/?*page_size=
+
+# ========================================
+# XML SITEMAP
+# ========================================
+
+Sitemap: https://spacesmith.ae/sitemap.xml
