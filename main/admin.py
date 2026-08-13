@@ -1,9 +1,17 @@
 from django.contrib import admin
-from .models import GeneralEnquiry, Newsletter, Testimonial, Newsletter, InstagramHighlight
+from .models import GeneralEnquiry, Newsletter, Testimonial, Newsletter, InstagramHighlight, CareerApplication
 
 admin.site.register(GeneralEnquiry)
 
 
+
+@admin.register(CareerApplication)
+class CareerApplicationAdmin(admin.ModelAdmin):
+    list_display  = ['name', 'email', 'phone', 'source', 'is_read', 'created_at']
+    list_filter   = ['is_read', 'created_at']
+    search_fields = ['name', 'email', 'phone']
+    readonly_fields = ['created_at', 'updated_at']
+    ordering = ['-created_at']
 
 
 # Register the newsletter so you can manage subscriptions in admin
