@@ -609,6 +609,19 @@
   .bd-hero__bg { transition: none; }
   /*.bd-progress { transition: none; }*/
 }
+
+
+/* ---------- QUICK CONTACT FORM (sidebar) ---------- */
+.bd-contact-form { display: flex; flex-direction: column; gap: 1rem; }
+.bd-contact-msg {
+  margin: .25rem 0 0;
+  font-size: .8125rem;
+  line-height: 1.5;
+  min-height: 1.2em;
+}
+.bd-contact-msg.is-success { color: var(--primary); }
+.bd-contact-msg.is-error   { color: #b3261e; }
+
 </style>
 {% endblock %}
 
@@ -796,6 +809,43 @@
         </div>
       </div>
       {% endif %}
+
+
+      <!-- QUICK CONTACT FORM -->
+      <div class="bd-widget" id="bdContactWidget">
+        <div class="bd-widget__head"><h2>Quick Enquiry</h2></div>
+        <div class="bd-widget__body">
+          <form id="bdContactForm" class="bd-contact-form" novalidate>
+            {% csrf_token %}
+            <div class="field">
+              <label for="bdName">Name</label>
+              <input id="bdName" type="text" name="name" placeholder="Your name" required autocomplete="name">
+            </div>
+            <div class="field">
+              <label for="bdEmail">Email</label>
+              <input id="bdEmail" type="email" name="email" placeholder="your@email.com" required autocomplete="email">
+            </div>
+            <div class="field">
+              <label for="bdPhone">Phone</label>
+              <input id="bdPhone" type="tel" name="phone" placeholder="+971 50 123 4567" required autocomplete="tel">
+            </div>
+
+            <!-- honeypot -->
+            <div class="field" style="display:none;">
+              <label for="bdWebsite">Website</label>
+              <input id="bdWebsite" type="text" name="website">
+            </div>
+
+            <button type="submit" class="btn-gold" id="bdContactSubmit" style="width:100%; margin-top:.5rem;">
+              Send Enquiry
+            </button>
+            <p id="bdContactMsg" class="bd-contact-msg" role="status" aria-live="polite"></p>
+          </form>
+        </div>
+      </div>
+
+     
+
 
       <div class="bd-cta">
         <h2>Looking At a Specific Building?</h2>
@@ -996,5 +1046,60 @@
     });
   }
 })();
+
+
+//-------------------form-----------------
+(function () {
+  var form = document.getElementById('bdContactForm');
+  if (!form) return;
+
+  var submitBtn = document.getElementById('bdContactSubmit');
+  var msgEl = document.getElementById('bdContactMsg');
+
+  form.addEventListener('submit', function (e) {
+    e.preventDefault();
+
+    // honeypot — if filled, silently do nothing (bot)
+    if (document.getElementById('bdWebsite').value) return;
+
+    msgEl.textContent = '';
+    msgEl.className = 'bd-contact-msg';
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Sending...';
+
+    var formData = new FormData(form);
+
+    fetch("{% url 'quick_enquiry' %}", {
+      method: 'POST',
+      body: formData,
+      headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+      .then(function (res) { return res.json(); })
+      .then(function (data) {
+        if (data.status === 'success') {
+          msgEl.textContent = data.message || 'Thank you! We will contact you shortly.';
+          msgEl.classList.add('is-success');
+          form.reset();
+          submitBtn.textContent = '✓ Sent';
+          setTimeout(function () {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Send Enquiry';
+          }, 2000);
+        } else {
+          msgEl.textContent = data.message || 'Something went wrong. Please try again.';
+          msgEl.classList.add('is-error');
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Send Enquiry';
+        }
+      })
+      .catch(function () {
+        msgEl.textContent = 'Network error. Please try again.';
+        msgEl.classList.add('is-error');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Send Enquiry';
+      });
+  });
+})();
+
 </script>
 {% endblock %}
