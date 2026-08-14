@@ -173,26 +173,7 @@
   color: var(--foreground);
 }
 
-.bd-content h2, .bd-content h3, .bd-content h4 {
-  font-family: var(--font-display);
-  color: var(--foreground);
-  font-weight: 600;
-  line-height: 1.2;
-  scroll-margin-top: calc(var(--nav-height) + 1.5rem);
-}
-.bd-content h2 {
-  font-size: clamp(1.625rem, 2.8vw, 2.125rem)!important;
-  margin: 3rem 0 1rem;
-  padding-bottom: .75rem;
-  border-bottom: 1px solid var(--border);
-  position: relative;
-}
-.bd-content h2::after {
-  content: ""; position: absolute; left: 0; bottom: -1px;
-  width: 3rem; height: 2px; background: var(--gold);
-}
-.bd-content h3 { font-size: clamp(1.25rem, 2vw, 1.5rem)!important; margin: 2.25rem 0 .75rem; }
-.bd-content h4 { font-size: 1.125rem; margin: 2rem 0 .625rem; }
+
 
 .bd-content a {
   color: var(--primary);
@@ -255,9 +236,18 @@
 
 
 /*-------------------------------new rule-----------------------------*/
+/* ================================================================
+   ARTICLE TYPOGRAPHY — HEADING HIERARCHY
+   ================================================================ */
 
-/* ---- Neutralize CKEditor / Word-paste inline styles ---- */
-.bd-content, 
+/* Base article text */
+.bd-content {
+  font-size: 1.0625rem;
+  line-height: 1.85;
+  color: var(--muted-foreground);
+}
+
+/* Remove pasted Word / CKEditor typography */
 .bd-content p,
 .bd-content li,
 .bd-content div,
@@ -270,59 +260,131 @@
   background-color: transparent !important;
 }
 
-.bd-content h1, .bd-content h2, .bd-content h3,
-.bd-content h4, .bd-content h5, .bd-content h6 {
+/* ------------------------------------------------
+   HEADINGS
+   ------------------------------------------------ */
+
+.bd-content h1,
+.bd-content h2,
+.bd-content h3,
+.bd-content h4,
+.bd-content h5,
+.bd-content h6 {
   font-family: var(--font-display) !important;
   color: var(--foreground) !important;
   font-weight: 700 !important;
-  background-color: transparent !important;
+  line-height: 1.2 !important;
+  background: transparent !important;
+  letter-spacing: -0.01em;
 }
 
+/* H2 — Main section heading */
 .bd-content h2 {
-  font-size: clamp(1.875rem, 3.2vw, 2.5rem) !important;
+  font-size: clamp(2rem, 3.4vw, 2.525rem) !important;
   font-weight: 700 !important;
+  line-height: 1.15 !important;
+  margin: 3.25rem 0 1.25rem !important;
+  padding-bottom: .75rem;
+  border-bottom: 1px solid var(--border);
+  position: relative;
+  scroll-margin-top: calc(var(--nav-height) + 1.5rem);
 }
 
+.bd-content h2::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -1px;
+  width: 3.5rem;
+  height: 3px;
+  background: var(--gold);
+}
+
+/* H3 — Subsection heading */
 .bd-content h3 {
-  font-size: clamp(1.4375rem, 2.4vw, 1.75rem) !important;
+  font-size: clamp(1.625rem, 2.5vw, 1.875rem) !important;
   font-weight: 700 !important;
+  line-height: 1.2 !important;
+  margin: 2.5rem 0 1rem !important;
+  scroll-margin-top: calc(var(--nav-height) + 1.5rem);
 }
 
+/* H4 — Smaller subsection heading */
 .bd-content h4 {
-  font-size: 1.25rem !important;
+  font-size: clamp(1.375rem, 2vw, 1.5rem) !important;
   font-weight: 700 !important;
+  line-height: 1.25 !important;
+  margin: 2rem 0 .875rem !important;
+  scroll-margin-top: calc(var(--nav-height) + 1.5rem);
 }
 
-.bd-content strong, .bd-content b { font-weight: 600 !important; color: inherit !important; }
-.bd-content em, .bd-content i { font-style: italic !important; }
+/* H5 */
+.bd-content h5 {
+  font-size: 1.1875rem !important;
+  font-weight: 700 !important;
+  line-height: 1.3 !important;
+  margin: 1.75rem 0 .75rem !important;
+}
 
+/* H6 */
+.bd-content h6 {
+  font-size: 1.0625rem !important;
+  font-weight: 700 !important;
+  line-height: 1.4 !important;
+  margin: 1.5rem 0 .625rem !important;
+}
+
+/* Strong / bold text inside paragraphs */
+.bd-content strong,
+.bd-content b {
+  font-weight: 700 !important;
+  color: inherit !important;
+}
+
+.bd-content em,
+.bd-content i {
+  font-style: italic !important;
+}
+
+/* Links */
 .bd-content a {
   color: var(--primary) !important;
   text-decoration: none !important;
 }
 
+/* Images */
 .bd-content img {
   width: 100% !important;
   height: auto !important;
   max-width: 100% !important;
 }
 
-.bd-content table { width: 100% !important; }
+/* Tables */
+.bd-content table {
+  width: 100% !important;
+}
+
 .bd-content th {
   background: var(--primary) !important;
   color: var(--cream) !important;
 }
+
 .bd-content td {
   background: transparent !important;
   color: inherit !important;
 }
-.bd-content tr:nth-child(even) td { background: var(--secondary) !important; }
 
-/* keep pre/code/blockquote exempt from the global "transparent bg" rule */
-.bd-content pre, .bd-content pre code {
+.bd-content tr:nth-child(even) td {
+  background: var(--secondary) !important;
+}
+
+/* Code / pre / blockquote exceptions */
+.bd-content pre,
+.bd-content pre code {
   background: var(--ink) !important;
   color: var(--cream) !important;
 }
+
 .bd-content blockquote {
   background: var(--cream) !important;
   color: var(--primary) !important;
