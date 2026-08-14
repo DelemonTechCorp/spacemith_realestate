@@ -181,7 +181,7 @@
   scroll-margin-top: calc(var(--nav-height) + 1.5rem);
 }
 .bd-content h2 {
-  font-size: clamp(1.625rem, 2.8vw, 2.125rem);
+  font-size: clamp(1.625rem, 2.8vw, 2.125rem)!important;
   margin: 3rem 0 1rem;
   padding-bottom: .75rem;
   border-bottom: 1px solid var(--border);
@@ -191,7 +191,7 @@
   content: ""; position: absolute; left: 0; bottom: -1px;
   width: 3rem; height: 2px; background: var(--gold);
 }
-.bd-content h3 { font-size: clamp(1.25rem, 2vw, 1.5rem); margin: 2.25rem 0 .75rem; }
+.bd-content h3 { font-size: clamp(1.25rem, 2vw, 1.5rem)!important; margin: 2.25rem 0 .75rem; }
 .bd-content h4 { font-size: 1.125rem; margin: 2rem 0 .625rem; }
 
 .bd-content a {
@@ -252,6 +252,85 @@
 .bd-content pre code { background: none; border: 0; color: inherit; }
 .bd-content iframe { width: 100%; aspect-ratio: 16/9; border: 0; border-radius: var(--radius); margin: 2rem 0; }
 .bd-content hr { border: 0; border-top: 1px solid var(--border); margin: 2.5rem 0; }
+
+
+/*-------------------------------new rule-----------------------------*/
+
+/* ---- Neutralize CKEditor / Word-paste inline styles ---- */
+.bd-content, 
+.bd-content p,
+.bd-content li,
+.bd-content div,
+.bd-content span,
+.bd-content font {
+  font-family: inherit !important;
+  font-size: inherit !important;
+  line-height: inherit !important;
+  color: inherit !important;
+  background-color: transparent !important;
+}
+
+.bd-content h1, .bd-content h2, .bd-content h3,
+.bd-content h4, .bd-content h5, .bd-content h6 {
+  font-family: var(--font-display) !important;
+  color: var(--foreground) !important;
+  font-weight: 700 !important;
+  background-color: transparent !important;
+}
+
+.bd-content h2 {
+  font-size: clamp(1.875rem, 3.2vw, 2.5rem) !important;
+  font-weight: 700 !important;
+}
+
+.bd-content h3 {
+  font-size: clamp(1.4375rem, 2.4vw, 1.75rem) !important;
+  font-weight: 700 !important;
+}
+
+.bd-content h4 {
+  font-size: 1.25rem !important;
+  font-weight: 700 !important;
+}
+
+.bd-content strong, .bd-content b { font-weight: 600 !important; color: inherit !important; }
+.bd-content em, .bd-content i { font-style: italic !important; }
+
+.bd-content a {
+  color: var(--primary) !important;
+  text-decoration: none !important;
+}
+
+.bd-content img {
+  width: 100% !important;
+  height: auto !important;
+  max-width: 100% !important;
+}
+
+.bd-content table { width: 100% !important; }
+.bd-content th {
+  background: var(--primary) !important;
+  color: var(--cream) !important;
+}
+.bd-content td {
+  background: transparent !important;
+  color: inherit !important;
+}
+.bd-content tr:nth-child(even) td { background: var(--secondary) !important; }
+
+/* keep pre/code/blockquote exempt from the global "transparent bg" rule */
+.bd-content pre, .bd-content pre code {
+  background: var(--ink) !important;
+  color: var(--cream) !important;
+}
+.bd-content blockquote {
+  background: var(--cream) !important;
+  color: var(--primary) !important;
+}
+/*-------------------------------new rule-----------------------------*/
+
+
+
 
 /* ---------- 4. SHARE ROW ---------- */
 .bd-share {

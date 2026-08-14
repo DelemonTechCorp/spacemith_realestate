@@ -4,6 +4,7 @@ charset-normalizer==3.4.9
 Django==5.2.16
 django-ckeditor-5==0.2.20
 idna==3.18
+nh3==0.3.6
 pillow==12.3.0
 python-decouple==3.8
 requests==2.34.2

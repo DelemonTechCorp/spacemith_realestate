@@ -182,6 +182,7 @@ from django.urls import reverse
 from django.utils.text import slugify
 from django.utils.html import strip_tags
 from django_ckeditor_5.fields import CKEditor5Field
+from .utils import clean_blog_content
 
 
 class BlogAuthor(models.Model):
@@ -288,6 +289,11 @@ class BlogPost(models.Model):
         return self.title
 
     def save(self, *args, **kwargs):
+        
+        # ADD THIS LINE — cleans CKEditor's inline styles before saving
+        if self.content:
+            self.content = clean_blog_content(self.content)
+        
         # Auto slug
         if not self.slug:
             self.slug = slugify(self.title)
