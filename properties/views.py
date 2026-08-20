@@ -385,7 +385,7 @@ def property_list(request):
         if name:
             location = f' in {name}'
     if not location:
-        location = ' in Dubai'
+        location = ' in Dubai & the UAE'
 
     page_tag = f' | Page {page}' if page > 1 else ''
     meta_title = _pick([
@@ -828,7 +828,7 @@ def ready_properties(request):
     facets = _facets(scope, active)
  
     # ── Location wording ──
-    location = ' in Dubai'
+    location = ' in Dubai & the UAE'
     if active['city']:
         name = facets['cities'].filter(slug=active['city']).values_list('name', flat=True).first()
         if name:
@@ -935,7 +935,7 @@ def offplan_properties(request):
     )
  
     # ── Location wording ──
-    location = ' in Dubai'
+    location = ' in Dubai & the UAE'
     if active['city']:
         name = facets['cities'].filter(slug=active['city']).values_list('name', flat=True).first()
         if name:
@@ -1030,6 +1030,7 @@ from django.db.models import Count, Min, Prefetch, Q
 from django.db.models.functions import ExtractYear
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils.html import strip_tags
+import re
 
 from properties.models import (
     DeveloperCompany,
@@ -1319,14 +1320,28 @@ def developer_detail(request, slug):
         .values_list('_y', flat=True).order_by('_y').distinct()
     )
 
-    admin_copy = (developer.description or '').strip()
+    # admin_copy = (developer.description or '').strip()
+    # dev_paragraphs = (
+    #     [p.strip() for p in strip_tags(admin_copy).split('\n') if p.strip()]
+    #     if admin_copy else
+    #     _developer_copy(developer, total, area_names, low_price,
+    #                     offplan_count, ready_count)
+    # )
+    # faqs = _developer_faqs(developer, total, area_names, low_price, years)
+    
+    admin_copy = strip_tags(developer.description or '').strip()
+    # Guard against junk data (stray dots, empty tags, whitespace-only fields) —
+    # content with no real words isn't usable copy, so fall back to the
+    # generated paragraphs/description instead of shipping "." as a meta tag.
+    has_real_copy = bool(re.search(r'[A-Za-z]{3,}', admin_copy))
+
     dev_paragraphs = (
-        [p.strip() for p in strip_tags(admin_copy).split('\n') if p.strip()]
-        if admin_copy else
-        _developer_copy(developer, total, area_names, low_price,
-                        offplan_count, ready_count)
+        [p.strip() for p in admin_copy.split('\n') if p.strip()]
+        if has_real_copy else
+        _developer_copy(developer, total, area_names, low_price, offplan_count, ready_count)
     )
     faqs = _developer_faqs(developer, total, area_names, low_price, years)
+    
 
     # Other developers — internal links so the page passes authority on
     # instead of dead-ending at the pagination.
@@ -1355,7 +1370,7 @@ def developer_detail(request, slug):
 
     price_bit = f' from AED {int(low_price):,}' if low_price else ''
     meta_description = _describe(
-        strip_tags(admin_copy) or (
+        admin_copy if has_real_copy else (
             f'Browse {total} propert{"y" if total == 1 else "ies"} by '
             f'{developer.name} in Dubai{price_bit} — off-plan and ready homes '
             f'with payment plans.'
