@@ -17,8 +17,7 @@ ENV/
 .env
 .env.*
 
-# exel property file
-*.xlsx
+
 
 # Logs
 logs/
