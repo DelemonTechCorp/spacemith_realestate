@@ -406,7 +406,7 @@ class Property(TranslatableMixin,TimeStampedModel):
     title_ar = models.CharField(max_length=255, blank=True, null=True)
     title_ru = models.CharField(max_length=255, blank=True, null=True)
     
-    slug = models.SlugField(unique=True, db_index=True)
+    slug = models.SlugField(max_length=500, unique=True, db_index=True)
     description = models.TextField()
     description_ar = models.TextField(blank=True, null=True)
     description_ru = models.TextField(blank=True, null=True)
