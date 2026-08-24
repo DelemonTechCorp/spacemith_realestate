@@ -24,7 +24,12 @@ admin.site.register(PropertyStatus)
 admin.site.register(SalesStatus)
 admin.site.register(PropertyType)
 admin.site.register(PropertyFacility)
-admin.site.register(Property)
+
+# admin.site.register(Property)
+class PropertyAdmin(admin.ModelAdmin):
+    readonly_fields = ('slug',)
+
+admin.site.register(Property, PropertyAdmin)
 admin.site.register(PropertyImage)
 admin.site.register(GroupedApartment)
 admin.site.register(Apartment)
