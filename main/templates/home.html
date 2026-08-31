@@ -1586,6 +1586,251 @@
   </div>
 </section>
 
+
+<!------------------------------------------------ MORTGAGE CALCULATOR TEASER ----------------------------------------- -->
+<style>
+  .mtg {
+    position: relative;
+    padding-block: 5rem;
+    background: color-mix(in srgb, var(--secondary) 75%, #fff);
+    overflow: hidden;
+  }
+  .mtg::before {
+    content: "";
+    position: absolute; top: -10%; left: -6%;
+    width: 280px; height: 280px; border-radius: 50%;
+    background: radial-gradient(circle, color-mix(in srgb, var(--gold) 12%, transparent), transparent 68%);
+    pointer-events: none;
+  }
+
+  .mtg__grid {
+    position: relative; z-index: 1;
+    display: grid; gap: 3rem; align-items: center;
+    grid-template-columns: 1fr;
+    max-width: 1150px;
+    margin-inline: auto;
+  }
+  @media (min-width: 1024px) { .mtg__grid { grid-template-columns: 1.05fr .95fr; gap: 3.5rem; } }
+
+  .mtg__lead {
+    margin: 1.25rem 0 0;
+    color: var(--muted-foreground);
+    line-height: 1.75;
+    font-size: .9375rem;
+    max-width: 42ch;
+  }
+
+  .mtg__list { list-style: none; margin: 1.75rem 0 0; padding: 0; display: grid; gap: .875rem; }
+  .mtg__list li { display: flex; gap: .75rem; align-items: flex-start; }
+  .mtg__check {
+    flex-shrink: 0; margin-top: .1rem;
+    width: 1.375rem; height: 1.375rem; border-radius: 9999px;
+    background: color-mix(in srgb, var(--primary) 12%, transparent);
+    color: var(--primary);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .mtg__check svg { width: .8rem; height: .8rem; }
+  .mtg__list li span:last-child { color: var(--foreground); font-size: .875rem; line-height: 1.5; }
+
+  .mtg__cta { margin-top: 2rem; }
+
+  /* ---- Estimate panel — same visual family as the deed-stamp CTA panel ---- */
+  .mtg__panel {
+    position: relative;
+    padding: 2.5rem 2rem;
+    background: var(--ink);
+    border: 1px solid rgba(212,175,55,.25);
+    border-radius: .5rem;
+    box-shadow: 0 30px 60px -25px rgba(11,21,18,.45);
+  }
+  .mtg__panel::before {
+    content: "";
+    position: absolute; top: 0; left: 1.25rem; right: 1.25rem; height: 1px;
+    background-image: radial-gradient(circle, rgba(246,242,233,.35) 1.5px, transparent 1.5px);
+    background-size: 14px 1px;
+    background-repeat: repeat-x;
+  }
+  .mtg__panel-icon {
+    position: absolute; top: -1.125rem; right: 1.75rem;
+    width: 3.25rem; height: 3.25rem;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 50%;
+    background: var(--card);
+    border: 1.5px solid var(--gold);
+    transform: rotate(-8deg);
+    box-shadow: 0 6px 16px -6px rgba(11,21,18,.4);
+  }
+  .mtg__panel-icon svg { width: 1.375rem; height: 1.375rem; stroke: var(--gold-dark); fill: none; stroke-width: 1.6; }
+
+  .mtg__label {
+    margin: 0 0 1.5rem;
+    font-size: .625rem; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .28em;
+    color: var(--gold);
+  }
+
+  .mtg__field { margin-bottom: 1.75rem; }
+  .mtg__field label {
+    display: flex; justify-content: space-between; align-items: baseline;
+    font-size: .75rem; text-transform: uppercase; letter-spacing: .12em;
+    color: rgba(246,242,233,.65);
+    margin-bottom: .75rem;
+  }
+  .mtg__field label span {
+    font-family: var(--font-display);
+    font-size: 1.0625rem; font-weight: 600;
+    letter-spacing: normal; text-transform: none;
+    color: var(--cream);
+  }
+  .mtg__field input[type="range"] {
+    width: 100%; height: 2.5rem; padding: 0; border: 0;
+    background: transparent; accent-color: var(--gold); cursor: pointer;
+  }
+
+  .mtg__result {
+    padding: 1.5rem;
+    border-radius: .5rem;
+    background: rgba(212,175,55,.10);
+    border: 1px solid rgba(212,175,55,.25);
+    text-align: center;
+  }
+  .mtg__result-label {
+    display: block; font-size: .6875rem; text-transform: uppercase;
+    letter-spacing: .14em; color: rgba(246,242,233,.7); margin-bottom: .5rem;
+  }
+  .mtg__result-value {
+    display: block; font-family: var(--font-display);
+    font-size: 2.25rem; line-height: 1.1; color: var(--gold);
+  }
+  .mtg__result-note {
+    display: block; margin-top: .5rem; font-size: .75rem; color: rgba(246,242,233,.55);
+  }
+
+  .mtg__link {
+    display: inline-flex; align-items: center; gap: .5rem;
+    margin-top: 1.5rem;
+    font-size: .8125rem; font-weight: 600; letter-spacing: .04em;
+    color: var(--cream);
+    border-bottom: 1px solid rgba(246,242,233,.35);
+    padding-bottom: .125rem;
+    transition: color .2s ease, border-color .2s ease;
+  }
+  .mtg__link:hover { color: var(--gold); border-color: var(--gold); }
+  .mtg__link svg { width: .875rem; height: .875rem; transition: transform .2s ease; }
+  .mtg__link:hover svg { transform: translateX(3px); }
+
+  @media (max-width: 480px) {
+    .mtg { padding-block: 3.5rem; }
+    .mtg__panel { padding: 2.25rem 1.5rem; }
+    .mtg__result-value { font-size: 1.875rem; }
+  }
+</style>
+
+<section class="mtg">
+  <div class="container-page mtg__grid">
+
+    <!-- ---- Copy ---- -->
+    <div class="reveal">
+      <p class="trust__eyebrow">Plan Your Purchase</p>
+      <h2 class="section-title">Know What You Can<br>Comfortably Afford.</h2>
+
+      <p class="mtg__lead">
+        Before you fall in love with a property, know your numbers. Our mortgage
+        calculator gives you a realistic monthly payment and upfront cost breakdown
+        based on current UAE bank rates — in seconds.
+      </p>
+
+      <ul class="mtg__list">
+        <li>
+          <span class="mtg__check">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+          </span>
+          <span>Rates tailored to UAE nationals, residents and non-residents</span>
+        </li>
+        <li>
+          <span class="mtg__check">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+          </span>
+          <span>Full breakdown of DLD transfer fees and mortgage registration costs</span>
+        </li>
+        <li>
+          <span class="mtg__check">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+          </span>
+          <span>No signup needed — just drag the sliders and see it update live</span>
+        </li>
+      </ul>
+
+      <div class="mtg__cta">
+        <a href="{% url 'mortgage_calculator' %}" class="btn-gold">
+          Try The Full Calculator
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M5 12h14M13 6l6 6-6 6"/>
+          </svg>
+        </a>
+      </div>
+    </div>
+
+    <!-- ---- Quick estimate panel ---- -->
+    <div class="mtg__panel reveal" data-delay="120">
+      <div class="mtg__panel-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 11h.01M12 11h.01M16 11h.01M8 15h.01M12 15h.01M16 15h.01"/></svg>
+      </div>
+
+      <p class="mtg__label">Quick Estimate</p>
+
+      <div class="mtg__field">
+        <label for="mtg-price">Property Price <span id="mtg-price-out">1,200,000 AED</span></label>
+        <input type="range" id="mtg-price" min="300000" max="20000000" step="10000" value="1200000">
+      </div>
+
+      <div class="mtg__result">
+        <span class="mtg__result-label">Estimated Monthly Payment</span>
+        <span class="mtg__result-value" id="mtg-payment">5,062 AED</span>
+        <span class="mtg__result-note">Based on 80% loan · 3.99% · 25 years</span>
+      </div>
+
+      <a href="{% url 'mortgage_calculator' %}" class="mtg__link">
+        See full cost breakdown
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </a>
+    </div>
+
+  </div>
+</section>
+
+<script>
+(function () {
+  var slider = document.getElementById('mtg-price');
+  var priceOut = document.getElementById('mtg-price-out');
+  var paymentOut = document.getElementById('mtg-payment');
+  if (!slider) return;
+
+  var RATE = 3.99;      // resident rate — matches the default on the full calculator
+  var LTV = 0.80;       // 80% loan-to-value default
+  var YEARS = 25;
+
+  function fmt(n) {
+    return new Intl.NumberFormat('en-AE').format(Math.round(n));
+  }
+
+  function update() {
+    var price = parseFloat(slider.value);
+    var loan = price * LTV;
+    var monthlyRate = RATE / 100 / 12;
+    var n = YEARS * 12;
+    var payment = loan * (monthlyRate * Math.pow(1 + monthlyRate, n)) / (Math.pow(1 + monthlyRate, n) - 1);
+
+    priceOut.textContent = fmt(price) + ' AED';
+    paymentOut.textContent = fmt(payment) + ' AED';
+  }
+
+  slider.addEventListener('input', update);
+  update();
+})();
+</script>
+
+
 <!------------------------------------------------ 6 section----------------------------------------- -->
 
 <!-- ================= SERVICES ================= -->
@@ -2171,6 +2416,7 @@
  
   </div>
 </section>
+
 
 
 

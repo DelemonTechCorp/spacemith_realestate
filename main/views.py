@@ -487,3 +487,15 @@ def quick_enquiry(request):
             'status': 'success',
             'message': 'Your enquiry was received. We will be in touch shortly.'
         })
+        
+        
+        
+from django.views.generic import TemplateView
+
+
+class MortgageCalculatorView(TemplateView):
+    template_name = "mortgage_calculator.html" 
+    
+# from django.shortcuts import render
+# def mortgage_calculator(request):
+#     return render(request, "mortgage_calculator.html")       

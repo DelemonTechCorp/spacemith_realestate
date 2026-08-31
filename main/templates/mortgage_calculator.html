@@ -1,0 +1,709 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block body_class %}has-subheader{% endblock %}
+
+{% block title %}Mortgage Calculator | Spacesmith Real Estate{% endblock %}
+
+{% block meta_description %}Estimate your UAE mortgage payments and upfront costs with Spacesmith's calculator — tailored to UAE nationals, residents and non-residents.{% endblock %}
+
+{% block canonical %}https://spacesmith.ae/mortgage-calculator/{% endblock %}
+
+{% block extra_css %}
+<style>
+  /* =====================================================================
+     PAGE HEADER — compact, reuses the same ink/gold language as the
+     home hero, without the video/search weight this page doesn't need.
+     ===================================================================== */
+  .calc-header {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    padding-top: calc(var(--nav-height) + 3rem);
+    padding-bottom: 3rem;
+    background: var(--ink);
+  }
+  .calc-header::before {
+    content: "";
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(60% 90% at 85% 0%, rgba(212,175,55,.12), transparent 60%),
+      linear-gradient(180deg, var(--ink) 0%, var(--ink-soft) 100%);
+    z-index: -1;
+  }
+
+  .calc-header__crumbs {
+    display: flex; align-items: center; gap: .625rem; flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+    font-size: .8125rem;
+    color: rgba(246,242,233,.6);
+  }
+  .calc-header__crumbs a { color: rgba(246,242,233,.85); }
+  .calc-header__crumbs a:hover { color: var(--gold); }
+  .calc-header__crumbs .sep { color: var(--gold); }
+  .calc-header__crumbs .current { color: var(--gold); }
+
+  .calc-header__title {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: clamp(2.25rem, 5vw, 3.25rem);
+    line-height: 1.08;
+    color: var(--cream);
+    max-width: 30ch;
+  }
+  .calc-header__lead {
+    margin-top: 1rem;
+    max-width: 50ch;
+    font-size: .9375rem;
+    line-height: 1.7;
+    color: rgba(246,242,233,.75);
+  }
+
+  /* =====================================================================
+     CALCULATOR LAYOUT
+     ===================================================================== */
+  .calc {
+    padding-block: 4rem 6rem;
+    background: var(--background);
+  }
+
+  .calc__grid {
+    display: grid; gap: 1.5rem;
+    grid-template-columns: 1fr;
+  }
+  @media (min-width: 1024px) { .calc__grid { grid-template-columns: 1.15fr .85fr; gap: 2rem; align-items: start; } }
+
+  /* ---- Inputs card ---- */
+  .calc-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.75rem 2rem;
+  }
+  @media (max-width: 480px) { .calc-card { padding: 1.5rem 1.25rem; } }
+
+  .calc-card__head {
+    display: flex; align-items: center; gap: .75rem;
+    margin-bottom: 1.5rem;
+  }
+  .calc-card__head svg { width: 1.375rem; height: 1.375rem; color: var(--primary); flex-shrink: 0; }
+  .calc-card__head h2 {
+    font-family: var(--font-display);
+    font-size: 1.375rem; color: var(--foreground);
+  }
+
+  .calc-field { margin-bottom: 1.375rem; }
+  .calc-field:last-child { margin-bottom: 0; }
+
+  .calc-field__label {
+    display: flex; align-items: center; gap: .5rem;
+    font-size: .6875rem; font-weight: 500;
+    text-transform: uppercase; letter-spacing: .1em;
+    color: var(--muted-foreground);
+    margin-bottom: .5rem;
+  }
+  .calc-field__label svg { width: .8125rem; height: .8125rem; color: var(--gold-dark); flex-shrink: 0; }
+
+  .calc-field__value {
+    font-family: var(--font-display);
+    font-size: 1.25rem; color: var(--primary);
+    margin-bottom: .375rem;
+  }
+  .calc-field__value .pct { font-family: var(--font-body); font-size: .875rem; color: var(--muted-foreground); }
+
+  .calc-slider {
+    width: 100%; height: 1.5rem; padding: 0; border: 0;
+    background: transparent; accent-color: var(--gold); cursor: pointer;
+    margin-bottom: .5rem;
+  }
+
+  .calc-input-wrap { position: relative; max-width: 18rem; }
+  .calc-input-wrap input {
+    width: 100%; height: 2.375rem;
+    padding: 0 2.75rem 0 .75rem;
+    border-radius: .5rem;
+    border: 1px solid var(--border);
+    background: var(--secondary);
+    color: var(--foreground);
+    font-family: inherit; font-size: .8125rem; font-weight: 500;
+    transition: border-color .2s ease, background-color .2s ease;
+  }
+  .calc-input-wrap input:focus { outline: none; border-color: var(--primary); background: var(--card); }
+  .calc-input-wrap .suffix {
+    position: absolute; right: .875rem; top: 50%; transform: translateY(-50%);
+    font-size: .75rem; color: var(--muted-foreground); pointer-events: none;
+  }
+
+  /* ---- Residency tabs ---- */
+  .residency { display: flex; gap: .5rem; flex-wrap: wrap; }
+  .residency button {
+    flex: 1; min-width: 7.5rem;
+    padding: .625rem .625rem;
+    border-radius: .5rem;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--muted-foreground);
+    font-family: inherit; font-size: .75rem; font-weight: 500;
+    cursor: pointer;
+    text-align: center;
+    transition: border-color .2s ease, background-color .2s ease, color .2s ease;
+  }
+  .residency button:hover { border-color: var(--primary); color: var(--primary); }
+  .residency button.is-active {
+    background: var(--primary); border-color: var(--primary); color: var(--primary-foreground);
+  }
+  .residency button .rate {
+    display: block; margin-top: .2rem;
+    font-family: var(--font-display); font-size: .9375rem; font-weight: 600;
+  }
+
+  /* =====================================================================
+     RESULT PANEL — same deed-stamp panel family used on the home
+     page CTA and teaser, kept consistent across the site.
+     ===================================================================== */
+  .calc-panel {
+    position: relative;
+    padding: 2.5rem 2rem 2rem;
+    background: var(--ink);
+    border: 1px solid rgba(212,175,55,.25);
+    border-radius: .5rem;
+    box-shadow: 0 30px 60px -25px rgba(11,21,18,.45);
+  }
+  .calc-panel::before {
+    content: "";
+    position: absolute; top: 0; left: 1.25rem; right: 1.25rem; height: 1px;
+    background-image: radial-gradient(circle, rgba(246,242,233,.35) 1.5px, transparent 1.5px);
+    background-size: 14px 1px;
+    background-repeat: repeat-x;
+  }
+  .calc-panel__seal {
+    position: absolute; top: -1.125rem; right: 1.75rem;
+    width: 3.25rem; height: 3.25rem;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 50%;
+    background: var(--card);
+    border: 1.5px solid var(--gold);
+    transform: rotate(-8deg);
+    box-shadow: 0 6px 16px -6px rgba(11,21,18,.4);
+  }
+  .calc-panel__seal svg { width: 1.375rem; height: 1.375rem; stroke: var(--gold-dark); fill: none; stroke-width: 1.5; }
+
+  .calc-panel__label {
+    margin: 0 0 1.5rem;
+    font-size: .625rem; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .28em;
+    color: var(--gold);
+  }
+
+  .calc-result {
+    text-align: center;
+    padding-bottom: 1.75rem;
+    margin-bottom: 1.75rem;
+    border-bottom: 1px solid rgba(246,242,233,.12);
+  }
+  .calc-result__label { font-size: .75rem; color: rgba(246,242,233,.65); margin-bottom: .625rem; }
+  .calc-result__value {
+    font-family: var(--font-display);
+    font-size: 2.75rem; line-height: 1.05; color: var(--cream);
+  }
+  .calc-result__note { margin-top: .625rem; font-size: .75rem; color: rgba(246,242,233,.5); }
+
+  .calc-rate {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1rem 0;
+    border-bottom: 1px solid rgba(246,242,233,.1);
+  }
+  .calc-rate:last-of-type { border-bottom: 0; padding-bottom: 0; }
+  .calc-rate span:first-child { font-size: .8125rem; color: rgba(246,242,233,.65); }
+  .calc-rate span:last-child { font-family: var(--font-display); font-size: 1.125rem; color: var(--gold); }
+
+  /* ---- Upfront costs, below the panel ---- */
+  .calc-costs {
+    margin-top: 1.5rem;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.75rem;
+  }
+  .calc-costs h3 {
+    font-family: var(--font-display); font-size: 1.125rem;
+    color: var(--foreground); margin-bottom: 1.25rem;
+  }
+  .calc-cost-row {
+    display: flex; align-items: baseline; justify-content: space-between; gap: 1rem;
+    padding-block: .75rem;
+    border-top: 1px solid var(--border);
+    font-size: .8125rem; color: var(--muted-foreground);
+  }
+  .calc-cost-row:first-of-type { border-top: 0; padding-top: 0; }
+  .calc-cost-row strong { color: var(--foreground); font-size: .875rem; font-weight: 600; }
+  .calc-cost-row.total {
+    margin-top: .5rem; padding-top: 1rem;
+    border-top: 1px solid var(--border);
+  }
+  .calc-cost-row.total strong { color: var(--primary); font-size: 1rem; }
+
+  .calc-note {
+    margin-top: 1.5rem;
+    padding: 1.125rem 1.25rem;
+    border-radius: .5rem;
+    background: color-mix(in srgb, var(--gold) 8%, transparent);
+    border-left: 3px solid var(--gold);
+    font-size: .8125rem; line-height: 1.6; color: var(--muted-foreground);
+  }
+
+  /* =====================================================================
+     DISCLAIMER
+     ===================================================================== */
+  .calc-disclaimer {
+    max-width: 1150px; margin: 3rem auto 0;
+    padding: 1.75rem 2rem;
+    border-radius: var(--radius);
+    background: var(--secondary);
+    border: 1px solid var(--border);
+  }
+  .calc-disclaimer h4 {
+    display: flex; align-items: center; gap: .625rem;
+    font-family: var(--font-display); font-size: 1.0625rem;
+    color: var(--foreground); margin-bottom: .875rem;
+  }
+  .calc-disclaimer h4 svg { width: 1.125rem; height: 1.125rem; color: var(--gold-dark); }
+  .calc-disclaimer p {
+    font-size: .8125rem; line-height: 1.7; color: var(--muted-foreground);
+    margin-bottom: .625rem;
+  }
+  .calc-disclaimer p:last-child { margin-bottom: 0; }
+  .calc-disclaimer a { color: var(--primary); font-weight: 500; }
+
+  /* =====================================================================
+     BOTTOM CTA
+     ===================================================================== */
+  .calc-cta {
+    max-width: 1150px; margin: 3rem auto 0;
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+    gap: 1.5rem;
+    padding: 2rem 2.25rem;
+    border-radius: var(--radius);
+    background: var(--primary);
+    color: var(--primary-foreground);
+  }
+  .calc-cta p { margin: 0; font-family: var(--font-display); font-size: 1.25rem; max-width: 32ch; }
+  .calc-cta .btn-gold { flex-shrink: 0; }
+
+  @media (max-width: 640px) {
+    .calc-cta { flex-direction: column; align-items: flex-start; }
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+
+<!-- ================= PAGE HEADER ================= -->
+<section class="calc-header">
+  <div class="container-page">
+    <div class="calc-header__crumbs">
+      <a href="{% url 'home' %}">Home</a>
+      <span class="sep">&raquo;</span>
+      <span class="current">Mortgage Calculator</span>
+    </div>
+
+    <h1 class="calc-header__title">Mortgage Calculator</h1>
+    <p class="calc-header__lead">
+      Estimate your monthly payment and upfront costs based on current UAE bank
+      rates — adjust the numbers below to match your budget and residency status.
+    </p>
+  </div>
+</section>
+
+<!-- ================= CALCULATOR ================= -->
+<section class="calc">
+  <div class="container-page">
+
+    <div class="calc__grid">
+
+      <!-- ---- Inputs ---- -->
+      <div class="calc-card">
+        <div class="calc-card__head">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 7h8M8 11h.01M12 11h.01M16 11h.01M8 15h.01M12 15h.01M16 15h.01"/>
+          </svg>
+          <h2>Mortgage Details</h2>
+        </div>
+
+        <!-- Property Price -->
+        <div class="calc-field">
+          <div class="calc-field__label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12l9-9 9 9M5 10v10h14V10"/></svg>
+            Property Purchase Price
+          </div>
+          <div class="calc-field__value" id="cc-price-display">1,200,000 AED</div>
+          <input type="range" class="calc-slider" id="cc-price" min="300000" max="20000000" step="10000" value="1200000">
+          <div class="calc-input-wrap">
+            <input type="text" id="cc-price-input" value="1,200,000">
+            <span class="suffix">AED</span>
+          </div>
+        </div>
+
+        <!-- Residency -->
+        <div class="calc-field">
+          <div class="calc-field__label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/></svg>
+            Residency Status
+          </div>
+          <div class="residency">
+            <button type="button" data-value="uae-national" data-rate="3.49">UAE National<span class="rate">3.49%</span></button>
+            <button type="button" data-value="uae-resident" data-rate="3.99" class="is-active">UAE Resident<span class="rate">3.99%</span></button>
+            <button type="button" data-value="non-resident" data-rate="4.79">Non-Resident<span class="rate">4.79%</span></button>
+          </div>
+        </div>
+
+        <!-- Down Payment -->
+        <div class="calc-field">
+          <div class="calc-field__label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 1v22M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+            Down Payment
+          </div>
+          <div class="calc-field__value" id="cc-down-display">240,000 AED <span class="pct" id="cc-down-pct">(20.0%)</span></div>
+          <input type="range" class="calc-slider" id="cc-down" min="240000" max="960000" step="1000" value="240000">
+          <div class="calc-input-wrap">
+            <input type="text" id="cc-down-input" value="240,000">
+            <span class="suffix">AED</span>
+          </div>
+        </div>
+
+        <!-- Loan Amount -->
+        <div class="calc-field">
+          <div class="calc-field__label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9 12h6M12 9v6"/></svg>
+            Loan Amount
+          </div>
+          <div class="calc-field__value" id="cc-loan-display">960,000 AED <span class="pct" id="cc-loan-pct">(80.0%)</span></div>
+          <input type="range" class="calc-slider" id="cc-loan" min="240000" max="960000" step="1000" value="960000">
+          <div class="calc-input-wrap">
+            <input type="text" id="cc-loan-input" value="960,000">
+            <span class="suffix">AED</span>
+          </div>
+        </div>
+
+        <!-- Loan Period -->
+        <div class="calc-field">
+          <div class="calc-field__label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg>
+            Loan Period (Years)
+          </div>
+          <div class="calc-field__value" id="cc-period-display">25 Years</div>
+          <input type="range" class="calc-slider" id="cc-period" min="1" max="25" step="1" value="25">
+          <div class="calc-input-wrap">
+            <input type="text" id="cc-period-input" value="25">
+          </div>
+        </div>
+
+        <!-- Interest Rate -->
+        <div class="calc-field">
+          <div class="calc-field__label">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 5 5 19M6.5 9a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5ZM17.5 20a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z"/></svg>
+            Annual Interest Rate
+          </div>
+          <div class="calc-field__value" id="cc-rate-display">3.99%</div>
+          <div class="calc-input-wrap">
+            <input type="text" id="cc-rate-input" value="3.99">
+            <span class="suffix">%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ---- Result panel + costs ---- -->
+      <div>
+        <div class="calc-panel">
+          <div class="calc-panel__seal" aria-hidden="true">
+            <svg viewBox="0 0 24 24"><path d="M12 2l2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.5-4.8 2.5.9-5.4L4.2 7.7l5.4-.8L12 2z"/></svg>
+          </div>
+
+          <p class="calc-panel__label">Your Estimate</p>
+
+          <div class="calc-result">
+            <div class="calc-result__label">Estimated Monthly Payment</div>
+            <div class="calc-result__value" id="cc-monthly">5,062 AED</div>
+            <div class="calc-result__note">Based on current settings</div>
+          </div>
+
+          <div class="calc-rate">
+            <span>Interest Rate</span>
+            <span id="cc-rate-tag">3.99%</span>
+          </div>
+          <div class="calc-rate">
+            <span>Loan Term</span>
+            <span id="cc-term-tag">25 Years</span>
+          </div>
+        </div>
+
+        <div class="calc-costs">
+          <h3>Mandatory Upfront Costs</h3>
+          <div class="calc-cost-row">
+            <span>Down Payment</span>
+            <strong id="cc-upfront-down">240,000 AED</strong>
+          </div>
+          <div class="calc-cost-row">
+            <span>DLD Transfer Fee (4%)</span>
+            <strong id="cc-upfront-dld">48,000 AED</strong>
+          </div>
+          <div class="calc-cost-row">
+            <span>Mortgage Registration (0.25% + 290)</span>
+            <strong id="cc-upfront-reg">2,690 AED</strong>
+          </div>
+          <div class="calc-cost-row total">
+            <span>Total Mandatory Costs</span>
+            <strong id="cc-upfront-total">290,690 AED</strong>
+          </div>
+
+          <div class="calc-note">
+            Additional costs to budget for: bank processing fees (2,500–15,000 AED),
+            property valuation (2,500–5,000 AED), and life insurance, which most
+            banks require based on age, health and loan amount.
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ---- Disclaimer ---- -->
+    <div class="calc-disclaimer">
+      <h4>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+        Important Disclaimer
+      </h4>
+      <p><strong>Interest rates</strong> shown (3.49%, 3.99%, 4.79%) are indicative only and subject to change. Actual rates depend on your profile, bank policies and current EIBOR rates.</p>
+      <p><strong>Fees &amp; costs</strong> shown are based on current government regulations. Bank fees, valuation costs and insurance vary by institution and property value.</p>
+      <p><strong>Eligibility</strong> depends on income, existing debts, credit history and age (typically age + loan term &le; 65&ndash;70 years). This calculator provides estimates only.</p>
+      <p>For a breakdown tailored to your situation, <a href="{% url 'contact' %}">speak with a Spacesmith advisor</a>.</p>
+    </div>
+
+    <!-- ---- CTA ---- -->
+    <div class="calc-cta">
+      <p>Ready to see what this looks like for a real property?</p>
+      <a href="{% url 'properties:property_list' %}" class="btn-gold">
+        Browse Properties
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </a>
+    </div>
+
+  </div>
+</section>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  var el = {
+    price: document.getElementById('cc-price'),
+    priceInput: document.getElementById('cc-price-input'),
+    priceDisplay: document.getElementById('cc-price-display'),
+
+    down: document.getElementById('cc-down'),
+    downInput: document.getElementById('cc-down-input'),
+    downDisplay: document.getElementById('cc-down-display'),
+    downPct: document.getElementById('cc-down-pct'),
+
+    loan: document.getElementById('cc-loan'),
+    loanInput: document.getElementById('cc-loan-input'),
+    loanDisplay: document.getElementById('cc-loan-display'),
+    loanPct: document.getElementById('cc-loan-pct'),
+
+    period: document.getElementById('cc-period'),
+    periodInput: document.getElementById('cc-period-input'),
+    periodDisplay: document.getElementById('cc-period-display'),
+
+    rateInput: document.getElementById('cc-rate-input'),
+    rateDisplay: document.getElementById('cc-rate-display'),
+    rateTag: document.getElementById('cc-rate-tag'),
+    termTag: document.getElementById('cc-term-tag'),
+
+    monthly: document.getElementById('cc-monthly'),
+
+    upDown: document.getElementById('cc-upfront-down'),
+    upDld: document.getElementById('cc-upfront-dld'),
+    upReg: document.getElementById('cc-upfront-reg'),
+    upTotal: document.getElementById('cc-upfront-total')
+  };
+
+  var state = { price: 1200000, down: 240000, loan: 960000, period: 25, rate: 3.99 };
+  var manualRate = false;
+
+  function fmt(n) { return new Intl.NumberFormat('en-AE').format(Math.round(n)); }
+  function parseNum(s) {
+    var n = parseFloat(String(s).replace(/,/g, ''));
+    return (isNaN(n) || n < 0) ? 0 : n;
+  }
+
+  function getLimits() {
+    var active = document.querySelector('.residency button.is-active');
+    var status = active ? active.dataset.value : 'uae-resident';
+    if (status === 'uae-national') return { minDown: 0.15, maxLoan: 0.85 };
+    if (status === 'non-resident') return { minDown: 0.40, maxLoan: 0.60 };
+    return { minDown: 0.20, maxLoan: 0.80 };
+  }
+
+  function enforceLimits() {
+    var limits = getLimits();
+    var minDown = state.price * limits.minDown;
+    var maxLoan = state.price * limits.maxLoan;
+    if (state.down < minDown) state.down = minDown;
+    if (state.loan > maxLoan) state.loan = maxLoan;
+    if (Math.abs((state.down + state.loan) - state.price) > 1) {
+      state.loan = state.price - state.down;
+    }
+  }
+
+  function setMaxLoan() {
+    var limits = getLimits();
+    state.down = Math.round(state.price * limits.minDown);
+    state.loan = Math.round(state.price * limits.maxLoan);
+  }
+
+  function updateSliderRanges() {
+    var limits = getLimits();
+    var minDown = Math.round(state.price * limits.minDown);
+    var maxDown = Math.round(state.price - minDown);
+    var minLoan = Math.round(state.price * limits.minDown);
+    var maxLoan = Math.round(state.price * limits.maxLoan);
+    el.down.min = minDown; el.down.max = maxDown;
+    el.loan.min = minLoan; el.loan.max = maxLoan;
+  }
+
+  function monthlyPayment() {
+    var principal = state.loan;
+    var mRate = state.rate / 100 / 12;
+    var n = state.period * 12;
+    if (mRate > 0) {
+      return principal * (mRate * Math.pow(1 + mRate, n)) / (Math.pow(1 + mRate, n) - 1);
+    }
+    return principal / n;
+  }
+
+  function updateUpfront() {
+    var dld = state.price * 0.04;
+    var reg = (state.loan * 0.0025) + 290;
+    el.upDown.textContent = fmt(state.down) + ' AED';
+    el.upDld.textContent = fmt(dld) + ' AED';
+    el.upReg.textContent = fmt(reg) + ' AED';
+    el.upTotal.textContent = fmt(state.down + dld + reg) + ' AED';
+  }
+
+  function render() {
+    enforceLimits();
+    updateSliderRanges();
+
+    el.priceDisplay.textContent = fmt(state.price) + ' AED';
+    el.priceInput.value = fmt(state.price);
+    el.price.value = state.price;
+
+    var downPct = ((state.down / state.price) * 100).toFixed(1);
+    el.downDisplay.childNodes[0].nodeValue = fmt(state.down) + ' AED ';
+    el.downPct.textContent = '(' + downPct + '%)';
+    el.downInput.value = fmt(state.down);
+    el.down.value = state.down;
+
+    var loanPct = ((state.loan / state.price) * 100).toFixed(1);
+    el.loanDisplay.childNodes[0].nodeValue = fmt(state.loan) + ' AED ';
+    el.loanPct.textContent = '(' + loanPct + '%)';
+    el.loanInput.value = fmt(state.loan);
+    el.loan.value = state.loan;
+
+    el.periodDisplay.textContent = state.period + ' Years';
+    el.periodInput.value = state.period;
+    el.period.value = state.period;
+
+    el.rateInput.value = state.rate.toFixed(2);
+    el.rateDisplay.textContent = state.rate.toFixed(2) + '%';
+    el.rateTag.textContent = state.rate.toFixed(2) + '%';
+    el.termTag.textContent = state.period + ' Years';
+
+    el.monthly.textContent = fmt(monthlyPayment()) + ' AED';
+
+    updateUpfront();
+  }
+
+  el.price.addEventListener('input', function () {
+    state.price = parseFloat(this.value);
+    setMaxLoan();
+    render();
+  });
+
+  el.down.addEventListener('input', function () {
+    state.down = parseFloat(this.value);
+    state.loan = state.price - state.down;
+    render();
+  });
+
+  el.loan.addEventListener('input', function () {
+    state.loan = parseFloat(this.value);
+    state.down = state.price - state.loan;
+    render();
+  });
+
+  el.period.addEventListener('input', function () {
+    state.period = parseFloat(this.value);
+    render();
+  });
+
+  document.querySelectorAll('.residency button').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      document.querySelectorAll('.residency button').forEach(function (b) { b.classList.remove('is-active'); });
+      this.classList.add('is-active');
+      if (!manualRate) state.rate = parseFloat(this.dataset.rate);
+      setMaxLoan();
+      render();
+    });
+  });
+
+  el.rateInput.addEventListener('blur', function () {
+    var val = parseFloat(this.value);
+    if (isNaN(val) || val < 2) val = 2;
+    else if (val > 10) val = 10;
+    state.rate = val;
+    manualRate = true;
+    render();
+  });
+  el.rateInput.addEventListener('keypress', function (e) { if (e.key === 'Enter') this.blur(); });
+
+  function bindTextInput(input, key) {
+    input.addEventListener('blur', function () {
+      var val = parseNum(this.value);
+      var limits = getLimits();
+
+      if (key === 'price') {
+        val = Math.max(300000, Math.min(20000000, val));
+        state.price = val;
+        setMaxLoan();
+      } else if (key === 'down') {
+        var minDown = state.price * limits.minDown;
+        var maxDown = state.price - minDown;
+        val = Math.max(minDown, Math.min(maxDown, val));
+        state.down = val;
+        state.loan = state.price - val;
+      } else if (key === 'loan') {
+        var maxLoan = state.price * limits.maxLoan;
+        var minLoan = state.price * (1 - limits.maxLoan);
+        val = Math.max(minLoan, Math.min(maxLoan, val));
+        state.loan = val;
+        state.down = state.price - val;
+      } else if (key === 'period') {
+        val = Math.max(1, Math.min(25, Math.round(val)));
+        state.period = val;
+      }
+      render();
+    });
+    input.addEventListener('keypress', function (e) { if (e.key === 'Enter') this.blur(); });
+  }
+
+  bindTextInput(el.priceInput, 'price');
+  bindTextInput(el.downInput, 'down');
+  bindTextInput(el.loanInput, 'loan');
+  bindTextInput(el.periodInput, 'period');
+
+  setMaxLoan();
+  render();
+});
+</script>
+{% endblock %}

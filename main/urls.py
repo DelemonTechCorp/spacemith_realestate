@@ -21,4 +21,6 @@ urlpatterns = [
     path('privacy-policy/', views.privacy_policy, name='privacy-policy'),
     path('faq/', views.faq, name='faq'),
     #  path('robots.txt', views.robots_txt, name='robots_txt'), 
+    path("mortgage-calculator/", views.MortgageCalculatorView.as_view(), name="mortgage_calculator"),
+    # path("mortgage-calculator/", views.mortgage_calculator, name="mortgage_calculator"),             function based view
 ]
