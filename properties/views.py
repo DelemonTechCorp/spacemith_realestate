@@ -1932,3 +1932,136 @@ def district_detail(request, slug):
         'rel_next': url_for(page_obj.next_page_number()) if page_obj.has_next() else None,
         'schema_json': _json_ld(schema),
     })
+    
+
+
+
+
+
+from django.db.models import Q
+from django.shortcuts import render
+from django.urls import reverse
+ 
+from properties.models import DeveloperCompany, District
+ 
+MAP_URL = f'{SITE_URL}/properties/map/'
+ 
+# Safety cap, not a UX limit — Orange Spaces ships ~800 properties in one
+# payload with no problem. Raise this only if the catalogue grows past a
+# size where a single page load becomes noticeably slow.
+MAP_PIN_LIMIT = 2000
+ 
+ 
+def property_map(request):
+    """
+    Interactive map of every active, geocoded property that matches the
+    current filters. Pins are plotted and clustered entirely client-side
+    (see property_map.html) — this view's only job is handing over one JSON
+    payload of everything that matches, same pattern as Orange Spaces.
+    """
+    bounce = _clean_url(request)
+    if bounce:
+        return bounce
+ 
+    search = request.GET.get('q', '').strip()
+    district_slug = request.GET.get('district', '').strip()
+    developer_slug = request.GET.get('developer', '').strip()
+ 
+    # Only properties with real coordinates can go on the map at all —
+    # everything else would either crash Leaflet or need a fake fallback
+    # pin, which is worse than just not listing it here.
+    scope = (
+    _base_qs()
+    .filter(latitude__isnull=False, longitude__isnull=False)
+    .exclude(latitude=0, longitude=0)
+)
+ 
+    qs = scope
+    if district_slug:
+        qs = qs.filter(district__slug=district_slug)
+    if developer_slug:
+        qs = qs.filter(developer_company__slug=developer_slug)
+    if search:
+        qs = qs.filter(
+            Q(title__icontains=search)
+            | Q(district__name__icontains=search)
+            | Q(city__name__icontains=search)
+            | Q(developer_company__name__icontains=search)
+        ).distinct()
+ 
+    # Same client-priority ordering as the rest of the site, so the
+    # developers the client cares about surface first in the card list.
+    qs = qs.annotate(dev_priority=_priority_annotation()).order_by('dev_priority', '-created_at')
+ 
+    total_count = qs.count()
+    properties = list(qs[:MAP_PIN_LIMIT])
+ 
+    # ── Pins for the map ──
+    # Rendered via |json_script in the template — handles escaping for us.
+    pins = []
+    for p in properties:
+        dev = p.developer_company
+        pins.append({
+            'id': p.pk,
+            'title': p.title,
+            'lat': float(p.latitude),
+            'lng': float(p.longitude),
+            'image': p.cover_image,
+            'devName': dev.name if dev else '',
+            'devLogo': (_logo_url(dev) or '') if dev else '',
+            'district': p.district.name if p.district else '',
+            'city': p.city.name if p.city else '',
+            'status': p.property_status.name if p.property_status else '',
+            'statusSlug': p.property_status.slug if p.property_status else '',
+            'price': float(p.compare_starting_price) if p.compare_starting_price else None,
+            'sqft': p.compare_unit_size_range or '',
+            'units': p.residential_units or 0,
+            'url': reverse('properties:property_detail', args=[p.slug]),
+        })
+ 
+    # ── Facets — scoped to properties that can actually appear on the map ──
+    districts = (
+        District.objects
+        .filter(is_active=True, properties__in=scope.values('pk'))
+        .order_by('name').distinct()
+    )
+    developers = (
+        DeveloperCompany.objects
+        .filter(is_active=True, properties__in=scope.values('pk'))
+        .order_by('name').distinct()
+    )
+ 
+    has_filters = bool(search or district_slug or developer_slug)
+ 
+    # ── SEO ──
+    meta_title = _pick([
+    f'UAE Properties — Explore on the Map | {BRAND}',
+    f'UAE Property Map | {BRAND}',
+    f'Property Map | Spacesmith',
+    ])
+    meta_description = _describe(
+    f'Browse {total_count} properties across the UAE on an interactive map '
+    f'— filter by area and developer to find what fits.',
+    filler=f'Curated by {BRAND}.',
+    )
+ 
+    return render(request, 'property_map.html', {
+        'pins': pins,
+        'properties': properties,
+        'total_count': total_count,
+        'shown_count': len(pins),
+ 
+        'districts': districts,
+        'developers': developers,
+ 
+        'active_search': search,
+        'active_district': district_slug,
+        'active_developer': developer_slug,
+        'has_filters': has_filters,
+ 
+        'meta_title': meta_title,
+        'meta_description': meta_description,
+        'canonical': MAP_URL,
+        'robots': 'noindex, follow' if has_filters else
+                  'index, follow, max-image-preview:large, max-snippet:-1',
+    })

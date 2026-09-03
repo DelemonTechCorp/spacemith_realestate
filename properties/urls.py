@@ -9,6 +9,10 @@ urlpatterns = [
     path('ready/', views.ready_properties, name='ready_properties'),
     path('off-plan/', views.offplan_properties, name='offplan_properties'),
     
+    # ── MAP ──  (before the catch-all — same reason as developers/ and areas/ below)
+    path('map/', views.property_map, name='property_map'),
+
+    
     # ── COMPARE ──  (before the catch-all)
     # path('compare/', views.compare_properties, name='compare'),
     

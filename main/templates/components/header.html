@@ -388,6 +388,12 @@
         Developers
       </a>
 
+      <a href="{% url 'properties:property_map' %}"
+   class="nav-link {% if '/map' in request.path %}is-active{% endif %}">
+  Map
+</a>
+
+
       <!-- Resources Dropdown -->
       <div class="nav-dropdown" id="resourcesDropdown">
         <button class="nav-link dropdown-trigger"
@@ -518,6 +524,11 @@
          class="mobile-link {% if '/developer_list' in request.path %}is-active{% endif %}">
         Developers
       </a>
+      <a href="{% url 'properties:property_map' %}"
+   class="mobile-link {% if '/map' in request.path %}is-active{% endif %}">
+  Map
+</a>
+
 
       <!-- Mobile Resources Dropdown -->
       <button class="mobile-dropdown-trigger"

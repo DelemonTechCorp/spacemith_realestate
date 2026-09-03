@@ -302,17 +302,10 @@
   .pd-aside { display: flex; flex-direction: column; gap: .875rem; }
   @media (min-width: 1024px) {
     .pd-aside {
-      position: sticky;
-      top: calc(var(--nav-height) + 1rem);
-      /* Without a height cap a tall sidebar scrolls away before it ever
-         sticks. Capping it to the viewport keeps it genuinely fixed. */
-      max-height: calc(100vh - var(--nav-height) - 2rem);
-      overflow-y: auto;
-      overscroll-behavior: contain;
-      padding-right: .25rem;
-    }
-    .pd-aside::-webkit-scrollbar { width: 3px; }
-    .pd-aside::-webkit-scrollbar-thumb { background: var(--border); border-radius: .5rem; }
+    position: sticky;
+    top: calc(var(--nav-height) + 1rem);
+    align-self: start;
+}
   }
 
   .pd-card {
@@ -1143,22 +1136,29 @@
   }
 
   /* ================= MAP ================= */
-  var mapEl = document.getElementById('pdMap');
-  if (mapEl) {
-    window.addEventListener('load', function () {
-      if (typeof L === 'undefined') return;
-      var lat = parseFloat(mapEl.dataset.lat);
-      var lng = parseFloat(mapEl.dataset.lng);
-      if (isNaN(lat) || isNaN(lng)) return;
+var mapEl = document.getElementById('pdMap');
+if (mapEl) {
+  window.addEventListener('load', function () {
+    if (typeof L === 'undefined') return;
+    var lat = parseFloat(mapEl.dataset.lat);
+    var lng = parseFloat(mapEl.dataset.lng);
+    if (isNaN(lat) || isNaN(lng)) return;
 
-      var map = L.map(mapEl, { scrollWheelZoom: false }).setView([lat, lng], 14);
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: '&copy; OpenStreetMap contributors'
-      }).addTo(map);
-      L.marker([lat, lng]).addTo(map).bindPopup(mapEl.dataset.label);
-    });
-  }
+    var map = L.map(mapEl, { scrollWheelZoom: false }).setView([lat, lng], 14);
+
+    L.tileLayer('https://mt{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&hl=en', {
+      subdomains: ['0', '1', '2', '3'],
+      maxZoom: 20,
+      tileSize: 256,
+      attribution: 'Map data &copy; <a href="https://maps.google.com">Google</a>'
+    }).addTo(map);
+
+    L.marker([lat, lng]).addTo(map).bindPopup(mapEl.dataset.label);
+
+    setTimeout(function () { map.invalidateSize(true); }, 300);
+    window.addEventListener('resize', function () { map.invalidateSize(true); });
+  });
+}
 })();
 </script>
 {% endblock %}

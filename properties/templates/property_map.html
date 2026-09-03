@@ -1,0 +1,733 @@
+{% extends 'base.html' %}
+{% load static humanize %}
+
+{# meta_title / meta_description / canonical / robots come from the view #}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+  /* =====================================================================
+     PROPERTY MAP — everything scoped under .pmap. Tokens come from
+     base.html. Card styling (.pcard) matches property_list.html so a
+     visitor moving between the two pages sees one design, not two.
+     ===================================================================== */
+
+  /* ---- Banner ---- */
+  .pmap-head {
+    background: var(--ink);
+    color: var(--cream);
+    padding-top: calc(var(--nav-height) + 3rem);
+    padding-bottom: 2.5rem;
+  }
+  .pmap-head__inner {
+    display: flex; flex-wrap: wrap; align-items: flex-end;
+    justify-content: space-between; gap: 1.5rem;
+  }
+  .pmap-crumb {
+    display: flex; align-items: center; gap: .5rem;
+    font-size: .6875rem; text-transform: uppercase; letter-spacing: .16em;
+    color: rgba(246,242,233,.55);
+  }
+  .pmap-crumb a { color: rgba(246,242,233,.8); }
+  .pmap-crumb a:hover { color: var(--gold); }
+
+  .pmap-head h1 {
+    margin: .875rem 0 0;
+    font-family: var(--font-display);
+    font-size: clamp(2rem, 5vw, 3.25rem);
+    line-height: 1.08;
+    color: var(--cream);
+  }
+  .pmap-head h1 em { font-style: normal; color: var(--gold); }
+  .pmap-head p {
+    margin: .75rem 0 0; max-width: 34rem;
+    font-size: .9375rem; color: rgba(246,242,233,.72);
+  }
+
+  /* ---- Filter bar ---- */
+  .pmap-filters { position: relative; z-index: 2; margin-top: -2rem; }
+  .pmap-filters__card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-elegant);
+    padding: 1rem 1.125rem;
+  }
+.pmap-filters__row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: .75rem;
+  align-items: center;
+}
+
+
+  .pmap-search { position: relative; flex: 1 1 260px; min-width: 220px; }
+  .pmap-search svg {
+    position: absolute; left: .875rem; top: 50%; translate: 0 -50%;
+    width: 1rem; height: 1rem; color: var(--muted-foreground); pointer-events: none;
+  }
+  .pmap-search input {
+    width: 100%; height: 2.75rem;
+    padding: 0 .875rem 0 2.5rem;
+    border: 1px solid var(--border); border-radius: .5rem;
+    background: var(--secondary); color: var(--foreground);
+    font-family: inherit; font-size: .9375rem;
+  }
+  .pmap-search input:focus { outline: none; border-color: var(--primary); }
+
+  .pmap-select { flex: 1 1 12rem; min-width: 10rem; }
+  .pmap-select select {
+    width: 100%; height: 2.75rem;
+    padding-inline: .75rem;
+    border: 1px solid var(--border); border-radius: .5rem;
+    background: var(--card); color: var(--foreground);
+    font-family: inherit; font-size: .875rem;
+  }
+  .pmap-select select:focus { outline: none; border-color: var(--primary); }
+
+  .pmap-filters__row .btn-solid,
+  .pmap-filters__row .btn-ghost { height: 2.75rem; flex-shrink: 0; }
+
+  .pmap-count-pill {
+    display: inline-flex; align-items: center;
+    margin-left: auto;
+    padding: .5rem 1rem;
+    border-radius: 9999px;
+    background: color-mix(in srgb, var(--primary) 10%, transparent);
+    color: var(--primary);
+    font-size: .8125rem; font-weight: 600;
+    white-space: nowrap;
+  }
+
+/* Tablet: search full-width, filters share a row, pill full-width below */
+@media (min-width: 641px) {
+  .pmap-filters__row { grid-template-columns: 1fr 1fr; }
+  .pmap-search  { grid-column: 1 / -1; }
+  .pmap-count-pill { grid-column: 1 / -1; margin-left: 0; justify-content: center; }
+}
+
+/* Desktop: everything back on one line */
+@media (min-width: 1024px) {
+  .pmap-filters__row {
+    grid-template-columns: minmax(220px, 1.4fr) repeat(2, minmax(9rem, 1fr)) auto auto auto;
+  }
+  .pmap-search { grid-column: auto; }
+  .pmap-count-pill { grid-column: auto; margin-left: auto; justify-content: center; }
+}
+
+/* Mobile: stack, full-width controls */
+@media (max-width: 640px) {
+  .pmap-filters__row .btn-solid,
+  .pmap-filters__row .btn-ghost { width: 100%; }
+}
+
+  /* ---- Body layout ---- */
+  .pmap-body { padding-block: 1.5rem 4rem; }
+
+  .pmap-layout {
+    display: grid; gap: 1.25rem;
+    grid-template-columns: 1fr;
+  }
+  @media (min-width: 1024px) {
+    .pmap-layout { grid-template-columns: 1.3fr 1fr; gap: 1.5rem; align-items: start; }
+  }
+
+  .pmap-map-col { height: 24rem; }
+  @media (min-width: 1024px) {
+    .pmap-map-col {
+      position: sticky;
+      top: calc(var(--nav-height) + 1rem);
+      height: calc(100vh - var(--nav-height) - 2rem);
+    }
+  }
+
+  #propMap {
+    width: 100%; height: 100%;
+    border-radius: var(--radius);
+    overflow: hidden;
+    border: 1px solid var(--border);
+    background: var(--secondary);
+  }
+
+  .pmap-cards-col {
+    display: grid; gap: 1rem;
+    grid-template-columns: repeat(2, 1fr);
+  }
+  @media (max-width: 420px) {
+  .pmap-cards-col { grid-template-columns: 1fr; }
+}
+  @media (min-width: 1024px) {
+    .pmap-cards-col {
+      max-height: calc(100vh - var(--nav-height) - 2rem);
+      overflow-y: auto;
+      padding-right: .25rem;
+      align-content: start;
+    }
+    .pmap-cards-col::-webkit-scrollbar { width: 3px; }
+    .pmap-cards-col::-webkit-scrollbar-thumb { background: var(--border); border-radius: .5rem; }
+  }
+
+  .hidden-property { display: none !important; }
+
+  .pmap-load-more { grid-column: 1 / -1; text-align: center; padding-block: .5rem 1rem; }
+  .pmap-load-more .btn-ghost { min-width: 12rem; }
+
+  /* ---- Cards — same component as property_list.html ---- */
+  .pcard {
+    display: flex; flex-direction: column; height: 100%;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    position: relative;
+    transition: transform .3s ease, box-shadow .3s ease, border-color .3s ease, outline-color .2s ease;
+    outline: 2px solid transparent; outline-offset: 2px;
+  }
+  .pcard:hover {
+    transform: translateY(-3px);
+    border-color: color-mix(in srgb, var(--primary) 35%, transparent);
+    box-shadow: var(--shadow-card);
+  }
+  .pcard.is-active { outline-color: var(--gold); }
+
+  .pcard__media { position: relative; aspect-ratio: 16 / 10; overflow: hidden; background: var(--secondary); }
+  .pcard__media img { width: 100%; height: 100%; object-fit: cover; transition: transform .7s ease; }
+  .pcard:hover .pcard__media img { transform: scale(1.05); }
+
+  .pcard__badge {
+    position: absolute; top: .75rem; left: .75rem;
+    padding: .25rem .625rem; border-radius: 9999px;
+    background: var(--primary); color: var(--primary-foreground);
+    font-size: .625rem; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .1em;
+  }
+  .pcard__badge--offplan { background: var(--gold); color: var(--ink); }
+
+  .pcard__locate {
+    position: absolute; top: .625rem; right: .625rem; z-index: 2;
+    width: 2rem; height: 2rem; border-radius: 9999px;
+    display: grid; place-items: center;
+    background: rgba(11,21,18,.65); backdrop-filter: blur(4px);
+    color: #fff; border: 0; cursor: pointer;
+    transition: background-color .2s ease;
+  }
+  .pcard__locate:hover { background: var(--primary); }
+  .pcard__locate svg { width: 1rem; height: 1rem; }
+
+  .pcard__body { flex: 1; display: flex; flex-direction: column; padding: .9375rem .9375rem 0; }
+  .pcard__dev {
+    margin: 0 0 .375rem;
+    font-size: .625rem; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .14em;
+    color: var(--gold);
+  }
+  .pcard__title {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: 1.0625rem; line-height: 1.3; color: var(--foreground);
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .pcard__loc {
+    display: flex; align-items: center; gap: .375rem;
+    margin: .5rem 0 0; font-size: .8125rem; color: var(--muted-foreground);
+  }
+  .pcard__loc svg { width: .875rem; height: .875rem; flex-shrink: 0; color: var(--primary); }
+
+  .pcard__foot {
+    margin-top: auto;
+    display: flex; align-items: center; justify-content: space-between; gap: .75rem;
+    padding: .75rem .9375rem;
+    border-top: 1px solid var(--border);
+    background: color-mix(in srgb, var(--secondary) 45%, transparent);
+  }
+  .pcard__price { font-size: .8125rem; font-weight: 600; color: var(--primary); }
+  .pcard__price small {
+    display: block; margin-top: .125rem;
+    font-size: .5625rem; font-weight: 400; text-transform: uppercase;
+    letter-spacing: .1em; color: var(--muted-foreground);
+  }
+  .pcard__arrow {
+    display: grid; place-items: center; flex-shrink: 0;
+    width: 1.875rem; height: 1.875rem; border-radius: 9999px;
+    border: 1px solid var(--border); color: var(--primary);
+    transition: background-color .25s ease, color .25s ease, border-color .25s ease;
+  }
+  .pcard__arrow svg { width: .8125rem; height: .8125rem; }
+  .pcard:hover .pcard__arrow {
+    background: var(--primary); border-color: var(--primary); color: var(--primary-foreground);
+  }
+
+  .pmap-empty {
+    grid-column: 1 / -1;
+    text-align: center; padding: 3rem 1.5rem;
+    border: 1px dashed var(--border); border-radius: var(--radius);
+  }
+  .pmap-empty h2 { margin: 0; font-family: var(--font-display); font-size: 1.375rem; }
+  .pmap-empty p { margin: .5rem 0 1.25rem; color: var(--muted-foreground); font-size: .875rem; }
+
+  /* =====================================================================
+     LEAFLET — dev-logo pins + proximity clusters, brand-themed
+     ===================================================================== */
+  .pmap-cluster {
+    display: flex; align-items: center; justify-content: center;
+    background: var(--primary);
+    color: #fff;
+    border-radius: 50%;
+    border: 3px solid rgba(246,242,233,.9);
+    font-family: var(--font-body);
+    font-weight: 700;
+    box-shadow: 0 6px 16px rgba(11,21,18,.35);
+    cursor: pointer;
+  }
+  .pmap-cluster--md { background: color-mix(in srgb, var(--primary) 85%, black); }
+  .pmap-cluster--lg { background: var(--gold-dark, #b8952c); color: var(--ink); }
+
+  .leaflet-popup-content-wrapper { border-radius: .5rem; }
+  .leaflet-popup-content { margin: 0 !important; }
+  .pmap-popup-wrap .leaflet-popup-content-wrapper { padding: 0; overflow: hidden; }
+
+  /* ---- Single-property popup ---- */
+  .pmap-single-popup { width: 15.5rem; background: var(--card); }
+  .pmap-single-popup__img { position: relative; height: 7rem; }
+  .pmap-single-popup__img img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .pmap-single-popup__badge {
+    position: absolute; top: .5rem; left: .5rem;
+    padding: .1875rem .5rem; border-radius: 9999px;
+    background: var(--primary); color: var(--primary-foreground);
+    font-size: .5625rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em;
+  }
+  .pmap-single-popup__body { padding: .625rem .75rem .75rem; }
+  .pmap-single-popup__dev {
+    margin: 0; font-size: .5625rem; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .1em; color: var(--gold-dark, #b8952c);
+  }
+  .pmap-single-popup__body h4 {
+    margin: .1875rem 0 0; font-family: var(--font-display);
+    font-size: .9375rem; line-height: 1.25; color: var(--foreground);
+    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .pmap-single-popup__loc { margin: .25rem 0 0; font-size: .6875rem; color: var(--muted-foreground); }
+  .pmap-single-popup__price { margin: .25rem 0 0; font-size: .8125rem; font-weight: 600; color: var(--primary); }
+  .pmap-single-popup__link {
+    display: inline-block; margin-top: .5rem;
+    font-size: .6875rem; font-weight: 600; color: var(--primary);
+    text-decoration: underline;
+  }
+
+  /* ---- Cluster popup ---- */
+  .pmap-cluster-popup {
+    width: 17rem; max-height: 20rem;
+    display: flex; flex-direction: column;
+    background: var(--card);
+  }
+  .pmap-cluster-popup__head {
+    padding: .625rem .75rem;
+    background: var(--primary); color: var(--primary-foreground);
+    font-size: .6875rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em;
+    flex-shrink: 0;
+  }
+  .pmap-cluster-popup__list { overflow-y: auto; }
+  .pmap-cluster-popup__item {
+    display: flex; gap: .5rem; align-items: center;
+    padding: .5rem .625rem;
+    border-bottom: 1px solid var(--border);
+    text-decoration: none; color: inherit;
+  }
+  .pmap-cluster-popup__item:last-child { border-bottom: 0; }
+  .pmap-cluster-popup__item:hover { background: var(--secondary); }
+  .pmap-cluster-popup__item img { width: 2.75rem; height: 2.125rem; object-fit: cover; border-radius: .3125rem; flex-shrink: 0; }
+  .pmap-cluster-popup__info { min-width: 0; }
+  .pmap-cluster-popup__name { font-size: .75rem; font-weight: 600; color: var(--foreground); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pmap-cluster-popup__price { font-size: .6875rem; color: var(--primary); font-weight: 600; margin-top: .0625rem; }
+  .pmap-cluster-popup__loc { font-size: .625rem; color: var(--muted-foreground); margin-top: .0625rem; }
+</style>
+{% endblock %}
+
+
+{% block content %}
+
+<!-- ================= BANNER ================= -->
+<section class="pmap-head">
+  <div class="container-page pmap-head__inner">
+    <div>
+      <nav class="pmap-crumb" aria-label="Breadcrumb">
+        <a href="{% url 'home' %}">Home</a>
+        <span>/</span>
+        <span>Map</span>
+      </nav>
+      <h1>UAE Properties — <em>Explore on the Map</em></h1>
+<p>Browse curated luxury properties across Dubai, Abu Dhabi, Sharjah and beyond.</p>    </div>
+  </div>
+</section>
+
+
+<!-- ================= FILTERS ================= -->
+<div class="container-page pmap-filters">
+  <form class="pmap-filters__card" method="get" action="{% url 'properties:property_map' %}" id="pmapForm">
+    <div class="pmap-filters__row">
+
+      <div class="pmap-search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" aria-hidden="true">
+          <circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>
+        </svg>
+        <label for="pmap-q" class="sr-only" hidden>Search</label>
+        <input type="search" id="pmap-q" name="q" value="{{ active_search }}"
+               placeholder="Search by project, area or developer…">
+      </div>
+
+      <div class="pmap-select">
+        <label for="pmap-district" class="sr-only" hidden>Area</label>
+        <select id="pmap-district" name="district">
+          <option value="">All Areas</option>
+          {% for d in districts %}
+            <option value="{{ d.slug }}" {% if d.slug == active_district %}selected{% endif %}>{{ d.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="pmap-select">
+        <label for="pmap-developer" class="sr-only" hidden>Developer</label>
+        <select id="pmap-developer" name="developer">
+          <option value="">All Developers</option>
+          {% for dv in developers %}
+            <option value="{{ dv.slug }}" {% if dv.slug == active_developer %}selected{% endif %}>{{ dv.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <button type="submit" class="btn-solid">Apply</button>
+      {% if has_filters %}
+        <a href="{% url 'properties:property_map' %}" class="btn-ghost">Clear</a>
+      {% endif %}
+
+      <span class="pmap-count-pill">{{ total_count|intcomma }} Result{{ total_count|pluralize }}</span>
+    </div>
+  </form>
+</div>
+
+
+<!-- ================= MAP + CARDS ================= -->
+<section class="pmap-body">
+  <div class="container-page pmap-layout">
+
+    <div class="pmap-map-col">
+      <div id="propMap" role="application" aria-label="Map of properties"></div>
+    </div>
+
+    <div class="pmap-cards-col" id="pmapCardsCol">
+      {% for property in properties %}
+        <a class="pcard {% if forloop.counter0 >= 12 %}hidden-property{% endif %}"
+           data-pin-id="{{ property.pk }}"
+           href="{% url 'properties:property_detail' property.slug %}">
+          <div class="pcard__media">
+            <img src="{{ property.cover_image }}" alt="{{ property.title }}"
+                 loading="lazy" width="480" height="300">
+            {% if property.property_status %}
+              <span class="pcard__badge {% if property.property_status.slug == 'off-plan' %}pcard__badge--offplan{% endif %}">
+                {{ property.property_status.name }}
+              </span>
+            {% endif %}
+            <button type="button" class="pcard__locate" data-locate-id="{{ property.pk }}"
+                    aria-label="Show on map" title="Show on map">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>
+              </svg>
+            </button>
+          </div>
+
+          <div class="pcard__body">
+            {% if property.developer_company %}
+              <p class="pcard__dev">{{ property.developer_company.name }}</p>
+            {% endif %}
+            <h2 class="pcard__title">{{ property.title }}</h2>
+            <p class="pcard__loc">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>
+              </svg>
+              {% if property.district %}{{ property.district.name }}, {% endif %}{{ property.city.name }}
+            </p>
+          </div>
+
+          <div class="pcard__foot">
+            <div class="pcard__price">
+              {% firstof property.price property.compare_starting_price as from_price %}
+              {% if from_price %}
+                AED {{ from_price|floatformat:0|intcomma }}
+                <small>Starting from</small>
+              {% else %}
+                Price on request
+                <small>Enquire for details</small>
+              {% endif %}
+            </div>
+            <span class="pcard__arrow" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                   stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </span>
+          </div>
+        </a>
+
+      {% empty %}
+        <div class="pmap-empty">
+          <h2>Nothing matches those filters</h2>
+          <p>Try a different area or developer.</p>
+          <a href="{% url 'properties:property_map' %}" class="btn-solid">Show all on map</a>
+        </div>
+      {% endfor %}
+
+      {% if properties|length > 12 %}
+        <div class="pmap-load-more">
+          <button type="button" id="pmapLoadMore" class="btn-ghost">Load More Properties</button>
+        </div>
+      {% endif %}
+    </div>
+
+  </div>
+</section>
+
+{{ pins|json_script:"pmap-pins" }}
+
+{% endblock %}
+
+
+{% block extra_js %}
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+(function () {
+  var mapEl = document.getElementById('propMap');
+  if (!mapEl || typeof L === 'undefined') return;
+
+  var dataEl = document.getElementById('pmap-pins');
+  var allPins = dataEl ? JSON.parse(dataEl.textContent) : [];
+
+  function validCoord(v) { return v !== null && v !== undefined && v !== '' && !isNaN(parseFloat(v)); }
+  function hasCoords(p) {
+  return validCoord(p.lat) && validCoord(p.lng) && !(p.lat === 0 && p.lng === 0);
+}
+
+  var styles = getComputedStyle(document.documentElement);
+  var PRIMARY = (styles.getPropertyValue('--primary') || '#0b5132').trim() || '#0b5132';
+
+  /* ================= PIN + CLUSTER MARKUP ================= */
+  function makePinSVG(p, active) {
+    var bg = active ? '#0a3d1f' : PRIMARY;
+    var clipId = 'pmap-clip-' + p.id;
+    var inner;
+
+    if (p.devLogo) {
+      inner = '<image href="' + p.devLogo + '" x="3" y="3" width="22" height="22" '
+            + 'clip-path="url(#' + clipId + ')" preserveAspectRatio="xMidYMid meet" />';
+    } else {
+      var initials = (p.devName || '').trim().slice(0, 2).toUpperCase();
+      inner = '<text x="14" y="18" text-anchor="middle" dominant-baseline="middle" '
+            + 'font-size="9" font-weight="700" font-family="sans-serif" fill="' + bg + '">'
+            + initials + '</text>';
+    }
+
+    return '<svg xmlns="http://www.w3.org/2000/svg" width="28" height="38" viewBox="0 0 28 38" '
+      + 'style="overflow:visible;display:block;">'
+      + '<defs><clipPath id="' + clipId + '"><circle cx="14" cy="14" r="11"/></clipPath></defs>'
+      + '<path d="M14 0C6.268 0 0 6.268 0 14C0 22 14 38 14 38C14 38 28 22 28 14C28 6.268 21.732 0 14 0Z" fill="' + bg + '"/>'
+      + '<circle cx="14" cy="14" r="12" fill="#fff"/>'
+      + '<circle cx="14" cy="14" r="11" fill="' + (p.devLogo ? '#fff' : '#eef4f0') + '"/>'
+      + inner
+      + '</svg>';
+  }
+
+  function makeClusterHTML(count) {
+    var size = count >= 1000 ? 56 : count >= 100 ? 52 : count >= 20 ? 48 : 36;
+    var fs   = count >= 1000 ? 10 : count >= 100 ? 11 : 13;
+    var cls  = count >= 100 ? ' pmap-cluster--lg' : count >= 20 ? ' pmap-cluster--md' : '';
+    return '<div class="pmap-cluster' + cls + '" style="width:' + size + 'px;height:' + size + 'px;font-size:' + fs + 'px;">'
+         + count + '</div>';
+  }
+
+  function fmtPrice(price) {
+    return price ? 'AED ' + Math.round(price).toLocaleString('en-US') : 'Price on request';
+  }
+
+  function buildPopup(p) {
+    return '<div class="pmap-single-popup">'
+      + '<div class="pmap-single-popup__img"><img src="' + p.image + '" alt="" loading="lazy">'
+      +   (p.status ? '<span class="pmap-single-popup__badge">' + p.status + '</span>' : '')
+      + '</div>'
+      + '<div class="pmap-single-popup__body">'
+      +   (p.devName ? '<p class="pmap-single-popup__dev">' + p.devName + '</p>' : '')
+      +   '<h4>' + p.title + '</h4>'
+      +   '<p class="pmap-single-popup__loc">' + (p.district ? p.district + ', ' : '') + p.city + '</p>'
+      +   '<p class="pmap-single-popup__price">' + fmtPrice(p.price) + '</p>'
+      +   '<a class="pmap-single-popup__link" href="' + p.url + '">View Details</a>'
+      + '</div></div>';
+  }
+
+  function buildClusterPopup(group) {
+    var items = group.map(function (p) {
+      return '<a href="' + p.url + '" class="pmap-cluster-popup__item">'
+        + '<img src="' + p.image + '" alt="" loading="lazy">'
+        + '<div class="pmap-cluster-popup__info">'
+        +   '<div class="pmap-cluster-popup__name">' + p.title + '</div>'
+        +   '<div class="pmap-cluster-popup__price">' + fmtPrice(p.price) + '</div>'
+        +   '<div class="pmap-cluster-popup__loc">' + p.district + '</div>'
+        + '</div></a>';
+    }).join('');
+    return '<div class="pmap-cluster-popup">'
+      + '<div class="pmap-cluster-popup__head">' + group.length + ' Properties in this area</div>'
+      + '<div class="pmap-cluster-popup__list">' + items + '</div></div>';
+  }
+
+  /* ================= PROXIMITY CLUSTERING ================= */
+  function groupByProximity(props, zoom) {
+    var t = zoom >= 16 ? 0.0005
+          : zoom >= 15 ? 0.001
+          : zoom >= 14 ? 0.003
+          : zoom >= 13 ? 0.006
+          : zoom >= 12 ? 0.012
+          : zoom >= 11 ? 0.025
+          : zoom >= 10 ? 0.05
+          : zoom >= 9  ? 0.12
+          : zoom >= 8  ? 0.3
+          : zoom >= 7  ? 0.7 : 1.5;
+
+    var groups = [], used = {};
+    props.forEach(function (p, i) {
+      if (used[i]) return;
+      var grp = [p]; used[i] = true;
+      props.forEach(function (q, j) {
+        if (used[j]) return;
+        if (Math.abs(p.lat - q.lat) < t && Math.abs(p.lng - q.lng) < t) {
+          grp.push(q); used[j] = true;
+        }
+      });
+      groups.push(grp);
+    });
+    return groups;
+  }
+
+  /* ================= MAP ================= */
+  var map = L.map(mapEl, { scrollWheelZoom: true, zoomControl: true }).setView([25.2048, 55.2708], 11);
+L.tileLayer('https://mt{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&hl=en', {
+  subdomains: ['0', '1', '2', '3'],
+  maxZoom: 20,
+  tileSize: 256,
+  attribution: 'Map data &copy; <a href="https://maps.google.com">Google</a>'
+}).addTo(map);
+
+  var activeMarkers = [];
+  var markerById = {};
+
+  function renderMarkers(pins) {
+    activeMarkers.forEach(function (m) { map.removeLayer(m); });
+    activeMarkers = [];
+    markerById = {};
+
+    var valid = pins.filter(hasCoords);
+    if (!valid.length) return;
+
+    var groups = groupByProximity(valid, map.getZoom());
+
+    groups.forEach(function (group) {
+      var avgLat = group.reduce(function (s, p) { return s + p.lat; }, 0) / group.length;
+      var avgLng = group.reduce(function (s, p) { return s + p.lng; }, 0) / group.length;
+      var single = group.length === 1;
+      var p0 = group[0];
+      var icon;
+
+      if (single) {
+        icon = L.divIcon({ className: '', html: makePinSVG(p0, false), iconSize: [28, 38], iconAnchor: [14, 38] });
+      } else {
+        var sz = group.length >= 1000 ? 56 : group.length >= 100 ? 52 : group.length >= 20 ? 48 : 36;
+        icon = L.divIcon({ className: '', html: makeClusterHTML(group.length), iconSize: [sz, sz], iconAnchor: [sz / 2, sz / 2] });
+      }
+
+      var marker = L.marker([avgLat, avgLng], { icon: icon, riseOnHover: true }).addTo(map);
+
+      function revealAndHighlight(ids) {
+        document.querySelectorAll('.pcard').forEach(function (c) { c.classList.remove('is-active'); });
+        ids.forEach(function (id) {
+          var card = document.querySelector('.pcard[data-pin-id="' + id + '"]');
+          if (!card) return;
+          card.classList.remove('hidden-property');
+          card.classList.add('is-active');
+        });
+        var loadBtn = document.getElementById('pmapLoadMore');
+        if (loadBtn && !document.querySelector('.pcard.hidden-property')) {
+          loadBtn.style.display = 'none';
+        }
+      }
+
+      if (single) {
+        marker.bindPopup(buildPopup(p0), {
+          maxWidth: 280, minWidth: 260, className: 'pmap-popup-wrap',
+          offset: L.point(0, -16)
+        });
+        marker.on('click', function () {
+          revealAndHighlight([p0.id]);
+          var card = document.querySelector('.pcard[data-pin-id="' + p0.id + '"]');
+          if (card) card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        });
+        markerById[p0.id] = marker;
+      } else {
+        marker.bindPopup(buildClusterPopup(group), {
+          maxWidth: 280, minWidth: 256, className: 'pmap-popup-wrap',
+          offset: L.point(0, -10)
+        });
+        marker.on('click', function () {
+          revealAndHighlight(group.map(function (gp) { return gp.id; }));
+        });
+        group.forEach(function (gp) { markerById[gp.id] = marker; });
+      }
+
+      activeMarkers.push(marker);
+    });
+  }
+
+  renderMarkers(allPins);
+
+  var bounds = allPins.filter(hasCoords).map(function (p) { return [p.lat, p.lng]; });
+  if (bounds.length) map.fitBounds(bounds, { padding: [40, 40], maxZoom: 15 });
+
+  window.addEventListener('resize', function () { map.invalidateSize(true); });
+
+  map.on('zoomend', function () {
+    map.closePopup();
+    renderMarkers(allPins);
+  });
+
+  /* ================= CARD ↔ MAP SYNC ================= */
+  function bindCardHover(card) {
+    card.addEventListener('mouseenter', function () {
+      var m = markerById[parseInt(card.dataset.pinId, 10)];
+      if (m) map.panTo(m.getLatLng(), { animate: true, duration: 0.4 });
+    });
+  }
+  document.querySelectorAll('.pcard').forEach(bindCardHover);
+
+  document.querySelectorAll('[data-locate-id]').forEach(function (btn) {
+    btn.addEventListener('click', function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      var m = markerById[btn.dataset.locateId];
+      if (!m) return;
+      map.setView(m.getLatLng(), 16, { animate: true });
+      setTimeout(function () { m.openPopup(); }, 300);
+      mapEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+  });
+
+  /* ================= LOAD MORE ================= */
+  var loadBtn = document.getElementById('pmapLoadMore');
+  if (loadBtn) {
+    var hiddenQueue = Array.prototype.slice.call(document.querySelectorAll('.pcard.hidden-property'));
+    var step = 12;
+    loadBtn.addEventListener('click', function () {
+      var batch = hiddenQueue.splice(0, step);
+      batch.forEach(function (c) { c.classList.remove('hidden-property'); });
+      if (!hiddenQueue.length) loadBtn.style.display = 'none';
+    });
+  }
+})();
+</script>
+{% endblock %}
