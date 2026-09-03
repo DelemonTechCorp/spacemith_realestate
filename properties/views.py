@@ -642,6 +642,16 @@ def property_detail(request, slug):
     Slug is `district/city/title` and contains slashes, so the URL routing
     here is the re_path catch-all and MUST stay last in urls.py.
     """
+    
+    # Remove accidental trailing slash captured inside slug
+    clean_slug = slug.rstrip('/')
+
+    # Force one canonical URL format (trailing slash)
+    canonical_path = f'/properties/{clean_slug}/'
+    
+    if request.path != canonical_path:
+        return redirect(canonical_path, permanent=True)
+    
     property_obj = get_object_or_404(
         Property.objects
         .filter(is_active=True)
@@ -660,7 +670,7 @@ def property_detail(request, slug):
                      queryset=PaymentPlan.objects.filter(is_active=True)
                      .prefetch_related('values')),
         ),
-        slug=slug,
+        slug=clean_slug,
     )
 
     # "Back to results" link. startswith('/') is NOT enough — "//evil.com" is a
