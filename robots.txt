@@ -31,6 +31,7 @@ Disallow: /properties/*?*price_max=
 Disallow: /properties/*?*handover=
 Disallow: /properties/*?*status=
 Disallow: /properties/*?*q=
+Disallow: /properties/*?*page=
 
 # ========================================
 # BLOG SEARCH / SORT PARAMETERS

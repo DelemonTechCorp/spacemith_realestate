@@ -20,7 +20,17 @@ urlpatterns = [
     # Must come BEFORE the property_detail catch-all below, otherwise the
     # catch-all will swallow /developers/ and /developers/<slug>/ requests.
     path('developers/', views.developer_list, name='developer_list'),
-    re_path(r'^developers/(?P<slug>[\w-]+)/N/A/$', views.developer_detail_redirect, name='developer_detail_na_redirect'),
+    re_path(
+    r'^developers/(?P<slug>[\w-]+)/N/A$',
+    views.developer_detail_redirect,
+    name='developer_detail_na_redirect_no_slash'
+    ),
+
+    re_path(
+    r'^developers/(?P<slug>[\w-]+)/N/A/$',
+    views.developer_detail_redirect,
+    name='developer_detail_na_redirect'
+    ),    
     path('developers/<slug:slug>/', views.developer_detail, name='developer_detail'),
 
    

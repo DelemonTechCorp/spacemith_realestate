@@ -403,11 +403,11 @@ def property_list(request):
         meta_description = f'Page {page} — {meta_description}'[:160]
 
     canonical_params = {k: active[k] for k in INDEXABLE_FACETS if active[k]}
-    noindex = any(active[k] for k in FILTER_KEYS if k not in INDEXABLE_FACETS)
+    noindex = (page > 1 or any(active[k] for k in FILTER_KEYS if k not in INDEXABLE_FACETS))
 
-    def url_for(target_page=None):
+    def url_for(target_page=None, include_page=True):
         params = dict(canonical_params)
-        if target_page and target_page > 1:
+        if include_page and target_page and target_page > 1:
             params['page'] = target_page
         return f'{SITE_URL}/properties/' + (f'?{urlencode(params)}' if params else '')
 
@@ -437,7 +437,7 @@ def property_list(request):
 
         'meta_title': meta_title,
         'meta_description': meta_description,
-        'canonical': url_for(page),
+        'canonical': url_for(page, include_page=False),
         'robots': 'noindex, follow' if noindex else
                   'index, follow, max-image-preview:large, max-snippet:-1',
         'rel_prev': url_for(page_obj.previous_page_number()) if page_obj.has_previous() else None,
