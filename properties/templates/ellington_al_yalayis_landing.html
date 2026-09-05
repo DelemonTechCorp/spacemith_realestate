@@ -1,0 +1,1975 @@
+{% extends 'base.html' %}
+{% load static %}
+ 
+{# meta_title / meta_description / canonical / robots / og_image come from the
+   `ellington` view's context, exactly like property_detail — base.html's
+   default blocks already render {{ meta_title|default:... }} etc, so they
+   don't need to be overridden here. #}
+ 
+{% block body_class %}has-hero{% endblock %}
+ 
+{% block schema %}
+{{ block.super }}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "ApartmentComplex",
+  "name": "Ellington Master Community, Al Yalayis 1",
+  "description": "A low-density master community by Ellington Properties in Al Yalayis 1, Dubai, featuring luxury villas, townhouses and apartments around a large crystal water body.",
+  "url": "{{ canonical }}",
+  "numberOfAccommodationUnits": { "@type": "QuantitativeValue", "value": 4500 },
+  "address": { "@type": "PostalAddress", "addressLocality": "Al Yalayis 1", "addressRegion": "Dubai", "addressCountry": "AE" },
+  "developer": { "@type": "Organization", "name": "Ellington Properties" }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What is Ellington Master Community Al Yalayis 1?",
+      "acceptedAnswer": { "@type": "Answer", "text": "It is a luxury residential development by Ellington Properties featuring apartments, townhouses and standalone villas in Al Yalayis 1, Dubai." }
+    },
+    {
+      "@type": "Question",
+      "name": "Where is Ellington Al Yalayis 1 located?",
+      "acceptedAnswer": { "@type": "Answer", "text": "The project is located in Al Yalayis 1, Dubai, offering convenient access to Dubai South, Jebel Ali and major Dubai destinations." }
+    },
+    {
+      "@type": "Question",
+      "name": "What property types are available at Ellington Master Community?",
+      "acceptedAnswer": { "@type": "Answer", "text": "The community offers luxury apartments, 2 to 4 bedroom townhouses and 4 to 5 bedroom standalone villas." }
+    },
+    {
+      "@type": "Question",
+      "name": "Is Ellington Al Yalayis 1 a good investment?",
+      "acceptedAnswer": { "@type": "Answer", "text": "The project offers strong investment potential thanks to its prime location, trusted developer, premium design and Dubai's growing real estate demand." }
+    },
+    {
+      "@type": "Question",
+      "name": "Who is the developer of Ellington Master Community Dubai?",
+      "acceptedAnswer": { "@type": "Answer", "text": "The project is developed by Ellington Properties, a renowned Dubai luxury developer known for design-focused residential communities." }
+    }
+  ]
+}
+</script>
+{% endblock %}
+ 
+{% block preload %}
+<link rel="preload" as="image"
+      href="{% static 'img/ellington-hero.webp' %}"
+      type="image/webp"
+      fetchpriority="high">
+{% endblock %}
+ 
+{% block content %}
+ 
+<!-- ================================================================
+     1. HERO
+     ================================================================ -->
+<style>
+  .ely-hero {
+    position: relative;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    background: var(--ink);
+    min-height: 82svh;
+    padding-top: calc(var(--nav-height) + 4.5rem);
+    padding-bottom: 3rem;
+  }
+  .ely-hero__bg  { position: absolute; inset: 0; z-index: 0; }
+  .ely-hero__bg img { width: 100%; height: 100%; object-fit: cover; object-position: center; }
+  .ely-hero__scrim {
+    position: absolute; inset: 0; z-index: 1;
+    background: linear-gradient(180deg, rgba(11,21,18,.65) 0%, rgba(11,21,18,.8) 60%, rgba(11,21,18,.82) 100%);
+  }
+ 
+  .ely-hero__inner {
+    position: relative; z-index: 2; width: 100%;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+    align-items: center;
+  }
+  @media (min-width: 1024px) {
+    .ely-hero__inner { grid-template-columns: 1.15fr .85fr; gap: 3rem; }
+  }
+ 
+  .ely-hero__eyebrow-row { display: flex; flex-wrap: wrap; align-items: center; gap: .9rem; margin-bottom: 1.5rem; }
+  .ely-hero__developer { font-size: .75rem; text-transform: uppercase; letter-spacing: .2em; color: rgba(246,242,233,.72); }
+ 
+  .ely-hero__title {
+    max-width: 34rem;
+    text-shadow: 0 2px 24px rgba(11,21,18,.4);
+  }
+  .ely-hero__title .accent { color: var(--gold); }
+  .ely-hero__title-kicker {
+    display: block;
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: clamp(2.25rem, 5.2vw, 3.5rem);
+    line-height: 1.08;
+    color: var(--cream);
+  }
+  .ely-hero__title-sub {
+    display: block;
+    margin-top: .625rem;
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: clamp(1.125rem, 2.2vw, 1.375rem);
+    line-height: 1.35;
+    color: rgba(246,242,233,.82);
+  }
+ 
+  .ely-hero__lead {
+    margin-top: 1.25rem;
+    max-width: 32rem;
+    font-size: clamp(.9375rem, 1.8vw, 1.0625rem);
+    color: rgba(246,242,233,.86);
+    line-height: 1.75;
+  }
+ 
+  .ely-hero__cta { margin-top: 2rem; display: flex; flex-wrap: wrap; gap: .875rem; }
+ 
+  /* ---- floating project snapshot card ---- */
+  .ely-hero__card {
+    background: rgba(11,21,18,.42);
+    border: 1px solid rgba(246,242,233,.18);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-radius: .75rem;
+    padding: 1.75rem;
+    box-shadow: var(--shadow-elegant);
+    max-width: 24rem;
+    margin-inline: auto;
+  }
+  @media (min-width: 1024px) { .ely-hero__card { margin-inline: 0 0 0 auto; } }
+ 
+  .ely-hero__card-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+  .ely-hero__card-head p { margin: 0; font-size: .6875rem; text-transform: uppercase; letter-spacing: .16em; color: var(--gold); }
+  .ely-hero__card-head span {
+    font-size: .625rem; text-transform: uppercase; letter-spacing: .08em;
+    color: rgba(246,242,233,.6); border: 1px solid rgba(246,242,233,.25);
+    border-radius: 9999px; padding: .25rem .625rem;
+  }
+ 
+  .ely-hero__card-list { list-style: none; margin: 1.25rem 0 0; padding: 0; display: grid; gap: .875rem; }
+  .ely-hero__card-list li {
+    display: flex; justify-content: space-between; align-items: baseline; gap: 1rem;
+    padding-bottom: .875rem; border-bottom: 1px solid rgba(246,242,233,.14);
+  }
+  .ely-hero__card-list li:last-child { border-bottom: 0; padding-bottom: 0; }
+  .ely-hero__card-list li span:first-child { font-size: .8125rem; color: rgba(246,242,233,.65); }
+  .ely-hero__card-list li span:last-child { font-family: var(--font-display); font-size: 1.0625rem; color: var(--cream); text-align: right; }
+ 
+  .ely-hero__card-cta {
+    margin-top: 1.5rem; width: 100%;
+    justify-content: center;
+  }
+</style>
+ 
+<section class="ely-hero">
+  <div class="ely-hero__bg">
+    <img src="{% static 'img/ellington-hero.webp' %}"
+         alt="Ellington Master Community Al Yalayis 1 aerial render"
+         width="1920" height="1080" fetchpriority="high" decoding="async">
+  </div>
+  <div class="ely-hero__scrim"></div>
+ 
+  <div class="container-page ely-hero__inner">
+ 
+    <div>
+      <div class="ely-hero__eyebrow-row">
+        <span class="badge">New Launch</span>
+        <span class="ely-hero__developer">By Ellington Properties</span>
+      </div>
+ 
+      <h1 class="ely-hero__title">
+        <span class="ely-hero__title-kicker">Ellington New Launch Dubai</span>
+        <span class="ely-hero__title-sub">Ellington Master Community <span class="accent">Al Yalayis 1</span> &mdash; Villas, Townhouses &amp; Apartments</span>
+      </h1>
+ 
+      <p class="ely-hero__lead">
+        A low-density community of villas, townhouses and apartments set around a large crystal
+        water body, landscaped parks and resort-inspired amenities in Dubai's southern growth
+        corridor.
+      </p>
+ 
+      <div class="ely-hero__cta">
+        <a href="{% url 'contact' %}" class="btn-gold">
+          Enquire Now
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </a>
+        <a href="tel:+{{ phone_number|default:'971556399212' }}" class="btn-line">Call An Advisor</a>
+      </div>
+    </div>
+ 
+    <div class="ely-hero__card reveal" data-delay="120">
+      <div class="ely-hero__card-head">
+        <p>Project Snapshot</p>
+        <span>Off-Plan</span>
+      </div>
+      <ul class="ely-hero__card-list">
+        <li><span>Developer</span><span>Ellington Properties</span></li>
+        <li><span>Location</span><span>Al Yalayis 1, Dubai</span></li>
+        <li><span>Units</span><span>4,500+</span></li>
+        <li><span>Payment Plan</span><span>70/30</span></li>
+        <li><span>Completion</span><span>Q2 2030</span></li>
+        <li><span>Resale</span><span>After 30% Paid</span></li>
+      </ul>
+      <a href="#enquiry" class="btn-gold ely-hero__card-cta">Get Full Brochure</a>
+    </div>
+ 
+  </div>
+</section>
+ 
+
+
+
+
+<!-- ================================================================
+     2. COMMUNITY HIGHLIGHTS
+     ================================================================ -->
+<style>
+  .ely-highlights { position: relative; padding-block: 4rem; background: var(--background); overflow: hidden; }
+  .ely-highlights::before {
+    content: ""; position: absolute; inset: 0; z-index: 0;
+    background-image:
+      repeating-linear-gradient(90deg, color-mix(in srgb, var(--primary) 5%, transparent) 0 1px, transparent 1px 64px),
+      repeating-linear-gradient(0deg,  color-mix(in srgb, var(--primary) 5%, transparent) 0 1px, transparent 1px 64px);
+    -webkit-mask-image: radial-gradient(65% 65% at 88% 10%, #000, transparent 68%);
+            mask-image: radial-gradient(65% 65% at 88% 10%, #000, transparent 68%);
+    pointer-events: none;
+  }
+  .ely-highlights__head { position: relative; z-index: 1; max-width: 42rem; margin-bottom: 3rem; }
+
+  .ely-highlights__grid {
+    position: relative; z-index: 1;
+    display: grid; gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    grid-template-columns: 1fr;
+  }
+  @media (min-width: 640px)  { .ely-highlights__grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (min-width: 1024px) { .ely-highlights__grid { grid-template-columns: repeat(4, 1fr); } }
+
+  .ely-highlight { background: var(--card); padding: 2rem 1.5rem; }
+  .ely-highlight__icon { width: 2.125rem; height: 2.125rem; color: var(--gold); margin-bottom: 1rem; }
+  .ely-highlight__icon svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+  .ely-highlight h3 { font-family: var(--font-display); font-size: 1.1875rem; margin: 0 0 .5rem; color: var(--foreground); font-weight: 600;}
+  .ely-highlight p  { margin: 0; font-size: .8125rem; color: var(--muted-foreground); line-height: 1.6; }
+</style>
+
+<section class="ely-highlights">
+  <div class="container-page">
+    <div class="ely-highlights__head reveal">
+      <p class="eyebrow" style="color:var(--primary);font-size: .6875rem;font-weight: 600;text-transform: uppercase;letter-spacing: .32em;">A New Standard Of Living</p>
+      <h2 class="section-title">Community Highlights</h2>
+      <p class="lead" style="max-width:none;margin-top:1rem;">
+        Planned as a low-density community of more than 4,500 residences, Al Yalayis 1 pairs
+        Ellington's design language with open space, greenery and resort-style amenities.
+      </p>
+    </div>
+
+    <div class="ely-highlights__grid">
+      <div class="ely-highlight reveal">
+        <div class="ely-highlight__icon"><svg viewBox="0 0 24 24"><path d="M3 21h18M7 21V6l5-3 5 3v15M10 11h4M10 15h4"/></svg></div>
+        <h3>4,500+ Residences</h3>
+        <p>Apartments, townhouses and standalone villas across a single master plan.</p>
+      </div>
+      <div class="ely-highlight reveal" data-delay="60">
+        <div class="ely-highlight__icon"><svg viewBox="0 0 24 24"><path d="M12 2c3 4 6 7.5 6 11a6 6 0 0 1-12 0c0-3.5 3-7 6-11Z"/></svg></div>
+        <h3>Crystal Water Body</h3>
+        <p>A large lagoon-style feature anchors the community's landscaping.</p>
+      </div>
+      <div class="ely-highlight reveal" data-delay="120">
+        <div class="ely-highlight__icon"><svg viewBox="0 0 24 24"><path d="M4 12a8 8 0 0 1 16 0M12 12v10M8 22h8"/></svg></div>
+        <h3>Landscaped Parks</h3>
+        <p>Green corridors and open spaces connect every cluster of homes.</p>
+      </div>
+      <div class="ely-highlight reveal" data-delay="180">
+        <div class="ely-highlight__icon"><svg viewBox="0 0 24 24"><path d="M4 21V9l8-6 8 6v12M9 21v-6h6v6"/></svg></div>
+        <h3>Fully Fitted Kitchens</h3>
+        <p>Premium hardware and finishes come standard in every residence.</p>
+      </div>
+      <div class="ely-highlight reveal">
+        <div class="ely-highlight__icon"><svg viewBox="0 0 24 24"><path d="M3 12h18M3 6h18M3 18h18"/></svg></div>
+        <h3>Low-Density Planning</h3>
+        <p>Generous plot ratios keep the community quiet and uncrowded.</p>
+      </div>
+      <div class="ely-highlight reveal" data-delay="60">
+        <div class="ely-highlight__icon"><svg viewBox="0 0 24 24"><path d="M4 4v16h16M8 16l3-4 3 3 4-6"/></svg></div>
+        <h3>Modern Architecture</h3>
+        <p>Contemporary facades and layouts across every property type.</p>
+      </div>
+      <div class="ely-highlight reveal" data-delay="120">
+        <div class="ely-highlight__icon"><svg viewBox="0 0 24 24"><path d="M5 9h14M5 15h14M9 5v14M15 5v14"/></svg></div>
+        <h3>Family Amenities</h3>
+        <p>Wellness facilities and shared spaces designed around family life.</p>
+      </div>
+      <div class="ely-highlight reveal" data-delay="180">
+        <div class="ely-highlight__icon"><svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 5-3.5 8-7 10-3.5-2-7-5-7-10V6z"/></svg></div>
+        <h3>Resort-Inspired Living</h3>
+        <p>A holistic lifestyle experience woven through the entire community.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ================================================================
+     3. LIFESTYLE AT ELLINGTON MASTER COMMUNITY
+     ================================================================ -->
+<style>
+  .ely-life { padding-block: 4rem; background: color-mix(in srgb, var(--secondary) 55%, #fff); }
+  .ely-life__grid { display: grid; gap: 3rem; align-items: center; grid-template-columns: 1fr; }
+  @media (min-width: 1024px) { .ely-life__grid { grid-template-columns: 1fr 1fr; gap: 4rem; } }
+
+  .ely-life__media { position: relative; width: 100%; margin-inline: auto; }
+  @media (min-width: 1024px) { .ely-life__media { max-width: none; margin-inline: 0; } }
+  .ely-life__media img {
+    width: 100%; height:430px; object-fit: cover;
+    border-radius: .5rem; box-shadow: var(--shadow-elegant); display: block; background: var(--secondary);
+  }
+  @media(max-width:1023px){
+    .ely-life__media img{
+        height:340px;
+    }
+}
+
+@media(max-width:640px){
+    .ely-life__media img{
+        height:280px;
+    }
+}
+  .ely-life__badge {
+    position: absolute; left: 1rem; bottom: 1rem;
+    background: var(--primary); color: var(--primary-foreground);
+    border-radius: .5rem; padding: .8rem 1.1rem;
+    box-shadow: var(--shadow-elegant);
+    display: flex; align-items: center; gap: .75rem;
+    max-width: calc(100% - 2rem);
+  }
+  @media (max-width: 480px) {
+    .ely-life__badge { left: .625rem; bottom: .625rem; padding: .65rem .9rem; gap: .6rem; max-width: calc(100% - 1.25rem); }
+  }
+  .ely-life__badge strong { font-family: var(--font-display); font-size: 1.75rem; line-height: 1; color: var(--gold); flex-shrink: 0; }
+  .ely-life__badge span { font-size: .625rem; text-transform: uppercase; letter-spacing: .12em; max-width: 8rem; color: rgba(246,242,233,.85); line-height: 1.4; }
+.ely-life__copy{
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+}
+  .ely-life__copy p { margin: 0; color: var(--muted-foreground); line-height: 1.75; font-size: .9375rem; max-width:none; }
+  .ely-life__copy p + p { margin-top: 1.1rem; }
+</style>
+
+<section class="ely-life">
+  <div class="container-page ely-life__grid">
+
+    <div class="ely-life__media reveal">
+      <img src="{% static 'img/ellington-1.webp' %}"
+           alt="Landscaped park and crystal water body at Ellington Master Community Al Yalayis 1"
+           width="800" height="920" loading="lazy">
+      <div class="ely-life__badge">
+        <strong>4,500+</strong>
+        <span>Homes across one master plan</span>
+      </div>
+    </div>
+
+    <div class="ely-life__copy reveal" data-delay="100">
+      <p class="eyebrow" style="color:var(--primary);font-size: .6875rem;font-weight: 600;text-transform: uppercase;letter-spacing: .32em;">Lifestyle</p>
+      <h2 class="section-title">Lifestyle At Ellington Master Community Dubai</h2>
+      <p>
+        Life at Al Yalayis 1 is built around the community's crystal water body and the
+        landscaped parks that surround it &ndash; spaces designed for morning walks, weekend
+        gatherings and children playing outdoors within a short stroll of home.
+      </p>
+      <p>
+        Every residence, whether an apartment, townhouse or standalone villa, shares the same
+        fully fitted kitchens, premium hardware and contemporary interiors that define
+        Ellington Properties' design language, while the low-density masterplan keeps streets
+        quiet and communal areas uncrowded.
+      </p>
+      <p>
+        Family-oriented amenities and wellness facilities are woven throughout the community,
+        so residents can move between home, park and shared spaces without leaving the
+        neighbourhood &ndash; the resort-inspired experience Ellington is positioning Al Yalayis 1
+        around.
+      </p>
+    </div>
+
+  </div>
+</section>
+
+
+<!-- ================================================================
+     4. GALLERY
+     ================================================================ -->
+<style>
+  .ely-gallery { padding-block: 3rem; background: var(--background); }
+  .ely-gallery__head { max-width: 42rem; margin-bottom: 2.5rem; }
+
+  .ely-gallery__grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: 1fr;
+  }
+  @media (min-width: 640px)  { .ely-gallery__grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (min-width: 1024px) { .ely-gallery__grid { grid-template-columns: repeat(4, 1fr); grid-auto-rows: 200px; } }
+
+  .ely-gallery__item {
+    position: relative;
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: var(--secondary);
+    aspect-ratio: 4 / 3;
+  }
+  @media (min-width: 1024px) { .ely-gallery__item { aspect-ratio: auto; } }
+
+  .ely-gallery__item img {
+    width: 100%; height: 100%; object-fit: cover; display: block;
+    transition: transform .6s ease;
+  }
+  .ely-gallery__item:hover img { transform: scale(1.06); }
+
+  .ely-gallery__item::after {
+    content: "";
+    position: absolute; inset: 0;
+    background: linear-gradient(180deg, transparent 55%, rgba(11,21,18,.65) 100%);
+    opacity: 0; transition: opacity .3s ease;
+  }
+  .ely-gallery__item:hover::after { opacity: 1; }
+
+  .ely-gallery__caption {
+    position: absolute; left: .875rem; bottom: .75rem; right: .875rem;
+    color: var(--cream);
+    font-size: .75rem; font-weight: 500;
+    opacity: 0; transform: translateY(6px);
+    transition: opacity .3s ease, transform .3s ease;
+  }
+  .ely-gallery__item:hover .ely-gallery__caption { opacity: 1; transform: none; }
+
+  @media (min-width: 1024px) {
+    .ely-gallery__item:nth-child(1) { grid-column: span 2; grid-row: span 2; }
+    .ely-gallery__item:nth-child(4) { grid-column: span 2; }
+  }
+</style>
+
+<section class="ely-gallery">
+  <div class="container-page">
+    <div class="ely-gallery__head reveal">
+      <p class="eyebrow" style="color:var(--primary);font-size: .6875rem;font-weight: 600;text-transform: uppercase;letter-spacing: .32em;">Renders &amp; Community Views</p>
+      <h2 class="section-title">Gallery</h2>
+      <p class="lead" style="max-width:none;margin-top:1rem;">
+        A closer look at the community's landscaping, amenities and residence types.
+      </p>
+    </div>
+
+    <div class="ely-gallery__grid">
+      <div class="ely-gallery__item reveal">
+        <img src="{% static 'img/ellington-hero.webp' %}" alt="Crystal water body at Ellington Master Community Al Yalayis 1" loading="lazy">
+        <span class="ely-gallery__caption">Crystal Water Body</span>
+      </div>
+      <div class="ely-gallery__item reveal" data-delay="60">
+        <img src="{% static 'img/ellington-1.webp' %}" alt="Landscaped park at Al Yalayis 1" loading="lazy">
+        <span class="ely-gallery__caption">Landscaped Parks</span>
+      </div>
+      <div class="ely-gallery__item reveal" data-delay="120">
+        <img src="{% static 'img/ellington-2.webp' %}" alt="Townhouse facade at Ellington Al Yalayis 1" loading="lazy">
+        <span class="ely-gallery__caption">Townhouse Facades</span>
+      </div>
+      <div class="ely-gallery__item reveal" data-delay="180">
+        <img src="{% static 'img/ellington-3.webp' %}" alt="Standalone villa exterior at Ellington Al Yalayis 1" loading="lazy">
+        <span class="ely-gallery__caption">Standalone Villas</span>
+      </div>
+      <div class="ely-gallery__item reveal">
+        <img src="{% static 'img/ellington-4.webp' %}" alt="Fitted kitchen interior at Ellington Al Yalayis 1" loading="lazy">
+        <span class="ely-gallery__caption">Community Townhouse</span>
+      </div>
+      <div class="ely-gallery__item reveal" data-delay="60">
+        <img src="{% static 'img/ellington-5.webp' %}" alt="Community amenities at Ellington Master Community Al Yalayis 1" loading="lazy">
+        <span class="ely-gallery__caption">Community Townhouse</span>
+      </div>
+      <div class="ely-gallery__item reveal" data-delay="60">
+        <img src="{% static 'img/ellington-6.webp' %}" alt="Apartments at Ellington Master Community Al Yalayis 1" loading="lazy">
+        <span class="ely-gallery__caption">Community Apartments</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ================================================================
+     5. PRIME LOCATION &amp; CONNECTIVITY
+     ================================================================ -->
+<style>
+  .ely-location { padding-block: 3rem; background: color-mix(in srgb, var(--secondary) 55%, #fff); }
+  .ely-location__grid { display: grid; gap: 3rem; align-items: center; grid-template-columns: 1fr; }
+  @media (min-width: 1024px) { .ely-location__grid { grid-template-columns: 1fr 1fr; gap: 3.5rem; } }
+
+  .ely-location__list { list-style: none; margin: 1.75rem 0 0; padding: 0; display: grid; gap: .875rem; }
+  .ely-location__list li { display: flex; gap: .75rem; align-items: flex-start; }
+  .ely-location__check {
+    flex-shrink: 0; margin-top: .1rem;
+    width: 1.375rem; height: 1.375rem; border-radius: 9999px;
+    background: color-mix(in srgb, var(--primary) 12%, transparent);
+    color: var(--primary);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .ely-location__check svg { width: .8rem; height: .8rem; }
+  .ely-location__list li span:last-child { color: var(--foreground); font-size: .875rem; line-height: 1.5; }
+
+  .ely-map {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-card);
+    overflow: hidden;
+  }
+  .ely-map__frame { position: relative; width: 100%; aspect-ratio: 4 / 3.4; }
+  .ely-map__frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+  @media (min-width: 1024px) { .ely-map__frame { aspect-ratio: 1 / 1; } }
+
+  /*==================================================
+=            CONNECTIVITY
+==================================================*/
+
+.ely-conn{
+    margin-top:3rem;
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:1rem;
+}
+
+@media(min-width:768px){
+
+    .ely-conn{
+        grid-template-columns:repeat(3,1fr);
+    }
+
+}
+
+.ely-conn__item{
+
+    display:flex;
+    align-items:center;
+    gap:1rem;
+
+    padding:1rem 1.1rem;
+
+  
+
+    border:1px solid var(--border);
+
+    border-radius:16px;
+
+    transition:.3s ease;
+
+}
+
+.ely-conn__item:hover{
+
+    transform:translateY(-4px);
+
+    box-shadow:var(--shadow-card);
+
+}
+
+.ely-conn__icon{
+
+    width:46px;
+    height:46px;
+
+    border-radius:50%;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    flex-shrink:0;
+
+    background:rgba(196,160,77,.12);
+
+    color:var(--gold);
+
+}
+
+.ely-conn__icon svg{
+
+    width:22px;
+    height:22px;
+
+}
+
+.ely-conn__content strong{
+
+    display:block;
+
+    font-size:.95rem;
+
+    color:var(--foreground);
+
+    margin-bottom:.2rem;
+
+}
+
+.ely-conn__content span{
+
+    display:block;
+
+    font-size:.8rem;
+
+    color:var(--muted-foreground);
+
+}</style>
+
+<section class="ely-location">
+  <div class="container-page">
+  <div class="ely-location__grid">
+
+    <div class="reveal">
+      <p class="eyebrow" style="color:var(--primary);font-size: .6875rem;font-weight: 600;text-transform: uppercase;letter-spacing: .32em;">Al Yalayis 1, Dubai</p>
+      <h2 class="section-title">Nearby Attractions &amp; Connectivity</h2>
+      <p class="lead" style="max-width:none;margin-top:1rem;">
+        Al Yalayis 1 sits in Dubai's southern growth corridor, balancing peaceful community
+        living with fast access to the emirate's key business and lifestyle districts. The
+        location offers a rare combination for Dubai off-plan buyers: a quiet, low-density
+        setting that still sits within reach of the city's main road network.
+      </p>
+
+      <ul class="ely-location__list">
+        <li>
+          <span class="ely-location__check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+          <span>Easy access to Dubai South and the Al Maktoum International Airport corridor</span>
+        </li>
+        <li>
+          <span class="ely-location__check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+          <span>Close proximity to Jebel Ali and its industrial and logistics hub</span>
+        </li>
+        <li>
+          <span class="ely-location__check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+          <span>Direct connection to Emirates Road (E611) and Sheikh Zayed Road</span>
+        </li>
+        <li>
+          <span class="ely-location__check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+          <span>Convenient reach to Dubai Marina and Downtown Dubai</span>
+        </li>
+        <li>
+          <span class="ely-location__check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span>
+          <span>One of Dubai's promising areas for future development and appreciation</span>
+        </li>
+      </ul>
+    </div>
+
+    <div class="ely-map reveal" data-delay="100">
+      <div class="ely-map__frame">
+        <iframe
+          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d7883.962646781703!2d55.29926854647389!3d25.01850746857908!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3e5f710026f1f391%3A0xed9ce47b21d1d31a!2sEllington%20master%20community!5e0!3m2!1sen!2sus!4v1788597234686!5m2!1sen!2sus"
+          title="Map showing the location of Ellington Master Community, Al Yalayis 1, Dubai"
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade"
+          allowfullscreen></iframe>
+      </div>
+    </div>    
+  </div>
+
+<div class="ely-conn reveal" data-delay="140">
+
+    <div class="ely-conn__item">
+             <div class="ely-conn__content">
+            <strong>Dubai South</strong>
+            <span>Approx. 10 mins</span>
+        </div>
+
+    </div>
+
+
+    <div class="ely-conn__item">
+        <div class="ely-conn__content">
+            <strong>Jebel Ali</strong>
+            <span>Approx. 15 mins</span>
+        </div>
+
+    </div>
+
+
+    <div class="ely-conn__item">        
+
+        <div class="ely-conn__content">
+            <strong>Emirates Road (E611)</strong>
+            <span>Approx. 5 mins</span>
+        </div>
+    </div>
+
+    <div class="ely-conn__item">
+        <div class="ely-conn__content">
+            <strong>Sheikh Zayed Road</strong>
+            <span>Approx. 15 mins</span>
+        </div>
+    </div>
+
+    <div class="ely-conn__item">
+    <div class="ely-conn__content">
+        <strong>Al Maktoum International Airport</strong>
+        <span>Approx. 20 mins</span>
+    </div>
+</div>
+
+    <div class="ely-conn__item">
+
+        <div class="ely-conn__content">
+            <strong>Dubai Marina</strong>
+            <span>Approx. 25 mins</span>
+        </div>
+    </div>
+
+    <div class="ely-conn__item">
+
+        <div class="ely-conn__content">
+            <strong>Downtown Dubai</strong>
+            <span>Approx. 30 mins</span>
+        </div>
+    </div>
+
+</div>
+
+<p class="lead"
+style="max-width:none;margin-top:1.5rem;font-size:.9rem;">
+
+Drive times are approximate and may vary depending on traffic conditions and the selected route.
+
+</p>
+
+  </div>
+</section>
+
+
+<!-- ================================================================
+     6. RESIDENCES — tabbed (CSS only, no JS)
+     ================================================================ -->
+<style>
+  .ely-res { padding-block: 3rem; background: var(--background); }
+  .ely-res__head { max-width: 42rem; margin-bottom: 2.5rem; }
+
+  .ely-res__radio { position: absolute; opacity: 0; pointer-events: none; }
+
+  .ely-res__tabbar { display: flex; flex-wrap: wrap; gap: .625rem; margin-bottom: 2.25rem; }
+  .ely-res__tablabel {
+    display: inline-flex; align-items: center;
+    padding: .625rem 1.375rem;
+    border-radius: 9999px;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--muted-foreground);
+    font-size: .875rem; font-weight: 500;
+    cursor: pointer;
+    transition: background-color .2s ease, color .2s ease, border-color .2s ease;
+  }
+  #ely-tab-town:checked  ~ .ely-res__tabbar label[for="ely-tab-town"],
+  #ely-tab-villa:checked ~ .ely-res__tabbar label[for="ely-tab-villa"],
+  #ely-tab-apt:checked   ~ .ely-res__tabbar label[for="ely-tab-apt"] {
+    background: var(--primary); border-color: var(--primary); color: var(--primary-foreground);
+  }
+
+  .ely-res__panel { display: none; }
+  #ely-tab-town:checked ~ .ely-res__panels [data-panel="town"] { display: grid; }
+  #ely-tab-villa:checked ~ .ely-res__panels [data-panel="villa"] { display: grid; }
+  #ely-tab-apt:checked   ~ .ely-res__panels [data-panel="apt"]   { display: grid; }
+
+  .ely-res__panel {
+    grid-template-columns: 1fr; gap: 1.25rem;
+  }
+  @media (min-width: 640px)  { .ely-res__panel { grid-template-columns: repeat(2, 1fr); } }
+  @media (min-width: 1024px) { .ely-res__panel { grid-template-columns: repeat(3, 1fr); } }
+
+  .ely-unit {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.75rem 1.5rem;
+    transition: border-color .25s ease, box-shadow .25s ease, transform .25s ease;
+  }
+  .ely-unit:hover { border-color: color-mix(in srgb, var(--primary) 35%, transparent); box-shadow: var(--shadow-card); transform: translateY(-3px); }
+  .ely-unit__bed { font-family: var(--font-display); font-size: 2rem; color: var(--primary); line-height: 1; }
+  .ely-unit__size { margin: .625rem 0 0; font-size: .875rem; font-weight: 600; color: var(--foreground); }
+  .ely-unit__note { margin: .375rem 0 0; font-size: .8125rem; color: var(--muted-foreground); line-height: 1.5; }
+</style>
+
+<section class="ely-res">
+  <div class="container-page">
+
+    <div class="ely-res__head reveal">
+      <p class="eyebrow" style="color:var(--primary);font-size: .6875rem;font-weight: 600;text-transform: uppercase;letter-spacing: .32em;">Property Options</p>
+      <h2 class="section-title">Residences For Every Household</h2>
+      <p class="lead" style="max-width:none;margin-top:.75rem;">
+        Browse unit types below, or explore Spacesmith's wider listings of
+        <a href="{% url 'properties:property_list' %}?type=villas" class="link-inline" style="display:inline;">luxury villas in Dubai</a>
+        and <a href="{% url 'properties:property_list' %}?type=townhouses" class="link-inline" style="display:inline;">Dubai townhouses</a>
+        to compare against Al Yalayis 1.
+      </p>
+    </div>
+
+    <input class="ely-res__radio" type="radio" name="ely-res-tab" id="ely-tab-town" checked>
+    <input class="ely-res__radio" type="radio" name="ely-res-tab" id="ely-tab-villa">
+    <input class="ely-res__radio" type="radio" name="ely-res-tab" id="ely-tab-apt">
+
+    <div class="ely-res__tabbar">
+      <label class="ely-res__tablabel" for="ely-tab-town">Townhouses</label>
+      <label class="ely-res__tablabel" for="ely-tab-villa">Villas</label>
+      <label class="ely-res__tablabel" for="ely-tab-apt">Apartments</label>
+    </div>
+
+    <div class="ely-res__panels">
+
+      <div class="ely-res__panel" data-panel="town">
+        <div class="ely-unit reveal">
+          <div class="ely-unit__bed">2 BR</div>
+          <p class="ely-unit__size">1,600 &ndash; 1,700 sq.ft.</p>
+          <p class="ely-unit__note">Designed for comfortable, easy family living.</p>
+        </div>
+        <div class="ely-unit reveal" data-delay="60">
+          <div class="ely-unit__bed">3 BR</div>
+          <p class="ely-unit__size">2,200 &ndash; 2,300 sq.ft.</p>
+          <p class="ely-unit__note">Ideal for growing families needing more room.</p>
+        </div>
+        <div class="ely-unit reveal" data-delay="120">
+          <div class="ely-unit__bed">4 BR</div>
+          <p class="ely-unit__size">3,000 &ndash; 3,200 sq.ft.</p>
+          <p class="ely-unit__note">Premium, spacious layouts across three levels.</p>
+        </div>
+      </div>
+
+      <div class="ely-res__panel" data-panel="villa">
+        <div class="ely-unit reveal">
+          <div class="ely-unit__bed">4 BR Standalone</div>
+          <p class="ely-unit__size">Approx. 4,000 sq.ft.</p>
+          <p class="ely-unit__note">Available with or without a private pool.</p>
+        </div>
+        <div class="ely-unit reveal" data-delay="60">
+          <div class="ely-unit__bed">5 BR Standalone</div>
+          <p class="ely-unit__size">5,500 &ndash; 6,000 sq.ft.</p>
+          <p class="ely-unit__note">Designed for luxury, multi-generational family living.</p>
+        </div>
+      </div>
+
+      <div class="ely-res__panel" data-panel="apt">
+        <div class="ely-unit reveal">
+          <div class="ely-unit__bed">1 BR</div>
+          <p class="ely-unit__size">Approx. 800 sq.ft.</p>
+          <p class="ely-unit__note">A compact, efficient layout with fitted kitchen.</p>
+        </div>
+        <div class="ely-unit reveal" data-delay="60">
+          <div class="ely-unit__bed">2 BR</div>
+          <p class="ely-unit__size">Approx. 1,100 sq.ft.</p>
+          <p class="ely-unit__note">Well-proportioned rooms with community views.</p>
+        </div>
+        <div class="ely-unit reveal" data-delay="120">
+          <div class="ely-unit__bed">3 BR</div>
+          <p class="ely-unit__size">Multiple layouts available</p>
+          <p class="ely-unit__note">Spacious family apartments across select buildings.</p>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</section>
+
+
+<!-- ================================================================
+     7. WHY INVEST IN ELLINGTON MASTER COMMUNITY AL YALAYIS 1
+     ================================================================ -->
+<style>
+  .ely-reasons { padding-block: 3rem; background: var(--background); }
+  .ely-reasons__head { max-width: 46rem; margin-bottom: 2.5rem; }
+  .ely-reasons__grid { display: grid; gap: 1.5rem; grid-template-columns: 1fr; }
+  @media (min-width: 640px)  { .ely-reasons__grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (min-width: 1024px) { .ely-reasons__grid { grid-template-columns: repeat(4, 1fr); } }
+  .ely-reason { padding: 1.75rem 1.5rem; border: 1px solid var(--border); border-radius: var(--radius); background: var(--card); }
+  .ely-reason__icon { width: 2.125rem; height: 2.125rem; color: var(--gold); margin-bottom: 1rem; }
+  .ely-reason__icon svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+  .ely-reason h3 { font-family: var(--font-display); font-size: 1.1875rem; margin: 0 0 .5rem; color: var(--foreground); }
+  .ely-reason p { margin: 0; font-size: .8125rem; color: var(--muted-foreground); line-height: 1.6; }
+</style>
+
+<section class="ely-reasons">
+  <div class="container-page">
+    <div class="ely-reasons__head reveal">
+      <p class="eyebrow" style="color:var(--primary);font-size: .6875rem;font-weight: 600;text-transform: uppercase;letter-spacing: .32em;">Investment Case</p>
+      <h2 class="section-title">Why Invest In Ellington Master Community Al Yalayis 1?</h2>
+      <p class="lead" style="max-width:none;margin-top:1rem;">
+        Beyond the payment mechanics, a handful of fundamentals make this launch worth a closer
+        look for both <a href="{% url 'contact' %}" class="link-inline" style="display:inline;">Dubai property investment</a> buyers and end users.
+      </p>
+    </div>
+
+    <div class="ely-reasons__grid">
+      <div class="ely-reason reveal">
+        <div class="ely-reason__icon"><svg viewBox="0 0 24 24"><path d="M3 21h18M7 21V6l5-3 5 3v15M10 11h4M10 15h4"/></svg></div>
+        <h3>Established Developer</h3>
+        <p>Ellington Properties is a recognised name in Dubai's design-led residential segment.</p>
+      </div>
+      <div class="ely-reason reveal" data-delay="60">
+        <div class="ely-reason__icon"><svg viewBox="0 0 24 24"><path d="M3 12h18M3 6h18M3 18h18"/></svg></div>
+        <h3>Low-Density Exclusivity</h3>
+        <p>Generous plot ratios and a large water feature support long-term desirability.</p>
+      </div>
+      <div class="ely-reason reveal" data-delay="120">
+        <div class="ely-reason__icon"><svg viewBox="0 0 24 24"><path d="M4 21V9l8-6 8 6v12M9 21v-6h6v6"/></svg></div>
+        <h3>Broad Unit Mix</h3>
+        <p>Apartments, townhouses and villas open the project to a wide range of budgets.</p>
+      </div>
+      <div class="ely-reason reveal" data-delay="180">
+        <div class="ely-reason__icon"><svg viewBox="0 0 24 24"><path d="M4 18l6-6 4 4 6-8M15 8h5v5"/></svg></div>
+        <h3>Early Resale Flexibility</h3>
+        <p>Resale is permitted once 30% of the purchase price has been paid.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ================================================================
+     8. FUTURE GROWTH POTENTIAL OF AL YALAYIS 1 DUBAI
+     ================================================================ -->
+<style>
+  .ely-growth { padding-block: 3rem; background: color-mix(in srgb, var(--secondary) 55%, #fff); }
+  .ely-growth__grid { display: grid; gap: 3rem; grid-template-columns: 1fr; }
+  @media (min-width: 1024px) { .ely-growth__grid { grid-template-columns: 1fr 1fr; gap: 3.5rem; } }
+  .ely-growth__copy p { margin-top: 15px; color: var(--muted-foreground); line-height: 1.75; font-size: .9375rem; }
+  .ely-growth__copy p + p { margin-top: 1.1rem; }
+
+  .ely-growth__list { list-style: none; margin: 0; padding: 0; display: grid; gap: 1.25rem; align-content: start; }
+  .ely-growth__list li { padding-top: 1.25rem; border-top: 1px solid var(--border); }
+  .ely-growth__list li:first-child { padding-top: 0; border-top: 0; }
+  .ely-growth__list h3 { font-family: var(--font-display); font-size: 1.0625rem; margin: 0 0 .375rem; color: var(--primary); font-weight: 700; }
+  .ely-growth__list p { margin: 0; font-size: .8125rem; color: var(--muted-foreground); line-height: 1.6; }
+</style>
+
+<section class="ely-growth">
+  <div class="container-page ely-growth__grid">
+
+    <div class="ely-growth__copy reveal">
+      <p class="eyebrow" style="color:var(--primary);font-size: .6875rem;font-weight: 600;text-transform: uppercase;letter-spacing: .32em;">Southern Dubai Corridor</p>
+      <h2 class="section-title">Future Growth Potential Of Al Yalayis 1 Dubai</h2>
+      <p>
+        Al Yalayis 1 sits within Dubai's southern growth corridor, an area that has steadily
+        drawn new master communities as the city's development focus extends toward Dubai
+        South and Jebel Ali. Its position along Emirates Road (E611), with links through to
+        Sheikh Zayed Road, keeps it tied into the wider road network even as the immediate
+        surroundings remain low-density today.
+      </p>
+      <p>
+        As nearby districts continue to build out, early buyers in a large-scale master
+        community such as this are typically positioned to benefit from the area's maturing
+        infrastructure and amenity base over time &ndash; one of the reasons off-plan launches in
+        this corridor continue to attract both investors and end users.
+      </p>
+    </div>
+
+    <ul class="ely-growth__list reveal" data-delay="100">
+      <li>
+        <h3>Southern Growth Corridor</h3>
+        <p>Positioned within one of Dubai's actively developing residential zones.</p>
+      </li>
+      <li>
+        <h3>Road Network Access</h3>
+        <p>Direct links to Emirates Road (E611) and onward to Sheikh Zayed Road.</p>
+      </li>
+      <li>
+        <h3>Proximity To Dubai South</h3>
+        <p>Close to one of the emirate's key long-term development zones.</p>
+      </li>
+      <li>
+        <h3>Scale Of The Masterplan</h3>
+        <p>4,500+ planned units give the community critical mass as it matures.</p>
+      </li>
+    </ul>
+
+  </div>
+</section>
+
+
+<!-- ================================================================
+     9. INVESTMENT & PAYMENT PLAN
+     ================================================================ -->
+<style>
+  .ely-invest { padding-block: 5rem; background: color-mix(in srgb, var(--secondary) 55%, #fff); }
+  .ely-invest__grid { display: grid; gap: 3rem; grid-template-columns: 1fr; }
+  @media (min-width: 1024px) { .ely-invest__grid { grid-template-columns: 1fr 1fr; gap: 3.5rem; } }
+
+  .ely-invest__list { list-style: none; margin: 1.75rem 0 0; padding: 0; display: grid; gap: .875rem; }
+  .ely-invest__list li { display: flex; gap: .75rem; align-items: flex-start; }
+  .ely-invest__check {
+    flex-shrink: 0; margin-top: .1rem;
+    width: 1.375rem; height: 1.375rem; border-radius: 9999px;
+    background: color-mix(in srgb, var(--primary) 12%, transparent);
+    color: var(--primary);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .ely-invest__check svg { width: .8rem; height: .8rem; }
+  .ely-invest__list li span:last-child { color: var(--foreground); font-size: .875rem; line-height: 1.5; }
+
+  .ely-plan {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-card);
+    padding: 2rem;
+  }
+  .ely-plan__bar { display: flex; border-radius: 9999px; overflow: hidden; height: 3.5rem; }
+  .ely-plan__seg { display: flex; flex-direction: column; align-items: center; justify-content: center; padding-inline: .5rem; text-align: center; }
+  .ely-plan__seg--main { width: 70%; background: var(--primary); color: var(--primary-foreground); }
+  .ely-plan__seg--gold { width: 30%; background: var(--gold); color: var(--ink); }
+  .ely-plan__seg strong { font-family: var(--font-display); font-size: 1.25rem; line-height: 1; }
+  .ely-plan__seg span { font-size: .625rem; text-transform: uppercase; letter-spacing: .05em; margin-top: .25rem; white-space: nowrap; }
+
+  @media (max-width: 420px) {
+    .ely-plan__bar { flex-direction: column; height: auto; border-radius: var(--radius); }
+    .ely-plan__seg { width: 100% !important; padding: .875rem .75rem; }
+    .ely-plan__seg span { white-space: normal; }
+  }
+
+  .ely-plan__specs { list-style: none; margin: 2rem 0 0; padding: 1.5rem 0 0; border-top: 1px solid var(--border); display: grid; gap: .875rem; }
+  .ely-plan__specs li { display: flex; justify-content: space-between; gap: 1rem; font-size: .875rem; }
+  .ely-plan__specs li span:first-child { color: var(--muted-foreground); }
+  .ely-plan__specs li span:last-child { color: var(--foreground); font-weight: 600; text-align: right; }
+</style>
+
+<section class="ely-invest">
+  <div class="container-page ely-invest__grid">
+
+    <div class="reveal">
+      <p class="eyebrow" style="color:var(--primary);font-size: .6875rem;font-weight: 600;text-transform: uppercase;letter-spacing: .32em;">Off-Plan Opportunity</p>
+      <h2 class="section-title">Built For Investors And End Users</h2>
+      <p class="lead" style="max-width:none;margin-top:1rem;">
+        Ellington Master Community Al Yalayis 1 combines a prime location, a trusted developer
+        and diverse property options &ndash; positioning it well for long-term capital
+        appreciation as demand for premium communities grows.
+      </p>
+
+      <ul class="ely-invest__list">
+        <li><span class="ely-invest__check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><span>Prime Dubai location with strong future connectivity</span></li>
+        <li><span class="ely-invest__check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><span>Trusted developer reputation and high-quality construction standards</span></li>
+        <li><span class="ely-invest__check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><span>Diverse property options across apartments, townhouses and villas</span></li>
+        <li><span class="ely-invest__check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></span><span>Resale permitted once 30% of the purchase price is paid</span></li>
+      </ul>
+    </div>
+
+    <div class="ely-plan reveal" data-delay="100">
+      <p class="eyebrow" style="margin-bottom:1rem;">Payment Plan</p>
+      <div class="ely-plan__bar">
+        <div class="ely-plan__seg ely-plan__seg--main"><strong>70%</strong><span>During Construction</span></div>
+        <div class="ely-plan__seg ely-plan__seg--gold"><strong>30%</strong><span>On Handover</span></div>
+      </div>
+
+      <ul class="ely-plan__specs">
+        <li><span>Developer</span><span>Ellington Properties</span></li>
+        <li><span>Project type</span><span>Master Community</span></li>
+        <li><span>Location</span><span>Al Yalayis 1, Dubai</span></li>
+        <li><span>Completion</span><span>Q2 2030 onwards</span></li>
+        <li><span>Resale policy</span><span>Allowed after 30% payment</span></li>
+      </ul>
+    </div>
+
+  </div>
+</section>
+
+
+<!-- ================================================================
+     10. WHY CHOOSE SPACESMITH
+     ================================================================ -->
+<style>
+  .ely-why {
+    padding-block: 4.5rem;
+    background: var(--ink);
+    color: var(--cream);
+  }
+  .ely-why__head { max-width: 40rem; }
+  .ely-why__head .eyebrow { color: var(--gold); }
+  .ely-why__head h2 { color: var(--cream); }
+  .ely-why__head p { color: rgba(246,242,233,.78); }
+
+  .ely-why__grid { margin-top: 2.5rem; display: grid; gap: 2rem; grid-template-columns: 1fr; }
+  @media (min-width: 768px) { .ely-why__grid { grid-template-columns: repeat(3, 1fr); } }
+
+  .ely-why__item { padding-top: 1.5rem; border-top: 1px solid rgba(246,242,233,.16); }
+  .ely-why__item h3 { font-family: var(--font-display); font-size: 1.375rem; margin: 0 0 .5rem; color: var(--cream); }
+  .ely-why__item p  { margin: 0; font-size: .875rem; line-height: 1.65; color: rgba(246,242,233,.72); }
+
+  .ely-why__cta { margin-top: 2.5rem; }
+</style>
+
+<section class="ely-why">
+  <div class="container-page">
+    <div class="ely-why__head reveal">
+      <p class="eyebrow" style="color:var(--gold);font-size: .6875rem;font-weight: 600;text-transform: uppercase;letter-spacing: .32em;">Why Choose Spacesmith</p>
+      <h2 class="section-title">Your Advisor Through Every Step</h2>
+      <p class="lead" style="max-width:none;margin-top:1rem;">
+        Spacesmith Real Estate helps buyers and investors explore premium opportunities in
+        Dubai's luxury market. Our advisors provide complete assistance for anyone considering
+        Ellington Al Yalayis 1 &ndash; from project details to unit selection and investment guidance.
+      </p>
+    </div>
+
+    <div class="ely-why__grid">
+      <div class="ely-why__item reveal">
+        <h3>Complete Assistance</h3>
+        <p>Guidance on project details, unit selection and paperwork from enquiry to handover.</p>
+      </div>
+      <div class="ely-why__item reveal" data-delay="80">
+        <h3>Market Expertise</h3>
+        <p>Local knowledge of Dubai's southern growth corridor and its investment potential.</p>
+      </div>
+      <div class="ely-why__item reveal" data-delay="160">
+        <h3>Exclusive Access</h3>
+        <p>Direct access to premium developments and priority off-plan launch inventory.</p>
+      </div>
+    </div>
+
+    <div class="ely-why__cta reveal" data-delay="200">
+      <a href="{% url 'contact' %}" class="btn-gold">
+        Speak With An Advisor
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </a>
+    </div>
+  </div>
+</section>
+
+
+<!-- ================================================================
+     12. FAQ
+     ================================================================ -->
+<style>
+  .ely-faq { padding-block: 3rem; background: var(--background); }
+  .ely-faq__head { max-width: 40rem; margin-bottom: 2.5rem; }
+  .ely-faq__list { display: grid; gap: .75rem; max-width: 80rem; }
+
+  .ely-faq__item {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--card);
+    overflow: hidden;
+  }
+  .ely-faq__item summary {
+    list-style: none;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+    padding: 1.125rem 1.375rem;
+    font-family: var(--font-display);
+    font-size: 1.35rem;
+    font-weight: 500;
+    color: var(--foreground);
+  }
+  .ely-faq__item summary::-webkit-details-marker { display: none; }
+  .ely-faq__item summary .ely-faq__icon {
+    flex-shrink: 0; width: 1.5rem; height: 1.5rem; border-radius: 9999px;
+    border: 1px solid var(--border); color: var(--primary);
+    display: flex; align-items: center; justify-content: center;
+    transition: transform .2s ease;
+  }
+  .ely-faq__item[open] summary .ely-faq__icon { transform: rotate(45deg); }
+  .ely-faq__item p {
+    margin: 0; padding: 0 1.375rem 1.25rem;
+    font-size: .9; line-height: 1.65; color: var(--muted-foreground);
+  }
+</style>
+
+<section class="ely-faq">
+  <div class="container-page">
+    <div class="ely-faq__head reveal">
+      <p class="eyebrow" style="color:var(--primary);font-size: .6875rem;font-weight: 600;text-transform: uppercase;letter-spacing: .32em;">Have Questions?</p>
+      <h2 class="section-title">Frequently Asked Questions</h2>
+    </div>
+
+    <div class="ely-faq__list reveal" data-delay="80">
+      <details class="ely-faq__item" open>
+        <summary>What is Ellington Master Community Al Yalayis 1?<span class="ely-faq__icon"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span></summary>
+        <p>It's a luxury residential development by Ellington Properties featuring apartments, townhouses and standalone villas in Dubai.</p>
+      </details>
+
+      <details class="ely-faq__item">
+        <summary>Where is Ellington Al Yalayis 1 located?<span class="ely-faq__icon"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span></summary>
+        <p>The project is located in Al Yalayis 1, Dubai, offering convenient access to Dubai South, Jebel Ali and major Dubai destinations.</p>
+      </details>
+
+      <details class="ely-faq__item">
+        <summary>What property types are available?<span class="ely-faq__icon"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span></summary>
+        <p>The community offers luxury apartments, 2&ndash;4 bedroom townhouses and 4&ndash;5 bedroom standalone villas.</p>
+      </details>
+
+      <details class="ely-faq__item">
+        <summary>Is Ellington Al Yalayis 1 a good investment?<span class="ely-faq__icon"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span></summary>
+        <p>The project offers strong investment potential thanks to its prime location, trusted developer, premium design and Dubai's growing real estate demand.</p>
+      </details>
+
+      <details class="ely-faq__item">
+        <summary>Who is the developer of Ellington Master Community?<span class="ely-faq__icon"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></span></summary>
+        <p>The project is developed by Ellington Properties, a renowned Dubai luxury developer known for design-focused residential communities.</p>
+      </details>
+    </div>
+  </div>
+</section>
+
+
+<!-- ================================================================
+     11. ENQUIRY FORM
+     ================================================================ -->
+<style>
+
+.ely-enquiry{
+    padding:4rem 0;
+    background:linear-gradient(180deg,#fbfaf7 0%,#ffffff 100%);
+}
+
+.ely-enquiry__grid{
+    display:grid;
+    grid-template-columns:.95fr 1.05fr;
+    gap:5rem;
+    align-items:center;
+}
+
+@media(max-width:1024px){
+
+    .ely-enquiry__grid{
+
+        grid-template-columns:1fr;
+
+        gap:3rem;
+
+    }
+
+}
+
+
+/*==================================================
+=            LEFT SIDE
+==================================================*/
+
+.ely-enquiry__copy{
+
+    display:flex;
+
+    flex-direction:column;
+
+    justify-content:center;
+
+    height:100%;
+
+}
+
+.ely-enquiry__copy .eyebrow{
+
+    margin-bottom:.75rem;
+
+}
+
+.ely-enquiry__copy .section-title{
+
+    margin-bottom:1.25rem;
+
+    max-width:11ch;
+
+}
+
+.ely-enquiry__copy p{
+
+    color:var(--muted-foreground);
+
+    line-height:1.9;
+
+    max-width:36rem;
+
+}
+
+.ely-divider{
+
+    width:90px;
+
+    height:3px;
+
+    background:var(--gold);
+
+    border-radius:50px;
+
+    margin:2rem 0;
+
+}
+
+
+/*==================================================
+=            BENEFITS
+==================================================*/
+
+.ely-benefits{
+
+    display:grid;
+
+    gap:1rem;
+
+    margin-top:2rem;
+
+}
+
+.ely-benefit{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:.9rem;
+
+    font-size:.95rem;
+
+    color:var(--foreground);
+
+}
+
+.ely-benefit svg{
+
+    width:20px;
+
+    height:20px;
+
+    color:var(--gold);
+
+    flex-shrink:0;
+
+}
+
+
+/*==================================================
+=            CONTACT
+==================================================*/
+
+.ely-contact{
+
+    display:grid;
+
+    gap:1rem;
+
+    margin-top:2.5rem;
+
+}
+
+.ely-contact-item{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:.9rem;
+
+}
+
+.ely-contact-icon{
+
+    width:42px;
+
+    height:42px;
+
+    border-radius:50%;
+
+    background:rgba(196,160,77,.12);
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    color:var(--gold);
+
+    flex-shrink:0;
+
+}
+
+.ely-contact-item strong{
+
+    display:block;
+
+    font-size:.9rem;
+
+}
+
+.ely-contact-item span{
+
+    display:block;
+
+    font-size:.82rem;
+
+    color:var(--muted-foreground);
+
+}
+
+
+/*==================================================
+=            FORM
+==================================================*/
+
+.ely-enquiry__form{
+
+    background:#fff;
+
+    padding:2.5rem;
+
+    border-radius:.5rem;
+
+    border:1px solid rgba(0,0,0,.06);
+
+    box-shadow:0 20px 60px rgba(0,0,0,.08);
+
+}
+
+.ely-enquiry__form h3{
+
+    margin:0;
+
+    font-family:var(--font-display);
+
+    font-size:1.65rem;
+
+}
+
+.ely-form-subtitle{
+
+    margin:.75rem 0 2rem;
+
+    color:var(--muted-foreground);
+
+    line-height:1.7;
+
+}
+
+
+/*==================================================
+=            FORM FIELDS
+==================================================*/
+
+.ely-enquiry__row{
+
+    display:grid;
+
+    grid-template-columns:1fr 1fr;
+
+    gap:1rem;
+}
+
+@media(max-width:560px){
+    .ely-enquiry__row{
+        grid-template-columns:1fr;
+    }
+}
+
+.field{
+    display:flex;
+    flex-direction:column;
+    gap:.75rem;
+}
+
+.field label{
+    font-size:.68rem;
+    font-weight:600;
+}
+
+.field input,
+.field textarea{
+    width:100%;
+    padding:.95rem 1rem;
+    border:1px solid var(--border);
+    border-radius:.5rem;
+    font:inherit;
+    background:#fff;
+    transition:.25s;
+}
+
+.field textarea{
+
+    resize:vertical;
+
+    min-height:130px;
+
+}
+
+.field input:focus,
+
+.field textarea:focus{
+
+    outline:none;
+
+    border-color:var(--gold);
+
+    box-shadow:0 0 0 3px rgba(196,160,77,.12);
+
+}
+
+
+/*==================================================
+=            BUTTON
+==================================================*/
+
+.ely-enquiry__submit{
+    width:100%;
+    margin-top:1rem;
+    height:56px;
+    font-weight: 600;
+    letter-spacing: 0.03em;
+}
+
+.ely-enquiry__note{
+
+    margin-top:1rem;
+
+    text-align:center;
+
+    font-size:.78rem;
+
+    color:var(--muted-foreground);
+
+}
+
+
+/*==================================================
+=            HONEYPOT
+==================================================*/
+
+.ely-enquiry__honeypot{
+
+    position:absolute;
+
+    left:-9999px;
+
+    top:-9999px;
+
+}
+
+
+/*==================================================
+=            MOBILE
+==================================================*/
+
+@media(max-width:768px){
+
+    .ely-enquiry{
+
+        padding:3rem 0;
+
+    }
+
+    .ely-enquiry__form{
+
+        padding:1.5rem;
+
+    }
+
+}
+
+
+.ely-err { margin:.35rem 0 0; font-size:.78rem; color:#b3261e; }
+.field input.has-error, .field textarea.has-error { border-color:#b3261e; }
+.ely-tel { display:flex; gap:.5rem; min-width:0; }
+.ely-tel select {
+    flex:0 0 6rem; width:6rem; padding:.65rem .5rem;
+    border:1px solid var(--border); border-radius:.5rem;
+    font:inherit; background:#fff;
+}
+.ely-tel input { flex:1 1 auto; min-width:0; }
+.ely-check {
+    display:flex; align-items:center; gap:.5rem;
+    font-size:.85rem; color:var(--muted-foreground); margin-top:.25rem;
+}
+.ely-check input { width:1rem; height:1rem; accent-color:var(--primary); }
+.ely-formerr {
+    margin:0 0 1.25rem; padding:.85rem 1rem;
+    border:1px solid #f2c2bd; border-radius:.5rem;
+    background:#fdf3f2; color:#b3261e; font-size:.85rem;
+}
+
+</style>
+
+<section class="ely-enquiry" id="enquiry">
+    <div class="container-page ely-enquiry__grid">
+
+        <!-- LEFT SIDE -->
+        <div class="ely-enquiry__copy reveal">
+
+            <p class="eyebrow" style="color:var(--primary);font-size: .6875rem;font-weight: 600;text-transform: uppercase;letter-spacing: .32em;">Exclusive Launch Access</p>
+
+            <h2 class="section-title">
+                Get Pricing &
+                Brochure
+            </h2>
+
+            <p>
+                Register your interest to receive the official brochure,
+                latest prices, floor plans, payment plan and current
+                availability for Ellington Master Community at
+                Al Yalayis 1.
+            </p>
+
+            <div class="ely-divider"></div>
+
+            <div class="ely-benefits">
+
+                <div class="ely-benefit">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                    <span>Official Brochure PDF</span>
+                </div>
+
+                <div class="ely-benefit">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                    <span>Latest Price List</span>
+                </div>
+
+                <div class="ely-benefit">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                    <span>Floor Plans</span>
+                </div>
+
+                <div class="ely-benefit">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                    <span>70/30 Payment Plan</span>
+                </div>
+
+                <div class="ely-benefit">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                    <span>Current Unit Availability</span>
+                </div>
+
+            </div>
+
+            <div class="ely-contact">
+
+                <div class="ely-contact-item">
+
+                    <div class="ely-contact-icon">📞</div>
+
+                    <div>
+
+                        <strong>Call Us</strong>
+
+                        <span>{{ contact_phone|default:'+971 55 639 9212' }}</span>
+
+                    </div>
+
+                </div>
+
+                <div class="ely-contact-item">
+
+                    <div class="ely-contact-icon">✉</div>
+
+                    <div>
+
+                        <strong>Email</strong>
+
+                        <span>{{ contact_email|default:'hello@spacesmithrealestate.com' }}</span>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- FORM -->
+
+<form class="ely-enquiry__form reveal"
+      id="elyForm"
+      method="post"
+      action="{% url 'properties:ellington' %}#enquiry">
+
+    {% csrf_token %}
+
+    <h3>Request Pricing &amp; Brochure</h3>
+
+    <p class="ely-form-subtitle">
+        Complete the form below and one of our property specialists
+        will contact you within 24 hours.
+    </p>
+
+    {% if enquiry_form.non_field_errors %}
+        <div class="ely-formerr">
+            {% for e in enquiry_form.non_field_errors %}<p style="margin:0;">{{ e }}</p>{% endfor %}
+        </div>
+    {% endif %}
+
+    <div class="ely-enquiry__honeypot" aria-hidden="true">
+        <label for="id_website">Website</label>
+        <input type="text" id="id_website" name="website" tabindex="-1" autocomplete="off">
+    </div>
+
+    <div class="field">
+        <label for="id_name">Your Name</label>
+        <input type="text" id="id_name" name="name"
+               class="{% if enquiry_form.name.errors %}has-error{% endif %}"
+               value="{{ enquiry_form.name.value|default:'' }}"
+               placeholder="Enter your name" autocomplete="name" required>
+        {% for e in enquiry_form.name.errors %}<p class="ely-err">{{ e }}</p>{% endfor %}
+    </div>
+
+    <div class="field">
+        <label for="id_email">Your Email</label>
+        <input type="email" id="id_email" name="email"
+               class="{% if enquiry_form.email.errors %}has-error{% endif %}"
+               value="{{ enquiry_form.email.value|default:'' }}"
+               placeholder="Enter your email" autocomplete="email" required>
+        {% for e in enquiry_form.email.errors %}<p class="ely-err">{{ e }}</p>{% endfor %}
+    </div>
+
+    <div class="field">
+        <label for="elyPhoneLocal">Phone</label>
+        <div class="ely-tel">
+            <select id="elyPhoneCode" aria-label="Country dialling code">
+                <option value="971" selected>+971</option>
+                <option value="91">+91</option>
+                <option value="44">+44</option>
+                <option value="1">+1</option>
+                <option value="966">+966</option>
+                <option value="974">+974</option>
+                <option value="965">+965</option>
+                <option value="92">+92</option>
+                <option value="880">+880</option>
+                <option value="94">+94</option>
+                <option value="20">+20</option>
+                <option value="7">+7</option>
+                <option value="86">+86</option>
+                <option value="49">+49</option>
+                <option value="61">+61</option>
+            </select>
+            <input type="tel" id="elyPhoneLocal" inputmode="tel"
+                   class="{% if enquiry_form.phone.errors %}has-error{% endif %}"
+                   placeholder="50 123 4567" autocomplete="tel-national" required>
+        </div>
+        <input type="hidden" name="phone" id="id_phone"
+               value="{{ enquiry_form.phone.value|default:'' }}">
+        {% for e in enquiry_form.phone.errors %}<p class="ely-err">{{ e }}</p>{% endfor %}
+    </div>
+
+    <label class="ely-check">
+        <input type="checkbox" id="elyWaSame" checked>
+        WhatsApp number is the same
+    </label>
+
+    <div class="field" id="elyWaWrap" hidden>
+        <label for="elyWaLocal">WhatsApp</label>
+        <div class="ely-tel">
+            <select id="elyWaCode" aria-label="WhatsApp dialling code">
+                <option value="971" selected>+971</option>
+                <option value="91">+91</option>
+                <option value="44">+44</option>
+                <option value="1">+1</option>
+                <option value="966">+966</option>
+                <option value="92">+92</option>
+            </select>
+            <input type="tel" id="elyWaLocal" inputmode="tel" placeholder="50 123 4567">
+        </div>
+    </div>
+    <input type="hidden" name="whatsapp" id="id_whatsapp"
+           value="{{ enquiry_form.whatsapp.value|default:'' }}">
+    {% for e in enquiry_form.whatsapp.errors %}<p class="ely-err">{{ e }}</p>{% endfor %}
+
+    <div class="field">
+        <label for="id_message">Message (Optional)</label>
+        <textarea id="id_message" name="message"
+                  placeholder="Tell us which property you're interested in...">{{ enquiry_form.message.value|default:'' }}</textarea>
+    </div>
+
+    <button type="submit" class="btn-gold ely-enquiry__submit">
+        Get Pricing &amp; Brochure
+    </button>
+
+    <p class="ely-enquiry__note">
+        By submitting this form, you agree to be contacted by a
+        Spacesmith Real Estate advisor regarding this project.
+    </p>
+
+</form>
+
+    </div>
+
+</section>
+
+<script>
+(function () {
+  var form = document.getElementById('elyForm');
+  if (!form) return;
+
+  var code  = document.getElementById('elyPhoneCode');
+  var local = document.getElementById('elyPhoneLocal');
+  var out   = document.getElementById('id_phone');
+  var same  = document.getElementById('elyWaSame');
+  var wrap  = document.getElementById('elyWaWrap');
+  var wCode = document.getElementById('elyWaCode');
+  var wLoc  = document.getElementById('elyWaLocal');
+  var wOut  = document.getElementById('id_whatsapp');
+
+  function digits(v) { return (v || '').replace(/\D/g, '').replace(/^0+/, ''); }
+
+  function syncPhone() {
+    var n = digits(local.value);
+    out.value = n ? '+' + code.value + n : '';
+    if (same.checked) wOut.value = out.value;
+  }
+
+  function syncWa() {
+    if (same.checked) { wOut.value = out.value; return; }
+    var n = digits(wLoc.value);
+    wOut.value = n ? '+' + wCode.value + n : '';
+  }
+
+  function restore(hidden, sel, box) {
+    var v = (hidden.value || '').replace(/\D/g, '');
+    if (!v) return;
+    var opts = Array.prototype.slice.call(sel.options)
+      .map(function (o) { return o.value; })
+      .sort(function (a, b) { return b.length - a.length; });
+    for (var i = 0; i < opts.length; i++) {
+      if (v.indexOf(opts[i]) === 0) {
+        sel.value = opts[i];
+        box.value = v.slice(opts[i].length);
+        return;
+      }
+    }
+    box.value = v;
+  }
+
+  restore(out, code, local);
+  restore(wOut, wCode, wLoc);
+  if (wOut.value && wOut.value !== out.value) {
+    same.checked = false;
+    wrap.hidden = false;
+  }
+
+  ['input', 'change'].forEach(function (ev) {
+    local.addEventListener(ev, syncPhone);
+    code.addEventListener(ev, syncPhone);
+    wLoc.addEventListener(ev, syncWa);
+    wCode.addEventListener(ev, syncWa);
+  });
+
+  same.addEventListener('change', function () {
+    wrap.hidden = same.checked;
+    syncWa();
+  });
+
+  form.addEventListener('submit', function () { syncPhone(); syncWa(); });
+
+  syncPhone();
+
+  if (form.querySelector('.ely-err, .ely-formerr')) {
+    document.getElementById('enquiry').scrollIntoView({ behavior: 'smooth' });
+  }
+})();
+</script>
+
+
+
+
+<!-- ================================================================
+     13. EXPLORE MORE (INTERNAL LINKS)
+     ================================================================ -->
+<style>
+  .ely-links { padding-block: 3.5rem; background: color-mix(in srgb, var(--secondary) 55%, #fff); }
+  .ely-links__row { display: flex; flex-wrap: wrap; gap: .75rem; margin-top: 1.5rem; }
+  .ely-links__chip {
+    display: inline-flex; align-items: center; gap: .5rem;
+    padding: .625rem 1.25rem;
+    border-radius: 9999px;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--foreground);
+    font-size: .8125rem; font-weight: 500;
+    transition: border-color .2s ease, color .2s ease;
+  }
+  .ely-links__chip:hover { border-color: var(--primary); color: var(--primary); }
+  .ely-links__chip svg { width: .875rem; height: .875rem; }
+</style>
+
+<section class="ely-links">
+  <div class="container-page reveal">
+    <p class="eyebrow" style="color:var(--primary);font-size: .6875rem;font-weight: 600;text-transform: uppercase;letter-spacing: .32em;">Explore More</p>
+    <h2 class="section-title" style="font-size:clamp(1.5rem,2.6vw,2rem);">Continue Your Search</h2>
+    <div class="ely-links__row">
+      <a class="ely-links__chip" href="{% url 'properties:developer_detail' 'ellington-properties' %}">
+        Ellington Properties
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </a>
+      <a class="ely-links__chip" href="{% url 'properties:offplan_properties' %}?city=dubai">
+        Dubai Off-Plan Properties
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </a>
+      <a class="ely-links__chip" href="{% url 'properties:property_list' %}?city=dubai&unit_type=Villa">
+        Luxury Villas In Dubai
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </a>
+      <a class="ely-links__chip" href="{% url 'properties:property_list' %}?city=dubai&unit_type=Townhouse">
+        Dubai Townhouses
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </a>
+      <a class="ely-links__chip" href="{% url 'contact' %}">
+        Property Investment Dubai
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ================================================================
+     14. FINAL CTA
+     ================================================================ -->
+<style>
+  .ely-cta {
+    position: relative;
+    padding-block: 3rem;
+    background: var(--primary);
+    color: var(--primary-foreground);
+    overflow: hidden;
+  }
+  .ely-cta::before {
+    content: ""; position: absolute; top: -30%; right: -8%;
+    width: 420px; height: 420px; border-radius: 50%;
+    background: radial-gradient(circle, color-mix(in srgb, var(--gold) 22%, transparent), transparent 70%);
+    pointer-events: none;
+  }
+  .ely-cta__inner { position: relative; z-index: 1; max-width: 80rem; }
+  .ely-cta h2 { color: var(--cream); margin: 0; }
+  .ely-cta p { margin: 1rem 0 0; color: rgba(246,242,233,.82); font-size: 1rem; line-height: 1.7; }
+  .ely-cta__row { margin-top: 2rem; display: flex; flex-wrap: wrap; gap: .875rem; align-items: center; }
+  .ely-cta__phone { font-size: .9375rem; color: var(--cream); }
+</style>
+
+<section class="ely-cta">
+  <div class="container-page ely-cta__inner reveal">
+    <p class="eyebrow" style="color:var(--gold);font-size: .6875rem;font-weight: 600;text-transform: uppercase;letter-spacing: .32em;">Al Yalayis 1, Dubai</p>
+    <h2 class="section-title">Secure Your Home In Ellington's Newest Community</h2>
+    <p>
+      Speak with a Spacesmith advisor for full floor plans, pricing and payment plan details
+      before this launch phase closes.
+    </p>
+    <div class="ely-cta__row">
+      <a href="{% url 'contact' %}" class="btn-gold">Enquire Now</a>
+      <a href="https://wa.me/{{ whatsapp_number|default:'971556399212' }}?text=Hi%2C%20I%27m%20interested%20in%20Ellington%20Al%20Yalayis%201"
+         target="_blank" rel="noopener noreferrer" class="btn-line">WhatsApp Us</a>
+      <a href="tel:+{{ phone_number|default:'971556399212' }}" class="ely-cta__phone">{{ contact_phone|default:'+971 55 639 9212' }}</a>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

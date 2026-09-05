@@ -68,7 +68,7 @@
 
   .nav-link {
     position: relative;
-    padding: .5rem 1rem;
+    padding: .5rem .6rem;
     font-family: var(--font-body);
     font-size: .875rem;
     font-weight: 500;
@@ -435,6 +435,39 @@
         </div>
       </div>
 
+        <!-- projects Dropdown -->
+      <div class="nav-dropdown" id="projectsDropdown">
+        <button class="nav-link dropdown-trigger"
+                type="button"
+                aria-label="Projects  menu"
+                aria-expanded="false"
+                aria-haspopup="true"
+                aria-controls="projectsMenu">
+
+          <span>Projects</span>
+
+          <svg class="dropdown-arrow"
+               viewBox="0 0 24 24"
+               fill="none"
+               stroke="currentColor"
+               stroke-width="2"
+               stroke-linecap="round"
+               stroke-linejoin="round"
+               aria-hidden="true">
+            <polyline points="6 9 12 15 18 9"></polyline>
+          </svg>
+        </button>
+
+        <div class="dropdown-menu" id="projectsMenu">
+                    <a href="{% url 'properties:ellington' %}"
+             class="dropdown-link {% if '/ellington-new-launch-dubai' in request.path %}is-active{% endif %}">
+            Ellington Al Yalayis 1
+          </a>
+        </div>
+      </div>
+
+
+
     </nav>
 
     <div class="header-actions">
@@ -556,6 +589,25 @@
         </a>
       </div>
 
+            <!-- Mobile Resources Dropdown -->
+      <button class="mobile-dropdown-trigger"
+              type="button"
+              id="mobileProjectsTrigger"
+              aria-expanded="false"
+              aria-controls="mobileProjectsMenu">
+        Projects
+      </button>
+
+      <div class="mobile-dropdown-menu" id="mobileProjectsMenu">
+        
+        <a href="{% url 'properties:ellington' %}"
+           class="mobile-dropdown-link {% if '/ellington-new-launch-dubai' in request.path %}is-active{% endif %}">
+          Ellington Al Yalayis 1
+        </a>
+      </div>
+
+
+
       <a href="{% url 'contact' %}" class="mobile-link {% if '/contact' in request.path %}is-active{% endif %}">
         Contact
       </a>
@@ -640,40 +692,44 @@
   });
 
   /* ---- Desktop dropdown ---- */
-  var desktopDropdown = document.getElementById('resourcesDropdown');
-  var desktopTrigger = desktopDropdown.querySelector('.dropdown-trigger');
-  
-  desktopTrigger.addEventListener('click', function () {
-    var isOpen = this.getAttribute('aria-expanded') === 'true';
-    desktopDropdown.classList.toggle('is-open', !isOpen);
-    this.setAttribute('aria-expanded', String(!isOpen));
+  /* ---- Desktop dropdowns ---- */
+  var desktopDropdowns = document.querySelectorAll('.nav-dropdown');
+
+  desktopDropdowns.forEach(function (dd) {
+    var trigger = dd.querySelector('.dropdown-trigger');
+    if (!trigger) return;
+
+    trigger.addEventListener('click', function () {
+      var isOpen = trigger.getAttribute('aria-expanded') === 'true';
+      // close the others first
+      desktopDropdowns.forEach(function (other) {
+        if (other !== dd) {
+          other.classList.remove('is-open');
+          var t = other.querySelector('.dropdown-trigger');
+          if (t) t.setAttribute('aria-expanded', 'false');
+        }
+      });
+      dd.classList.toggle('is-open', !isOpen);
+      trigger.setAttribute('aria-expanded', String(!isOpen));
+    });
   });
 
   document.addEventListener('click', function (e) {
-    if (!desktopDropdown.contains(e.target)) {
-      desktopDropdown.classList.remove('is-open');
-      desktopTrigger.setAttribute('aria-expanded', 'false');
-    }
-  });
-
-  /* ---- Mobile dropdown ---- */
-  var mobileResourcesTrigger = document.getElementById('mobileResourcesTrigger');
-  if (mobileResourcesTrigger) {
-    mobileResourcesTrigger.addEventListener('click', function () {
-      var isOpen = this.getAttribute('aria-expanded') === 'true';
-      this.setAttribute('aria-expanded', String(!isOpen));
+    desktopDropdowns.forEach(function (dd) {
+      if (!dd.contains(e.target)) {
+        dd.classList.remove('is-open');
+        var t = dd.querySelector('.dropdown-trigger');
+        if (t) t.setAttribute('aria-expanded', 'false');
+      }
     });
-  }
-
-  document.addEventListener('keydown', function (e) {
-    if (e.key === 'Escape' && panel.classList.contains('is-open')) {
-      setMenu(false);
-      toggle.focus();
-    }
   });
 
-  window.addEventListener('resize', function () {
-    if (window.innerWidth >= 1024 && panel.classList.contains('is-open')) setMenu(false);
+  /* ---- Mobile dropdowns ---- */
+  document.querySelectorAll('.mobile-dropdown-trigger').forEach(function (trigger) {
+    trigger.addEventListener('click', function () {
+      var isOpen = trigger.getAttribute('aria-expanded') === 'true';
+      trigger.setAttribute('aria-expanded', String(!isOpen));
+    });
   });
 })();
 </script>

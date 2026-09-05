@@ -2075,3 +2075,98 @@ def property_map(request):
         'robots': 'noindex, follow' if has_filters else
                   'index, follow, max-image-preview:large, max-snippet:-1',
     })
+    
+
+
+
+
+
+
+
+ELLINGTON_PROPERTY_SLUG = 'al-yalayis-1/dubai/ellington-master-community-al-yalayis-1'
+ 
+ 
+def ellington(request):
+    """
+    Ellington Master Community, Al Yalayis 1 — community + project SEO
+    landing page. Content is editorial/static (built for organic ranking on
+    "Ellington New Launch Dubai" and related terms), not templated from the
+    Property model — but enquiries still need a Property row to attach to,
+    so we anchor to one seeded record via ELLINGTON_PROPERTY_SLUG.
+    """
+    property_obj = (
+        Property.objects
+        .filter(slug=ELLINGTON_PROPERTY_SLUG, is_active=True)
+        .first()
+    )
+ 
+    enquiry_form = PropertyEnquiryForm()
+ 
+    if request.method == 'POST':
+        enquiry_form = PropertyEnquiryForm(request.POST)
+ 
+        if property_obj is None:
+            # Fails closed rather than 500ing or silently dropping the lead.
+            logger.error(
+                'Ellington landing page: ELLINGTON_PROPERTY_SLUG "%s" not found — '
+                'set it to a real Property slug before enquiries can be saved.',
+                ELLINGTON_PROPERTY_SLUG,
+            )
+            messages.error(
+                request,
+                'Sorry, enquiries are temporarily unavailable. Please call or '
+                'WhatsApp us directly and we\u2019ll help right away.'
+            )
+        elif enquiry_form.is_valid():
+            enquiry = enquiry_form.save(commit=False)
+            enquiry.property = property_obj
+            enquiry.source = 'Ellington Al Yalayis 1 Landing Page'
+            enquiry.save()
+ 
+            for sender, label in (
+                (_send_property_admin_email, 'admin'),
+                (_send_property_client_email, 'client'),
+            ):
+                try:
+                    sender(enquiry)
+                except Exception as exc:
+                    logger.error('Ellington enquiry %s email failed: %s', label, exc)
+ 
+            messages.success(
+                request,
+                'Thank you. Your enquiry has been received — our team will '
+                'be in touch within 24 hours.'
+            )
+            return redirect(f"{reverse('properties:ellington')}#enquiry")
+        else:
+            messages.error(request, 'Please correct the highlighted fields and try again.')
+ 
+    canonical = f'{SITE_URL}/properties/ellington-new-launch-dubai/'
+ 
+    # Static, SEO-team-authored title/description — audited through the same
+    # length checks as property_detail so nothing ships outside Google's
+    # display windows.
+    meta_title, meta_description, seo_report = _audit_seo(
+        property_obj if property_obj else Property(pk=0, title='Ellington New Launch Dubai'),
+        'Ellington New Launch Dubai | Al Yalayis 1 Luxury Living',
+        'Discover Ellington New Launch Dubai at Al Yalayis 1 featuring luxury villas, '
+        'townhouses & apartments in a premium master community by Ellington Properties.',
+    )
+ 
+    return render(request, 'ellington_al_yalayis_landing.html', {
+        'property': property_obj,
+        'enquiry_form': enquiry_form,
+ 
+        'meta_title': meta_title,
+        'meta_description': meta_description,
+        'canonical': canonical,
+        'robots': 'index, follow, max-image-preview:large, max-snippet:-1',
+        'og_type': 'article',
+        'og_image': _absolute(property_obj.cover_image) if property_obj and property_obj.cover_image else None,
+ 
+        # Swap for '{lat},{lng}' once you have exact coordinates for the plot,
+        # e.g. f'{property_obj.latitude},{property_obj.longitude}&z=14'
+        'map_embed_url': 'https://www.google.com/maps?q=Al+Yalayis+1,+Dubai,+UAE&z=13&output=embed',
+ 
+        'seo_report': seo_report if settings.DEBUG else None,
+    })

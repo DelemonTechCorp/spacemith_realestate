@@ -20,6 +20,8 @@ from properties.models import Property, DeveloperCompany, District
 from blogs.models import BlogPost
 
 
+ELLINGTON_PROPERTY_SLUG = 'al-yalayis-1/dubai/ellington-master-community-al-yalayis-1'
+
 # ─────────────────────────────────────────────────────────────
 # STATIC PAGES SITEMAP (FIXED — paths only)
 # ─────────────────────────────────────────────────────────────
@@ -44,6 +46,7 @@ class StaticPagesSitemap(Sitemap):
             {'path': '/contact/', 'priority': 0.7, 'changefreq': 'never'},
             {'path': '/faq/', 'priority': 0.6, 'changefreq': 'monthly'},
             {'path': '/privacy-policy/', 'priority': 0.5, 'changefreq': 'monthly'},
+            {'path': '/properties/ellington-new-launch-dubai/', 'priority': 0.9, 'changefreq': 'weekly'},
         ]
     
     def location(self, item):
@@ -85,7 +88,7 @@ class PropertySitemap(Sitemap):
     priority = 0.8
     
     def items(self):
-        return Property.objects.filter(is_active=True).order_by('-created_at')
+        return Property.objects.filter(is_active=True).exclude(slug=ELLINGTON_PROPERTY_SLUG).order_by('-created_at')
     
     def location(self, item):
         # Return path only — Django adds domain
@@ -136,7 +139,7 @@ class OffPlanPropertiesSitemap(Sitemap):
         return Property.objects.filter(
             is_active=True,
             property_status__slug='off-plan'
-        ).order_by('-created_at')
+        ).exclude(slug=ELLINGTON_PROPERTY_SLUG).order_by('-created_at')
     
     def location(self, item):
         return f'/properties/{item.slug}/'

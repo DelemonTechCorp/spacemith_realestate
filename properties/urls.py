@@ -39,10 +39,12 @@ urlpatterns = [
     path('areas/', views.district_list, name='district_list'),
     path('areas/<slug:slug>/', views.district_detail, name='district_detail'),
 
-   
+   path('ellington-new-launch-dubai/', views.ellington, name='ellington'),
  
     # ── PROPERTY DETAIL ──
     # Slug is "district/city/title" (contains slashes), so this is a catch-all.
     # It MUST be the LAST pattern, otherwise it will swallow /ready/, /off-plan/, etc.
     re_path(r'^(?P<slug>[\w\-/]+?)/?$', views.property_detail, name='property_detail'),
+    
+    
 ]
