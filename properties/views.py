@@ -28,6 +28,7 @@ from properties.models import (
 SITE_URL = getattr(settings, 'SITE_URL', 'https://spacesmith.ae').rstrip('/')
 BRAND = 'Spacesmith Real Estate'
 PAGE_SIZE = 12
+ELLINGTON_PROPERTY_SLUG = 'al-yalayis-1/dubai/ellington-master-community-al-yalayis-1'
 
 SORT_OPTIONS = {
     'priority': ('dev_priority', '-created_at'),
@@ -233,6 +234,7 @@ def _base_qs(status_slug=None):
     qs = (
         Property.objects
         .filter(is_active=True)
+        .exclude(slug=ELLINGTON_PROPERTY_SLUG)
         .select_related(
             'developer_company', 'city', 'district',
             'property_status', 'sales_status', 'property_type',
@@ -719,6 +721,7 @@ def property_detail(request, slug):
         Property.objects
         .filter(is_active=True, district=property_obj.district)
         .exclude(pk=property_obj.pk)
+        .exclude(slug=ELLINGTON_PROPERTY_SLUG)
         .select_related('developer_company', 'city', 'district', 'property_status')
         .prefetch_related(
             Prefetch('images', queryset=PropertyImage.objects.order_by('order'),
@@ -732,6 +735,7 @@ def property_detail(request, slug):
             Property.objects
             .filter(is_active=True, city=property_obj.city)
             .exclude(pk=property_obj.pk)
+            .exclude(slug=ELLINGTON_PROPERTY_SLUG)
             .select_related('developer_company', 'city', 'district', 'property_status')
             .prefetch_related(
                 Prefetch('images', queryset=PropertyImage.objects.order_by('order'),
@@ -789,7 +793,8 @@ def property_detail(request, slug):
         'meta_title': meta_title,
         'meta_description': meta_description,
         'canonical': canonical,
-        'robots': 'index, follow, max-image-preview:large, max-snippet:-1',
+        'robots': ('noindex, follow' if property_obj.slug == ELLINGTON_PROPERTY_SLUG
+            else 'index, follow, max-image-preview:large, max-snippet:-1'),
         'og_type': 'article',
         'og_image': _absolute(images[0] if images else None),
         'schema_json': _build_schema(property_obj, canonical, images),
@@ -1293,6 +1298,7 @@ def developer_detail(request, slug):
     qs = (
         Property.objects
         .filter(is_active=True, developer_company=developer)
+        .exclude(slug=ELLINGTON_PROPERTY_SLUG)
         .select_related('city', 'district', 'property_status', 'sales_status',
                         'property_type')
         .prefetch_related(
