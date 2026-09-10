@@ -13,6 +13,8 @@ from .models import InstagramHighlight, Testimonial, Newsletter
 
 
 
+ELLINGTON_PROPERTY_SLUG = 'al-yalayis-1/dubai/ellington-master-community-al-yalayis-1'
+
 def home(request):
     top = Property.objects.filter(is_active=True).aggregate(m=Max('price'))['m']
     max_price = int(math.ceil(float(top or 20000000) / 500000) * 500000)
@@ -38,6 +40,7 @@ def home(request):
     featured_properties = (
     Property.objects
     .filter(is_active=True)
+    .exclude(slug=ELLINGTON_PROPERTY_SLUG)
     .select_related(
         'developer_company',
         'city',
