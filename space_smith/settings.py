@@ -17,15 +17,15 @@ from decouple import config
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-# SECRET_KEY = 'django-insecure-cb%0&d6bnj_xb@ub9usps%3=@$i4cuigx2=^nf+q%+!em=%0eq'
+SECRET_KEY = 'django-insecure-cb%0&d6bnj_xb@ub9usps%3=@$i4cuigx2=^nf+q%+!em=%0eq'
 
 # ====================
 # CORE SETTINGS
 # ====================
 
-SECRET_KEY    = config('SECRET_KEY', default='your-secret-key-here')
+# SECRET_KEY    = config('SECRET_KEY', default='your-secret-key-here')
 DEBUG         = config('DEBUG', default=True, cast=bool)
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1,www.spacesmith.ae,spacesmith.ae').split(',')
+# ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1,www.spacesmith.ae,spacesmith.ae').split(',')
 
 
 CSRF_TRUSTED_ORIGINS = [
@@ -116,28 +116,28 @@ WSGI_APPLICATION = 'space_smith.wsgi.application'
 # DATABASE
 # ====================
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE':   config('DB_ENGINE',   default='django.db.backends.sqlite3'),
-#         'NAME':     config('DB_NAME',     default=str(BASE_DIR / 'db.sqlite3')),
-#         'USER':     config('DB_USER',     default=''),
-#         'PASSWORD': config('DB_PASSWORD', default=''),
-#         'HOST':     config('DB_HOST',     default=''),
-#         'PORT':     config('DB_PORT',     default=''),
-#     }
-# }
-
-
 DATABASES = {
     'default': {
-        'ENGINE':   config('DB_ENGINE',   default='django.db.backends.postgresql'),
-        'NAME':     config('DB_NAME'),
-        'USER':     config('DB_USER'),
-        'PASSWORD': config('DB_PASSWORD'),
-        'HOST':     config('DB_HOST',     default='localhost'),
-        'PORT':     config('DB_PORT',     default='5432'),
+        'ENGINE':   config('DB_ENGINE',   default='django.db.backends.sqlite3'),
+        'NAME':     config('DB_NAME',     default=str(BASE_DIR / 'db.sqlite3')),
+        'USER':     config('DB_USER',     default=''),
+        'PASSWORD': config('DB_PASSWORD', default=''),
+        'HOST':     config('DB_HOST',     default=''),
+        'PORT':     config('DB_PORT',     default=''),
     }
 }
+
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE':   config('DB_ENGINE',   default='django.db.backends.postgresql'),
+#         'NAME':     config('DB_NAME'),
+#         'USER':     config('DB_USER'),
+#         'PASSWORD': config('DB_PASSWORD'),
+#         'HOST':     config('DB_HOST',     default='localhost'),
+#         'PORT':     config('DB_PORT',     default='5432'),
+#     }
+# }
 
 
 # ====================
