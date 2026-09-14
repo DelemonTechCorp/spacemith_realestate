@@ -48,8 +48,7 @@ FILTER_KEYS = (
 # Facets that make a real landing page. These stay indexable and keep their
 # own canonical. Everything else canonicalises back to the clean URL and goes
 # noindex, so filter combinations don't spawn thousands of thin duplicates.
-INDEXABLE_FACETS = ('city', 'type')
-
+INDEXABLE_FACETS = ('city', 'unit_type')
 
 
 
