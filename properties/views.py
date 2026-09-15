@@ -2362,3 +2362,94 @@ def valley_by_emaar(request):
 
         'seo_report': seo_report if settings.DEBUG else None,
     })
+
+
+# SEEFA_PROPERTY
+
+SEEFA_PROPERTY_SLUG = 'seefa/sharjah/seefa-by-alef-sharjah'
+
+
+def seefa_by_alef(request):
+    """
+    SEEFA by Alef, Sharjah — community + project SEO landing page. Content
+    is editorial/static (built for organic ranking on "SEEFA by Alef" and
+    related terms), not templated from the Property model — but enquiries
+    still need a Property row to attach to, so we anchor to one seeded
+    record via SEEFA_PROPERTY_SLUG.
+    """
+    property_obj = (
+        Property.objects
+        .filter(slug=SEEFA_PROPERTY_SLUG, is_active=True)
+        .first()
+    )
+
+    enquiry_form = PropertyEnquiryForm()
+
+    if request.method == 'POST':
+        enquiry_form = PropertyEnquiryForm(request.POST)
+
+        if property_obj is None:
+            # Fails closed rather than 500ing or silently dropping the lead.
+            logger.error(
+                'SEEFA by Alef landing page: SEEFA_PROPERTY_SLUG "%s" not found — '
+                'set it to a real Property slug before enquiries can be saved.',
+                SEEFA_PROPERTY_SLUG,
+            )
+            messages.error(
+                request,
+                'Sorry, enquiries are temporarily unavailable. Please call or '
+                'WhatsApp us directly and we\u2019ll help right away.'
+            )
+        elif enquiry_form.is_valid():
+            enquiry = enquiry_form.save(commit=False)
+            enquiry.property = property_obj
+            enquiry.source = 'SEEFA by Alef Landing Page'
+            enquiry.save()
+
+            for sender, label in (
+                (_send_property_admin_email, 'admin'),
+                (_send_property_client_email, 'client'),
+            ):
+                try:
+                    sender(enquiry)
+                except Exception as exc:
+                    logger.error('SEEFA by Alef enquiry %s email failed: %s', label, exc)
+
+            messages.success(
+                request,
+                'Thank you. Your enquiry has been received — our team will '
+                'be in touch within 24 hours.'
+            )
+            return redirect(f"{reverse('properties:seefa_by_alef')}#enquiry")
+        else:
+            messages.error(request, 'Please correct the highlighted fields and try again.')
+
+    canonical = f'{SITE_URL}/properties/seefa-by-alef-sharjah/'
+
+    # Static, SEO-team-authored title/description — audited through the same
+    # length checks as property_detail so nothing ships outside Google's
+    # display windows.
+    meta_title, meta_description, seo_report = _audit_seo(
+        property_obj if property_obj else Property(pk=0, title='SEEFA by Alef'),
+        'SEEFA by Alef Sharjah | Waterfront Apartments By Alef Group',
+        'Discover SEEFA by Alef — a waterfront-inspired residential community of '
+        'apartments in Sharjah with modern amenities and strong investment potential.',
+    )
+
+    return render(request, 'seefa_by_alef.html', {
+        'property': property_obj,
+        'enquiry_form': enquiry_form,
+
+        'meta_title': meta_title,
+        'meta_description': meta_description,
+        'canonical': canonical,
+        'robots': 'index, follow, max-image-preview:large, max-snippet:-1',
+        'og_type': 'article',
+        'og_image': _absolute(property_obj.cover_image) if property_obj and property_obj.cover_image else None,
+
+        # Swap for '{lat},{lng}' once you have exact coordinates for the plot,
+        # e.g. f'{property_obj.latitude},{property_obj.longitude}&z=14'
+        'map_embed_url': 'https://www.google.com/maps?q=Sharjah,+UAE&z=11&output=embed',
+
+        'seo_report': seo_report if settings.DEBUG else None,
+    })
