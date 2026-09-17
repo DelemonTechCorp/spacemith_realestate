@@ -2453,3 +2453,47 @@ def seefa_by_alef(request):
 
         'seo_report': seo_report if settings.DEBUG else None,
     })
+
+
+# BINGHATTI
+
+
+BINGHATTI_STARFALL_PROPERTY_SLUG = ("binghatti/starfall/al-jaddaf")
+
+def binghatti_starfall(request):
+    """
+    Binghatti Starfall, Al Jaddaf — project landing page.
+    """
+
+    property_obj = Property.objects.filter(
+        slug=BINGHATTI_STARFALL_PROPERTY_SLUG
+    ).first()
+
+    if request.method == "POST":
+        form = PropertyEnquiryForm(request.POST)
+
+        if form.is_valid():
+            enquiry = form.save(commit=False)
+            enquiry.property = property_obj
+
+            if request.user.is_authenticated:
+                enquiry.user = request.user
+
+            enquiry.save()
+
+            messages.success(
+                request,
+                "Your enquiry has been submitted successfully."
+            )
+
+            return render(request, "binghatti.html", context)
+    else:
+        form = PropertyEnquiryForm()
+
+    context = {
+        "property": property_obj,
+        "form": form,
+        "site_url": getattr(settings, "SITE_URL", ""),
+    }
+
+    return render(request, "binghatti.html", context)

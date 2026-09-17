@@ -43,6 +43,7 @@ urlpatterns = [
     path('azizi_florece/', views.azizi_florence, name='aziziflorence'),
     path('valley-by-emaar-dubai/',views.valley_by_emaar,name='valley_by_emaar',),
     path('seefa-by-alef-sharjah/', views.seefa_by_alef,name='seefa_by_alef',),
+    path('binghatti-starfall-al-jaddaf/', views.binghatti_starfall, name='binghatti_starfall'),
  
     # ── PROPERTY DETAIL ──
     # Slug is "district/city/title" (contains slashes), so this is a catch-all.

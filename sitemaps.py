@@ -50,6 +50,7 @@ class StaticPagesSitemap(Sitemap):
             {'path': '/properties/azizi_florece/', 'priority': 0.9, 'changefreq': 'weekly'},
             {'path': '/properties/valley-by-emaar-dubai/', 'priority': 0.9, 'changefreq': 'weekly'},
             {'path': '/seefa-by-alef-sharjah/', 'priority': 0.9, 'changefreq': 'weekly'},
+            {'path': '/binghatti/', 'priority': 0.9, 'changefreq': 'weekly'},
             
              
         ]
