@@ -9,11 +9,13 @@ Filter params: city, district, type, developer, unit_type,
 """
 
 from urllib.parse import urlencode
-
-from django.conf import settings
 from django.core.paginator import Paginator
+from django.conf import settings
 from django.db.models import Prefetch, Q, Count, Case, IntegerField, Value, When
 from django.shortcuts import redirect, render
+from django.shortcuts import render, get_object_or_404
+from django.db.models import Count, Q, Sum
+
 
 from properties.models import (
     City,
@@ -380,26 +382,250 @@ def property_list(request):
     facets = _facets(scope, active)
 
     # ── SEO ──
-    location = ''
-    if active['city']:
-        name = facets['cities'].filter(slug=active['city']).values_list('name', flat=True).first()
-        if name:
-            location = f' in {name}'
-    if not location:
-        location = ' in Dubai & the UAE'
-
     page_tag = f' | Page {page}' if page > 1 else ''
-    meta_title = _pick([
-        f'Properties for Sale{location}{page_tag} | {BRAND}',
-        f'Properties for Sale{location}{page_tag} | Spacesmith',
-        f'Properties{location}{page_tag} | Spacesmith',
-    ])
 
-    meta_description = _describe(
-        f'Browse {paginator.count} properties{location} — apartments, villas and '
-        f'penthouses, ready and off-plan.',
-        filler=f'Expert guidance from {BRAND}.',
-    )
+    # Read selected values directly from request
+    seo_city = active.get('city', '').strip()
+    seo_district = active.get('district', '').strip()
+    seo_type = active.get('type', '').strip()
+    seo_developer = active.get('developer', '').strip()
+
+    # IMPORTANT: read unit_type directly from URL
+    seo_unit_type = request.GET.get('unit_type', '').strip()
+    seo_bedrooms = request.GET.get('bedrooms', '').strip()
+    seo_price_min = request.GET.get('price_min', '').strip()
+    seo_price_max = request.GET.get('price_max', '').strip()
+    seo_search = request.GET.get('q', '').strip()
+
+
+    # Get readable city name
+    city_name = ''
+
+    if seo_city:
+        city_name = (
+            facets['cities']
+            .filter(slug=seo_city)
+            .values_list('name', flat=True)
+            .first()
+            or ''
+        )
+
+
+    # Get readable district name
+    district_name = ''
+
+    if seo_district:
+        district_name = (
+            facets['districts']
+            .filter(slug=seo_district)
+            .values_list('name', flat=True)
+            .first()
+            or ''
+        )
+
+
+    # Get readable property type
+    type_name = ''
+
+    if seo_type:
+        type_name = (
+            facets['types']
+            .filter(slug=seo_type)
+            .values_list('name', flat=True)
+            .first()
+            or ''
+        )
+
+
+    # Get readable developer
+    developer_name = ''
+
+    if seo_developer:
+        developer_name = (
+            facets['developers']
+            .filter(slug=seo_developer)
+            .values_list('name', flat=True)
+            .first()
+            or ''
+        )
+
+
+    # =========================================================
+    # SEO TITLE + DESCRIPTION
+    # =========================================================
+
+    # SEARCH
+    if seo_search:
+
+        meta_title = (
+            f'{seo_search.title()} Properties for Sale'
+            f'{page_tag} | {BRAND}'
+        )
+
+        meta_description = _describe(
+            f'Browse properties matching {seo_search} for sale '
+            f'in Dubai & the UAE. Explore available properties, '
+            f'prices, locations and project details.',
+            filler=f'Expert guidance from {BRAND}.',
+        )
+
+
+    # CITY + UNIT TYPE
+    elif city_name and seo_unit_type:
+
+        meta_title = (
+            f'{seo_unit_type.title()} Properties for Sale in '
+            f'{city_name}{page_tag} | {BRAND}'
+        )
+
+        meta_description = _describe(
+            f'Browse {seo_unit_type.lower()} properties for sale '
+            f'in {city_name}. Explore available properties, prices, '
+            f'locations and investment opportunities.',
+            filler=f'Expert guidance from {BRAND}.',
+        )
+
+
+    # CITY + DISTRICT + UNIT TYPE
+    elif city_name and district_name and seo_unit_type:
+
+        meta_title = (
+            f'{seo_unit_type.title()} Properties for Sale in '
+            f'{district_name}, {city_name}{page_tag} | {BRAND}'
+        )
+
+        meta_description = _describe(
+            f'Browse {seo_unit_type.lower()} properties for sale in '
+            f'{district_name}, {city_name}. Explore available properties, '
+            f'prices and investment opportunities.',
+            filler=f'Expert guidance from {BRAND}.',
+        )
+
+
+    # CITY + DISTRICT + PROPERTY TYPE
+    elif city_name and district_name and type_name:
+
+        meta_title = (
+            f'{type_name} for Sale in {district_name}, '
+            f'{city_name}{page_tag} | {BRAND}'
+        )
+
+        meta_description = _describe(
+            f'Browse {type_name.lower()} for sale in {district_name}, '
+            f'{city_name}. Explore ready and off-plan properties with '
+            f'prices and project details.',
+            filler=f'Expert guidance from {BRAND}.',
+        )
+
+
+    # CITY + PROPERTY TYPE
+    elif city_name and type_name:
+
+        meta_title = (
+            f'{type_name} for Sale in {city_name}'
+            f'{page_tag} | {BRAND}'
+        )
+
+        meta_description = _describe(
+            f'Browse {type_name.lower()} for sale in {city_name}. '
+            f'Explore available properties, prices and project details.',
+            filler=f'Expert guidance from {BRAND}.',
+        )
+
+
+    # CITY + DEVELOPER
+    elif city_name and developer_name:
+
+        meta_title = (
+            f'{developer_name} Properties for Sale in '
+            f'{city_name}{page_tag} | {BRAND}'
+        )
+
+        meta_description = _describe(
+            f'Explore {developer_name} properties for sale in {city_name}. '
+            f'Browse available projects, prices and property details.',
+            filler=f'Expert guidance from {BRAND}.',
+        )
+
+
+    # CITY + BEDROOM
+    elif city_name and seo_bedrooms:
+
+        meta_title = (
+            f'{seo_bedrooms}+ Bedroom Properties for Sale in '
+            f'{city_name}{page_tag} | {BRAND}'
+        )
+
+        meta_description = _describe(
+            f'Browse {seo_bedrooms}+ bedroom properties for sale in '
+            f'{city_name}. Explore apartments, villas and residential '
+            f'properties.',
+            filler=f'Expert guidance from {BRAND}.',
+        )
+
+
+    # CITY ONLY
+    elif city_name:
+
+        meta_title = (
+            f'Properties for Sale in {city_name}'
+            f'{page_tag} | {BRAND}'
+        )
+
+        meta_description = _describe(
+            f'Browse {paginator.count} properties for sale in {city_name}. '
+            f'Explore apartments, villas and penthouses, including ready '
+            f'and off-plan properties.',
+            filler=f'Expert guidance from {BRAND}.',
+        )
+
+
+    # UNIT TYPE ONLY
+    elif seo_unit_type:
+
+        meta_title = (
+            f'{seo_unit_type.title()} Properties for Sale'
+            f'{page_tag} | {BRAND}'
+        )
+
+        meta_description = _describe(
+            f'Browse {seo_unit_type.lower()} properties for sale '
+            f'in Dubai & the UAE. Explore available properties and '
+            f'investment opportunities.',
+            filler=f'Expert guidance from {BRAND}.',
+        )
+
+
+    # PROPERTY TYPE ONLY
+    elif type_name:
+
+        meta_title = (
+            f'{type_name} for Sale in Dubai & the UAE'
+            f'{page_tag} | {BRAND}'
+        )
+
+        meta_description = _describe(
+            f'Browse {type_name.lower()} for sale in Dubai & the UAE. '
+            f'Explore available properties, prices and project details.',
+            filler=f'Expert guidance from {BRAND}.',
+        )
+
+
+    # STATIC
+    else:
+
+        meta_title = (
+            f'Properties for Sale in Dubai & the UAE'
+            f'{page_tag} | {BRAND}'
+        )
+
+        meta_description = _describe(
+            f'Browse {paginator.count} properties in Dubai & the UAE — '
+            f'apartments, villas and penthouses, ready and off-plan.',
+            filler=f'Expert guidance from {BRAND}.',
+        )
+
+
     if page > 1:
         meta_description = f'Page {page} — {meta_description}'[:160]
 
@@ -444,10 +670,6 @@ def property_list(request):
         'rel_prev': url_for(page_obj.previous_page_number()) if page_obj.has_previous() else None,
         'rel_next': url_for(page_obj.next_page_number()) if page_obj.has_next() else None,
     })
-    
-    
-    
-    
     
 # -----------------------------------------property detail----------------------------------------------------
 
@@ -1185,46 +1407,83 @@ def _developer_faqs(developer, count, area_names, low_price, years):
 # ─────────────────────────────────────────
 # DEVELOPERS — directory
 # ─────────────────────────────────────────
+
 def developer_list(request):
     """
     Directory of partner developers with a live, active-property count.
-
-    Unpaginated on purpose — a developer directory rarely runs past a couple
-    of screens, and a single grid keeps every partner one click from both a
-    visitor and a crawler.
+    Paginated — 20 developers per page.
     """
+
     search = request.GET.get('q', '').strip()
 
     developers = (
         DeveloperCompany.objects
         .filter(is_active=True)
-        .annotate(prop_count=Count('properties', filter=Q(properties__is_active=True)),
-                  dev_priority=_developer_priority_annotation(),
-                  )
-        .order_by('dev_priority', '-prop_count', 'name')
+        .annotate(
+            prop_count=Count(
+                'properties',
+                filter=Q(properties__is_active=True)
+            ),
+            dev_priority=_developer_priority_annotation(),
+        )
+        .order_by(
+            'dev_priority',
+            '-prop_count',
+            'name'
+        )
     )
-    if search:
-        developers = developers.filter(name__icontains=search)
 
+    # Search
+    if search:
+        developers = developers.filter(
+            name__icontains=search
+        )
+
+    # Convert to list so your existing logo/image behaviour stays exactly the same
     developers = list(developers)
-    count = len(developers)
-    total_properties = sum(d.prop_count for d in developers)
-    with_stock = sum(1 for d in developers if d.prop_count)
+
+    # ── TOTAL COUNTS ──
+    total_count = len(developers)
+
+    total_properties = sum(
+        d.prop_count for d in developers
+    )
+
+    with_stock = sum(
+        1 for d in developers
+        if d.prop_count
+    )
+
+    # ─────────────────────────────────────────
+    # PAGINATION
+    # ─────────────────────────────────────────
+
+    paginator = Paginator(
+        developers,
+        15
+    )
+
+    page_number = request.GET.get('page', 1)
+
+    developers_page = paginator.get_page(page_number)
 
     # ── SEO ──
     if search:
         meta_title = _pick([
-            f'\u201c{search}\u201d Developers in Dubai | {BRAND}',
-            f'\u201c{search}\u201d Developers in Dubai | Spacesmith',
-            f'\u201c{search}\u201d Developers | Spacesmith',
+            f'“{search}” Developers in Dubai | {BRAND}',
+            f'“{search}” Developers in Dubai | Spacesmith',
+            f'“{search}” Developers | Spacesmith',
         ])
+
         meta_description = _describe(
-            f'{count} developer{"" if count == 1 else "s"} matching '
-            f'\u201c{search}\u201d in Dubai and the UAE, with '
+            f'{total_count} developer'
+            f'{"" if total_count == 1 else "s"} matching '
+            f'“{search}” in Dubai and the UAE, with '
             f'{total_properties} live project'
             f'{"" if total_properties == 1 else "s"} listed.',
             filler=f'Compare payment plans and handover dates with {BRAND}.',
         )
+
     else:
         meta_title = _pick([
             f'Property Developers in Dubai & the UAE | {BRAND}',
@@ -1232,55 +1491,92 @@ def developer_list(request):
             f'Dubai Property Developers | {BRAND}',
             f'Property Developers in Dubai | Spacesmith',
         ])
+
         meta_description = _describe(
-            f'Browse {count} property developers building across Dubai and the '
-            f'UAE, with {total_properties} live projects listed.',
-            filler=f'Compare delivery records, payment plans and handover dates.',
+            f'Browse {total_count} property developers building across Dubai '
+            f'and the UAE, with {total_properties} live projects listed.',
+            filler='Compare delivery records, payment plans and handover dates.',
         )
 
+    # ── SCHEMA ──
     schema = [
         {
             '@context': 'https://schema.org',
             '@type': 'BreadcrumbList',
             'itemListElement': [
-                {'@type': 'ListItem', 'position': 1, 'name': 'Home', 'item': f'{SITE_URL}/'},
-                {'@type': 'ListItem', 'position': 2, 'name': 'Properties',
-                 'item': f'{SITE_URL}/properties/'},
-                {'@type': 'ListItem', 'position': 3, 'name': 'Developers',
-                 'item': DEVELOPERS_URL},
+                {
+                    '@type': 'ListItem',
+                    'position': 1,
+                    'name': 'Home',
+                    'item': f'{SITE_URL}/',
+                },
+                {
+                    '@type': 'ListItem',
+                    'position': 2,
+                    'name': 'Properties',
+                    'item': f'{SITE_URL}/properties/',
+                },
+                {
+                    '@type': 'ListItem',
+                    'position': 3,
+                    'name': 'Developers',
+                    'item': DEVELOPERS_URL,
+                },
             ],
         },
         {
             '@context': 'https://schema.org',
             '@type': 'ItemList',
             'name': 'Property developers in Dubai and the UAE',
-            'numberOfItems': count,
+            'numberOfItems': total_count,
             'itemListElement': [
-                {'@type': 'ListItem', 'position': i, 'name': d.name,
-                 'url': f'{DEVELOPERS_URL}{d.slug}/'}
-                for i, d in enumerate(developers[:50], start=1)
+                {
+                    '@type': 'ListItem',
+                    'position': i,
+                    'name': d.name,
+                    'url': f'{DEVELOPERS_URL}{d.slug}/',
+                }
+                for i, d in enumerate(
+                    developers_page,
+                    start=((developers_page.number - 1) * paginator.per_page) + 1
+                )
             ],
         },
     ]
 
-    # Search permutations canonicalise back to the clean directory and stay
-    # noindex — the same pattern property_list / areas / off-plan already use.
-    return render(request, 'developer_list.html', {
-        'developers': developers,
-        'total_count': count,
-        'total_properties': total_properties,
-        'with_stock': with_stock,
-        'active_search': search,
+    return render(
+        request,
+        'developer_list.html',
+        {
+            # Developers for current page
+            'developers': developers_page,
 
-        'meta_title': meta_title,
-        'meta_description': meta_description,
-        'canonical': DEVELOPERS_URL,
-        'robots': ('noindex, follow' if search else
-                   'index, follow, max-image-preview:large, max-snippet:-1'),
-        'schema_json': _dev_json_ld(schema),
-    })
+            # Overall statistics
+            'total_count': total_count,
+            'total_properties': total_properties,
+            'with_stock': with_stock,
 
+            # Search
+            'active_search': search,
 
+            # Pagination
+            'page_obj': developers_page,
+            'paginator': paginator,
+
+            # SEO
+            'meta_title': meta_title,
+            'meta_description': meta_description,
+            'canonical': DEVELOPERS_URL,
+
+            'robots': (
+                'noindex, follow'
+                if search or developers_page.number > 1
+                else 'index, follow, max-image-preview:large, max-snippet:-1'
+            ),
+
+            'schema_json': _dev_json_ld(schema),
+        }
+    )
 # ─────────────────────────────────────────
 # DEVELOPERS — profile + their properties
 # ─────────────────────────────────────────

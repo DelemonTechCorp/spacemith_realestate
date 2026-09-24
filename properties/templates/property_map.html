@@ -580,32 +580,36 @@
 
   /* ================= PROXIMITY CLUSTERING ================= */
   function groupByProximity(props, zoom) {
-    var t = zoom >= 16 ? 0.0005
-          : zoom >= 15 ? 0.001
-          : zoom >= 14 ? 0.003
-          : zoom >= 13 ? 0.006
-          : zoom >= 12 ? 0.012
-          : zoom >= 11 ? 0.025
-          : zoom >= 10 ? 0.05
-          : zoom >= 9  ? 0.12
-          : zoom >= 8  ? 0.3
-          : zoom >= 7  ? 0.7 : 1.5;
+  var t = zoom >= 16 ? 0.0005
+        : zoom >= 15 ? 0.001
+        : zoom >= 14 ? 0.003
+        : zoom >= 13 ? 0.006
+        : zoom >= 12 ? 0.012
+        : zoom >= 11 ? 0.025
+        : zoom >= 10 ? 0.05
+        : zoom >= 9  ? 0.12
+        : zoom >= 8  ? 0.3
+        : zoom >= 7  ? 0.7
+        : 1.5;
 
-    var groups = [], used = {};
-    props.forEach(function (p, i) {
-      if (used[i]) return;
-      var grp = [p]; used[i] = true;
-      props.forEach(function (q, j) {
-        if (used[j]) return;
-        if (Math.abs(p.lat - q.lat) < t && Math.abs(p.lng - q.lng) < t) {
-          grp.push(q); used[j] = true;
-        }
-      });
-      groups.push(grp);
-    });
-    return groups;
-  }
+  var buckets = Object.create(null);
 
+  props.forEach(function (p) {
+    var x = Math.floor(p.lat / t);
+    var y = Math.floor(p.lng / t);
+    var key = x + ':' + y;
+
+    if (!buckets[key]) {
+      buckets[key] = [];
+    }
+
+    buckets[key].push(p);
+  });
+
+  return Object.keys(buckets).map(function (key) {
+    return buckets[key];
+  });
+}
   /* ================= MAP ================= */
   var map = L.map(mapEl, { scrollWheelZoom: true, zoomControl: true }).setView([25.2048, 55.2708], 11);
 L.tileLayer('https://mt{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&hl=en', {
@@ -684,18 +688,22 @@ L.tileLayer('https://mt{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}&hl=en', {
     });
   }
 
-  renderMarkers(allPins);
-
-  var bounds = allPins.filter(hasCoords).map(function (p) { return [p.lat, p.lng]; });
-  if (bounds.length) map.fitBounds(bounds, { padding: [40, 40], maxZoom: 15 });
-
-  window.addEventListener('resize', function () { map.invalidateSize(true); });
-
-  map.on('zoomend', function () {
-    map.closePopup();
-    renderMarkers(allPins);
+  var bounds = allPins
+  .filter(hasCoords)
+  .map(function (p) {
+    return [p.lat, p.lng];
   });
 
+if (bounds.length) {
+  map.fitBounds(bounds, {
+    padding: [40, 40],
+    maxZoom: 15,
+    animate: false
+  });
+}
+
+/* Render only after the initial viewport is ready */
+renderMarkers(allPins);
   /* ================= CARD ↔ MAP SYNC ================= */
   function bindCardHover(card) {
     card.addEventListener('mouseenter', function () {

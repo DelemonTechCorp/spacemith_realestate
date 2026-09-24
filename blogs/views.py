@@ -124,8 +124,8 @@ def blog_list(request, page=1):
     # ── SEO ───────────────────────────────────────────────────
     is_paginated = posts_page.number > 1
     is_search    = bool(search_query)
-    robots       = 'noindex, follow' if (is_paginated or is_search) else \
-                   'index, follow, max-image-preview:large, max-snippet:-1'
+    robots = 'index, follow, max-image-preview:large, max-snippet:-1' 
+    # for this
 
     if is_search:
         meta_title = f'Search: "{search_query}" | Dubai Property Insights | {BRAND}'
