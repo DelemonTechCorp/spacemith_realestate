@@ -17,15 +17,15 @@ from decouple import config
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-SECRET_KEY = 'django-insecure-cb%0&d6bnj_xb@ub9usps%3=@$i4cuigx2=^nf+q%+!em=%0eq'
+# SECRET_KEY = 'django-insecure-cb%0&d6bnj_xb@ub9usps%3=@$i4cuigx2=^nf+q%+!em=%0eq'
 
 # ====================
 # CORE SETTINGS
 # ====================
 
-# SECRET_KEY    = config('SECRET_KEY', default='your-secret-key-here')
-# DEBUG         = config('DEBUG', default=True, cast=bool)
-# ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1,www.spacesmith.ae,spacesmith.ae').split(',')
+SECRET_KEY    = config('SECRET_KEY', default='your-secret-key-here')
+DEBUG         = config('DEBUG', default=True, cast=bool)
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1,www.spacesmith.ae,spacesmith.ae').split(',')
 
 
 CSRF_TRUSTED_ORIGINS = [
