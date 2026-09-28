@@ -12,8 +12,10 @@ from urllib.parse import urlencode
 from django.core.paginator import Paginator
 from django.conf import settings
 from django.db.models import Prefetch, Q, Count, Case, IntegerField, Value, When
+from django.http import Http404
 from django.shortcuts import redirect, render
 from django.shortcuts import render, get_object_or_404
+from django.utils.text import slugify
 from django.db.models import Count, Q, Sum
 
 
@@ -53,7 +55,6 @@ FILTER_KEYS = (
 INDEXABLE_FACETS = ('city', 'unit_type')
 
 
-
 # ─────────────────────────────────────────
 # DEVELOPER PRIORITY — client's builder focus list
 # ─────────────────────────────────────────
@@ -82,7 +83,7 @@ INDEXABLE_FACETS = ('city', 'unit_type')
 # "Dubai Holding" itself has no row, but three of its subsidiaries named in
 # the tie-up list ("DHRE(Nakheel, Meraas, Dubai Properties, Meydan)") do —
 # they're grouped at one rank below.
- 
+
 DEVELOPER_PRIORITY = [
     # ── TIER 1 ──────────────────────────────────────────────
     ('binghatti',),
@@ -102,7 +103,7 @@ DEVELOPER_PRIORITY = [
     ('alef-group',),
     ('imtiaz',),
     ('dubai-south',),
- 
+
     # ── TIER 2 ──────────────────────────────────────────────
     ('vincitore',),
     ('mag',),
@@ -113,7 +114,7 @@ DEVELOPER_PRIORITY = [
     ('hre-development',),
     ('hh',),
     ('dubai-invesment',),
- 
+
     # ── TIER 3 ──────────────────────────────────────────────
     ('skyline-builders',),
     ('aqua-properties',),
@@ -128,7 +129,7 @@ DEVELOPER_PRIORITY = [
     ('peace-homes-development',),
     ('dugasta',),
     ('mira-developments',),
- 
+
     # ── WIDER "BUILDER TIE-UPS" ROSTER (new names only — anything already
     #    ranked in a tier above keeps that tier's rank) ──────
     ('alhabtoor-group',),
@@ -164,13 +165,13 @@ DEVELOPER_PRIORITY = [
     ('nine-development',),
     ('iman-developers',),
 ]
- 
- 
+
+
 def _priority_annotation():
     """
     Case/When mapping developer_company__slug -> priority rank (0 = highest),
     for `.annotate(dev_priority=...).order_by('dev_priority', ...)`.
- 
+
     Pure Python list, no DB round trip — cheap to rebuild every request, and
     there's nothing to cache or invalidate when the developers table changes.
     """
@@ -194,12 +195,6 @@ def _developer_priority_annotation():
         for rank, slugs in enumerate(DEVELOPER_PRIORITY)
     ]
     return Case(*whens, default=Value(len(DEVELOPER_PRIORITY)), output_field=IntegerField())
-
-
-
-
-
-
 
 
 # ─────────────────────────────────────────
@@ -312,7 +307,6 @@ def _filtered(qs, active):
     return qs.order_by(*order_fields)
 
 
-
 def _facets(scope, active):
     """
     Dropdowns scoped to real inventory — never offer a choice that leads to
@@ -366,13 +360,61 @@ def _describe(text, filler=None, low=120, high=160):
 # ─────────────────────────────────────────
 # VIEW
 # ─────────────────────────────────────────
-def property_list(request):
+def _city_path(city_slug, unit_type=''):
+    """Clean, parameter-free URL path for a city (and optional unit type)."""
+    path = f'/properties/city/{city_slug}/'
+    if unit_type:
+        path += f'{slugify(unit_type)}/'
+    return path
+
+
+def property_list(request, city=None, unit_type=None):
+    """
+    /properties/                          -> all listings
+    /properties/city/<city>/              -> city landing page   (clean URL)
+    /properties/city/<city>/<unit-type>/  -> city + unit type    (clean URL)
+
+    Legacy ?city=... / ?city=...&unit_type=... URLs are 301-redirected to the
+    clean paths, so crawlers never see a "dynamic" URL for these pages.
+    """
     bounce = _clean_url(request)
     if bounce:
         return bounce
 
-    scope = _base_qs()
     active = _read(request)
+
+    # ── Legacy query-string URLs -> clean path (301) ──
+    if city is None and active['city']:
+        used = {k for k in request.GET if request.GET.get(k, '').strip()}
+        if used <= {'city', 'unit_type', 'page'} and City.objects.filter(
+                slug=active['city'], is_active=True).exists():
+            target = _city_path(active['city'], active['unit_type'])
+            page_param = request.GET.get('page', '').strip()
+            if page_param.isdigit() and int(page_param) > 1:
+                target += f'?page={page_param}'
+            return redirect(target, permanent=True)
+
+    # ── Clean city routes ──
+    path_unit_slug = ''
+    if city is not None:
+        get_object_or_404(City, slug=city, is_active=True)
+        active['city'] = city
+        if unit_type:
+            options = {
+                slugify(u): u
+                for u in (
+                    GroupedApartment.objects
+                    .filter(is_active=True, property_obj__city__slug=city)
+                    .exclude(apartment_type__isnull=True).exclude(apartment_type='')
+                    .values_list('apartment_type', flat=True).distinct()
+                )
+            }
+            if unit_type not in options:
+                raise Http404('Unknown unit type for this city')
+            active['unit_type'] = options[unit_type]
+            path_unit_slug = unit_type
+
+    scope = _base_qs()
     qs = _filtered(scope, active)
 
     paginator = Paginator(qs, PAGE_SIZE)
@@ -391,12 +433,11 @@ def property_list(request):
     seo_developer = active.get('developer', '').strip()
 
     # IMPORTANT: read unit_type directly from URL
-    seo_unit_type = request.GET.get('unit_type', '').strip()
+    seo_unit_type = active.get('unit_type', '').strip()
     seo_bedrooms = request.GET.get('bedrooms', '').strip()
     seo_price_min = request.GET.get('price_min', '').strip()
     seo_price_max = request.GET.get('price_max', '').strip()
     seo_search = request.GET.get('q', '').strip()
-
 
     # Get readable city name
     city_name = ''
@@ -410,7 +451,6 @@ def property_list(request):
             or ''
         )
 
-
     # Get readable district name
     district_name = ''
 
@@ -422,7 +462,6 @@ def property_list(request):
             .first()
             or ''
         )
-
 
     # Get readable property type
     type_name = ''
@@ -436,7 +475,6 @@ def property_list(request):
             or ''
         )
 
-
     # Get readable developer
     developer_name = ''
 
@@ -448,7 +486,6 @@ def property_list(request):
             .first()
             or ''
         )
-
 
     # =========================================================
     # SEO TITLE + DESCRIPTION
@@ -469,6 +506,20 @@ def property_list(request):
             filler=f'Expert guidance from {BRAND}.',
         )
 
+    # CITY + DISTRICT + UNIT TYPE
+    elif city_name and district_name and seo_unit_type:
+
+        meta_title = (
+            f'{seo_unit_type.title()} Properties for Sale in '
+            f'{district_name}, {city_name}{page_tag} | {BRAND}'
+        )
+
+        meta_description = _describe(
+            f'Browse {seo_unit_type.lower()} properties for sale in '
+            f'{district_name}, {city_name}. Explore available properties, '
+            f'prices and investment opportunities.',
+            filler=f'Expert guidance from {BRAND}.',
+        )
 
     # CITY + UNIT TYPE
     elif city_name and seo_unit_type:
@@ -485,23 +536,6 @@ def property_list(request):
             filler=f'Expert guidance from {BRAND}.',
         )
 
-
-    # CITY + DISTRICT + UNIT TYPE
-    elif city_name and district_name and seo_unit_type:
-
-        meta_title = (
-            f'{seo_unit_type.title()} Properties for Sale in '
-            f'{district_name}, {city_name}{page_tag} | {BRAND}'
-        )
-
-        meta_description = _describe(
-            f'Browse {seo_unit_type.lower()} properties for sale in '
-            f'{district_name}, {city_name}. Explore available properties, '
-            f'prices and investment opportunities.',
-            filler=f'Expert guidance from {BRAND}.',
-        )
-
-
     # CITY + DISTRICT + PROPERTY TYPE
     elif city_name and district_name and type_name:
 
@@ -517,7 +551,6 @@ def property_list(request):
             filler=f'Expert guidance from {BRAND}.',
         )
 
-
     # CITY + PROPERTY TYPE
     elif city_name and type_name:
 
@@ -532,7 +565,6 @@ def property_list(request):
             filler=f'Expert guidance from {BRAND}.',
         )
 
-
     # CITY + DEVELOPER
     elif city_name and developer_name:
 
@@ -546,7 +578,6 @@ def property_list(request):
             f'Browse available projects, prices and property details.',
             filler=f'Expert guidance from {BRAND}.',
         )
-
 
     # CITY + BEDROOM
     elif city_name and seo_bedrooms:
@@ -563,7 +594,6 @@ def property_list(request):
             filler=f'Expert guidance from {BRAND}.',
         )
 
-
     # CITY ONLY
     elif city_name:
 
@@ -578,7 +608,6 @@ def property_list(request):
             f'and off-plan properties.',
             filler=f'Expert guidance from {BRAND}.',
         )
-
 
     # UNIT TYPE ONLY
     elif seo_unit_type:
@@ -595,7 +624,6 @@ def property_list(request):
             filler=f'Expert guidance from {BRAND}.',
         )
 
-
     # PROPERTY TYPE ONLY
     elif type_name:
 
@@ -610,12 +638,11 @@ def property_list(request):
             filler=f'Expert guidance from {BRAND}.',
         )
 
-
     # STATIC
     else:
 
         meta_title = (
-            f'Properties for Sale in Dubai & the UAE'
+            f'Properties for Sale in Dubai & UAE'
             f'{page_tag} | {BRAND}'
         )
 
@@ -625,21 +652,34 @@ def property_list(request):
             filler=f'Expert guidance from {BRAND}.',
         )
 
-
     if page > 1:
         meta_description = f'Page {page} — {meta_description}'[:160]
 
-    canonical_params = {k: active[k] for k in INDEXABLE_FACETS if active[k]}
-    noindex = (page > 1 or any(active[k] for k in FILTER_KEYS if k not in INDEXABLE_FACETS))
+    # ── SEO CANONICAL / ROBOTS ─────────────────────────────
+
+    # Any URL containing query parameters is a filtered/dynamic URL.
+    # Keep the clean /properties/ page indexable.
+    # Clean paths (/properties/, /properties/city/dubai/) are indexable and
+    # self-canonical; any query string or page > 1 is noindex and points its
+    # canonical back at the clean path.
+    has_query_params = bool(request.GET)
+    noindex = (page > 1 or has_query_params)
+
+    base_path = (
+        _city_path(active['city'], active['unit_type'] if path_unit_slug else '')
+        if city is not None else '/properties/'
+    )
 
     def url_for(target_page=None, include_page=True):
-        params = dict(canonical_params)
+        url = f'{SITE_URL}{base_path}'
         if include_page and target_page and target_page > 1:
-            params['page'] = target_page
-        return f'{SITE_URL}/properties/' + (f'?{urlencode(params)}' if params else '')
+            url += f'?page={target_page}'
+        return url
 
-    # Querystring for pagination links — keeps active filters, drops page.
-    querystring = urlencode({k: v for k, v in active.items() if v})
+    # Querystring for pagination/filter links
+    querystring = urlencode({
+        k: v for k, v in active.items() if v
+    })
 
     return render(request, 'property_list.html', {
         'page_obj': page_obj,
@@ -658,7 +698,7 @@ def property_list(request):
         'active_bedrooms': active['bedrooms'],
         'active_price_min': active['price_min'],
         'active_price_max': active['price_max'],
-        'active_sort': active['sort'] or 'DEFAULT_SORT',
+        'active_sort': active['sort'] or DEFAULT_SORT,
         'active_search': active['q'],
         'has_filters': any(active.values()),
 
@@ -670,7 +710,8 @@ def property_list(request):
         'rel_prev': url_for(page_obj.previous_page_number()) if page_obj.has_previous() else None,
         'rel_next': url_for(page_obj.next_page_number()) if page_obj.has_next() else None,
     })
-    
+
+
 # -----------------------------------------property detail----------------------------------------------------
 
 """
@@ -819,7 +860,7 @@ def _build_schema(property_obj, canonical, images):
             {'@type': 'ListItem', 'position': 2, 'name': 'Properties',
              'item': f'{SITE_URL}/properties/'},
             {'@type': 'ListItem', 'position': 3, 'name': city,
-             'item': f'{SITE_URL}/properties/?city={property_obj.city.slug}'},
+             'item': f'{SITE_URL}{_city_path(property_obj.city.slug)}'},
             {'@type': 'ListItem', 'position': 4, 'name': property_obj.title, 'item': canonical},
         ],
     }
@@ -865,16 +906,16 @@ def property_detail(request, slug):
     Slug is `district/city/title` and contains slashes, so the URL routing
     here is the re_path catch-all and MUST stay last in urls.py.
     """
-    
+
     # Remove accidental trailing slash captured inside slug
     clean_slug = slug.rstrip('/')
 
     # Force one canonical URL format (trailing slash)
     canonical_path = f'/properties/{clean_slug}/'
-    
+
     if request.path != canonical_path:
         return redirect(canonical_path, permanent=True)
-    
+
     property_obj = get_object_or_404(
         Property.objects
         .filter(is_active=True)
@@ -990,13 +1031,13 @@ def property_detail(request, slug):
     status = property_obj.property_status.name.lower() if property_obj.property_status else 'residential'
 
     meta_description = _describe(
-    property_obj.meta_description or (
-        f'{property_obj.title} is a {status} development by {developer} '
-        f'in {district}, {city}. Discover luxury residences, modern amenities, '
-        f'investment opportunities and flexible payment plans. Starting from {price_str}.'
-    ),
-    filler=f'Contact {BRAND} for latest availability.'
-)
+        property_obj.meta_description or (
+            f'{property_obj.title} is a {status} development by {developer} '
+            f'in {district}, {city}. Discover luxury residences, modern amenities, '
+            f'investment opportunities and flexible payment plans. Starting from {price_str}.'
+        ),
+        filler=f'Contact {BRAND} for latest availability.'
+    )
 
     # Final guarantee — nothing leaves this view outside the display windows.
     meta_title, meta_description, seo_report = _audit_seo(
@@ -1015,28 +1056,25 @@ def property_detail(request, slug):
         'meta_description': meta_description,
         'canonical': canonical,
         'robots': ('noindex, follow' if property_obj.slug == ELLINGTON_PROPERTY_SLUG
-            else 'index, follow, max-image-preview:large, max-snippet:-1'),
+                   else 'index, follow, max-image-preview:large, max-snippet:-1'),
         'og_type': 'article',
         'og_image': _absolute(images[0] if images else None),
         'schema_json': _build_schema(property_obj, canonical, images),
         # Visible only when DEBUG is on — see the badge in property_detail.html
         'seo_report': seo_report if settings.DEBUG else None,
     })
-    
-    
-   # -----------------------------------------property detail----------------------------------------------------
- 
- 
- 
- 
- 
+
+
+# -----------------------------------------property detail----------------------------------------------------
+
+
 from django.core.paginator import Paginator
 from django.db.models.functions import ExtractYear
- 
+
 STATUS_READY = 'ready'
 STATUS_OFFPLAN = 'off-plan'
- 
- 
+
+
 # =========================================================================
 #  READY PROPERTIES
 # =========================================================================
@@ -1045,33 +1083,33 @@ def ready_properties(request):
     bounce = _clean_url(request)
     if bounce:
         return bounce
- 
+
     # select_related pulls all six FKs in the same query — without it, 12
     # cards fire 60 extra queries. prefetch_related gets the images (ordered
     # once) and grouped_apartments, which is what makes compare_bedroom_options
     # / compare_unit_size_range / compare_starting_price free on every card.
     scope = _base_qs(STATUS_READY)
- 
+
     active = _read(request)
     qs = _filtered(scope, active)
- 
+
     paginator = Paginator(qs, PAGE_SIZE)
     page_obj = paginator.get_page(request.GET.get('page', 1))
     page = page_obj.number
- 
+
     # Dropdowns scoped to ready stock only, so the city list never offers a
     # city with zero ready properties.
     facets = _facets(scope, active)
- 
+
     # ── Location wording ──
     location = ' in Dubai & the UAE'
     if active['city']:
         name = facets['cities'].filter(slug=active['city']).values_list('name', flat=True).first()
         if name:
             location = f' in {name}'
- 
+
     page_tag = f' | Page {page}' if page > 1 else ''
- 
+
     # ── TITLE ──
     # Candidates run longest to shortest; _pick returns the first that fits
     # 60 chars, so you always get the most descriptive title that isn't cut.
@@ -1081,7 +1119,7 @@ def ready_properties(request):
         f'Ready Properties{location}{page_tag} | Spacesmith',
         f'Ready Properties{location}{page_tag}',
     ])
- 
+
     # ── DESCRIPTION ──
     # _describe pads with the filler when the base text lands under 120, and
     # trims on a word boundary when it goes over 160.
@@ -1092,29 +1130,29 @@ def ready_properties(request):
     )
     if page > 1:
         meta_description = f'Page {page} — {meta_description}'[:160]
- 
+
     # ── CANONICAL & ROBOTS ──
     # city and type make real landing pages, so they keep their own canonical
     # and stay indexable. Everything else points back to the clean URL and
     # goes noindex — otherwise filter combinations spawn thin duplicates.
     canonical_params = {k: active[k] for k in INDEXABLE_FACETS if active[k]}
     noindex = any(active[k] for k in FILTER_KEYS if k not in INDEXABLE_FACETS)
- 
+
     def url_for(target_page=None):
         params = dict(canonical_params)
         if target_page and target_page > 1:
             params['page'] = target_page
         return f'{SITE_URL}/properties/ready/' + (f'?{urlencode(params)}' if params else '')
- 
+
     return render(request, 'ready_properties.html', {
         'page_obj': page_obj,
         'properties': page_obj.object_list,
         'total_count': paginator.count,
         'page_range': paginator.get_elided_page_range(page, on_each_side=1, on_ends=1),
         'querystring': urlencode({k: v for k, v in active.items() if v}),
- 
+
         **facets,
- 
+
         'active_city': active['city'],
         'active_district': active['district'],
         'active_type': active['type'],
@@ -1123,10 +1161,10 @@ def ready_properties(request):
         'active_bedrooms': active['bedrooms'],
         'active_price_min': active['price_min'],
         'active_price_max': active['price_max'],
-        'active_sort': active['sort'] or 'DEFAULT_SORT',
+        'active_sort': active['sort'] or DEFAULT_SORT,
         'active_search': active['q'],
         'has_filters': any(active.values()),
- 
+
         'meta_title': meta_title,
         'meta_description': meta_description,
         'canonical': url_for(page),
@@ -1135,8 +1173,8 @@ def ready_properties(request):
         'rel_prev': url_for(page_obj.previous_page_number()) if page_obj.has_previous() else None,
         'rel_next': url_for(page_obj.next_page_number()) if page_obj.has_next() else None,
     })
- 
- 
+
+
 # =========================================================================
 #  OFF-PLAN PROPERTIES
 # =========================================================================
@@ -1145,40 +1183,40 @@ def offplan_properties(request):
     bounce = _clean_url(request)
     if bounce:
         return bounce
- 
+
     scope = _base_qs(STATUS_OFFPLAN)
- 
+
     active = _read(request)
     qs = _filtered(scope, active)
- 
+
     # Handover year — only useful on this page, so it lives here rather than
     # in the shared FILTER_KEYS.
     handover = request.GET.get('handover', '').strip()
     if handover.isdigit():
         qs = qs.filter(delivery_date__year=int(handover))
- 
+
     paginator = Paginator(qs, PAGE_SIZE)
     page_obj = paginator.get_page(request.GET.get('page', 1))
     page = page_obj.number
- 
+
     facets = _facets(scope, active)
- 
+
     # Years that actually exist in off-plan stock
     handover_options = (
         scope.annotate(_y=ExtractYear('delivery_date'))
         .values_list('_y', flat=True)
         .order_by('_y').distinct()
     )
- 
+
     # ── Location wording ──
     location = ' in Dubai & the UAE'
     if active['city']:
         name = facets['cities'].filter(slug=active['city']).values_list('name', flat=True).first()
         if name:
             location = f' in {name}'
- 
+
     page_tag = f' | Page {page}' if page > 1 else ''
- 
+
     # ── TITLE ──
     meta_title = _pick([
         f'Off-Plan Properties for Sale{location}{page_tag} | {BRAND}',
@@ -1186,7 +1224,7 @@ def offplan_properties(request):
         f'Off-Plan Properties{location}{page_tag} | Spacesmith',
         f'Off-Plan Properties{location}{page_tag}',
     ])
- 
+
     # ── DESCRIPTION ──
     meta_description = _describe(
         f'Discover {paginator.count} off-plan projects{location} with flexible '
@@ -1195,31 +1233,31 @@ def offplan_properties(request):
     )
     if page > 1:
         meta_description = f'Page {page} — {meta_description}'[:160]
- 
+
     # ── CANONICAL & ROBOTS ──
     canonical_params = {k: active[k] for k in INDEXABLE_FACETS if active[k]}
     noindex = handover or any(active[k] for k in FILTER_KEYS if k not in INDEXABLE_FACETS)
- 
+
     def url_for(target_page=None):
         params = dict(canonical_params)
         if target_page and target_page > 1:
             params['page'] = target_page
         return f'{SITE_URL}/properties/off-plan/' + (f'?{urlencode(params)}' if params else '')
- 
+
     querystring_parts = {k: v for k, v in active.items() if v}
     if handover:
         querystring_parts['handover'] = handover
- 
+
     return render(request, 'offplan_properties.html', {
         'page_obj': page_obj,
         'properties': page_obj.object_list,
         'total_count': paginator.count,
         'page_range': paginator.get_elided_page_range(page, on_each_side=1, on_ends=1),
         'querystring': urlencode(querystring_parts),
- 
+
         **facets,
         'handover_options': handover_options,
- 
+
         'active_city': active['city'],
         'active_district': active['district'],
         'active_type': active['type'],
@@ -1229,10 +1267,10 @@ def offplan_properties(request):
         'active_handover': handover,
         'active_price_min': active['price_min'],
         'active_price_max': active['price_max'],
-        'active_sort': active['sort'] or 'DEFAULT_SORT',
+        'active_sort': active['sort'] or DEFAULT_SORT,
         'active_search': active['q'],
         'has_filters': bool(handover) or any(active.values()),
- 
+
         'meta_title': meta_title,
         'meta_description': meta_description,
         'canonical': url_for(page),
@@ -1241,8 +1279,9 @@ def offplan_properties(request):
         'rel_prev': url_for(page_obj.previous_page_number()) if page_obj.has_previous() else None,
         'rel_next': url_for(page_obj.next_page_number()) if page_obj.has_next() else None,
     })
-    
-    #-------------------------------------------------- developer list and detail----------------------------------------------------------
+
+
+#-------------------------------------------------- developer list and detail----------------------------------------------------------
 
 """
 properties/views.py — DEVELOPERS
@@ -1407,7 +1446,6 @@ def _developer_faqs(developer, count, area_names, low_price, years):
 # ─────────────────────────────────────────
 # DEVELOPERS — directory
 # ─────────────────────────────────────────
-
 def developer_list(request):
     """
     Directory of partner developers with a live, active-property count.
@@ -1577,6 +1615,8 @@ def developer_list(request):
             'schema_json': _dev_json_ld(schema),
         }
     )
+
+
 # ─────────────────────────────────────────
 # DEVELOPERS — profile + their properties
 # ─────────────────────────────────────────
@@ -1639,7 +1679,7 @@ def developer_detail(request, slug):
     #                     offplan_count, ready_count)
     # )
     # faqs = _developer_faqs(developer, total, area_names, low_price, years)
-    
+
     admin_copy = strip_tags(developer.description or '').strip()
     # Guard against junk data (stray dots, empty tags, whitespace-only fields) —
     # content with no real words isn't usable copy, so fall back to the
@@ -1652,7 +1692,6 @@ def developer_detail(request, slug):
         _developer_copy(developer, total, area_names, low_price, offplan_count, ready_count)
     )
     faqs = _developer_faqs(developer, total, area_names, low_price, years)
-    
 
     # Other developers — internal links so the page passes authority on
     # instead of dead-ending at the pagination.
@@ -1672,10 +1711,10 @@ def developer_detail(request, slug):
 
     # ── SEO ──
     meta_title = _pick([
-        f'{developer.name} Properties for Sale in Dubai{page_tag} | {BRAND}',
-        f'{developer.name} Properties in Dubai{page_tag} | {BRAND}',
-        f'{developer.name} Properties in Dubai{page_tag} | Spacesmith',
-        f'{developer.name} Properties{page_tag} | Spacesmith',
+        f'{developer.name} Properties Sale in Dubai{page_tag}|{BRAND}',
+        f'{developer.name} Properties in Dubai{page_tag}|{BRAND}',
+        f'{developer.name} Properties in Dubai{page_tag}|Spacesmith',
+        f'{developer.name} Properties{page_tag}|Spacesmith',
         f'{developer.name} Properties for Sale{page_tag}',
     ])
 
@@ -1763,22 +1802,23 @@ def developer_detail_redirect(request, slug):
     """Permanently redirect legacy /developers/<slug>/N/A/ URLs to the profile."""
     return redirect('properties:developer_detail', slug=slug, permanent=True)
 
+
 # ----------------------------------------------------------area------------------------------------------------------
 
 import json
- 
+
 from django.core.paginator import Paginator
 from django.db.models import Count, Min, Prefetch, Q
 from django.db.models.functions import ExtractYear
 from django.shortcuts import get_object_or_404, render
 from django.utils.html import strip_tags
 from urllib.parse import urlencode
- 
+
 from properties.models import District, Property, PropertyImage, PropertyStatus
- 
+
 AREAS_URL = f'{SITE_URL}/properties/areas/'
- 
- 
+
+
 # ─────────────────────────────────────────
 # HELPERS
 # ─────────────────────────────────────────
@@ -1790,19 +1830,19 @@ def _json_ld(payload):
     "</script>" from closing the tag early.
     """
     return json.dumps(payload, ensure_ascii=False).replace('</', r'<\/')
- 
- 
+
+
 def _cover_map(district_ids):
     """
     One query for the whole directory instead of one per card.
- 
+
     Ordered by district then newest, so the first row seen for each district
     is its newest property — we stop as soon as every district has a cover.
     """
     covers = {}
     if not district_ids:
         return covers
- 
+
     qs = (
         Property.objects
         .filter(is_active=True, district_id__in=district_ids)
@@ -1819,12 +1859,12 @@ def _cover_map(district_ids):
             if len(covers) == target:
                 break
     return covers
- 
- 
+
+
 def _area_copy(district, count, low_price, developer_count, offplan, ready):
     """
     Fallback body copy when an area has no admin-written description.
- 
+
     Thin-content pages are the single most common reason an area page never
     ranks: a heading, a grid of cards and nothing else gives Google almost
     nothing to index. These paragraphs are built from real data for THIS
@@ -1833,44 +1873,44 @@ def _area_copy(district, count, low_price, developer_count, offplan, ready):
     """
     city = district.city.name
     name = district.name
- 
+
     price_line = (
         f'Prices in {name} currently start from AED {int(low_price):,}'
         if low_price else
         f'Pricing in {name} varies by developer, unit type and handover date'
     )
- 
+
     mix = []
     if offplan:
         mix.append(f'{offplan} off-plan project{"" if offplan == 1 else "s"}')
     if ready:
         mix.append(f'{ready} ready propert{"y" if ready == 1 else "ies"}')
     mix_line = ' and '.join(mix) if mix else f'{count} active listings'
- 
+
     return [
         f'{name} is one of {city}\u2019s established residential addresses, with '
         f'{count} propert{"y" if count == 1 else "ies"} currently listed through '
         f'{BRAND}. The area covers {mix_line}, giving both investors and end-users '
         f'a choice between immediate handover and construction-linked payment plans.',
- 
+
         f'{price_line}, and the area is served by '
         f'{developer_count} developer{"" if developer_count == 1 else "s"} on our '
         f'books. Off-plan releases in {name} are typically sold on staged plans '
         f'tied to construction milestones, with the balance due at handover, while '
         f'ready units can be viewed, valued and transferred at the Dubai Land '
         f'Department without waiting for completion.',
- 
+
         f'Use the filters below to narrow listings in {name} by property type, '
         f'developer, bedroom count, price and handover, or speak to a {BRAND} '
         f'advisor for the current price list, floor plans and payment plans on any '
         f'project in the area.',
     ]
- 
- 
+
+
 def _area_faqs(district, count, low_price, developer_names, years):
     city = district.city.name
     name = district.name
- 
+
     faqs = [{
         'q': f'How many properties are available in {name}?',
         'a': (f'There {"is" if count == 1 else "are"} currently {count} active '
@@ -1878,7 +1918,7 @@ def _area_faqs(district, count, low_price, developer_names, years):
               f'covering both off-plan launches and ready units. The list below '
               f'updates as new releases and resale units come to market.'),
     }]
- 
+
     faqs.append({
         'q': f'What do properties in {name} cost?',
         'a': (f'Listings in {name} start from AED {int(low_price):,}. The final '
@@ -1889,7 +1929,7 @@ def _area_faqs(district, count, low_price, developer_names, years):
               f'phase and unit availability. Contact a {BRAND} advisor for the '
               f'current price list on any development in the area.'),
     })
- 
+
     if developer_names:
         names = ', '.join(developer_names[:5])
         faqs.append({
@@ -1898,7 +1938,7 @@ def _area_faqs(district, count, low_price, developer_names, years):
                   f'Each developer sets its own payment plan and handover '
                   f'schedule, so terms differ from one project to the next.'),
         })
- 
+
     if years:
         span = f'{years[0]}' if len(years) == 1 else f'{years[0]} and {years[-1]}'
         faqs.append({
@@ -1908,7 +1948,7 @@ def _area_faqs(district, count, low_price, developer_names, years):
                   f'the Dubai Land Department; we confirm the current schedule on '
                   f'each project before you reserve.'),
         })
- 
+
     faqs.append({
         'q': f'Can a foreign buyer own property in {name}?',
         'a': (f'Freehold ownership in {city} is open to all nationalities in '
@@ -1916,17 +1956,17 @@ def _area_faqs(district, count, low_price, developer_names, years):
               f'project before reservation, along with the DLD fees, service '
               f'charges and registration steps that apply to your purchase.'),
     })
- 
+
     return faqs
- 
- 
+
+
 # ─────────────────────────────────────────
 # AREAS — directory
 # ─────────────────────────────────────────
 def district_list(request):
     """
     Directory of every area that actually holds stock.
- 
+
     Areas with zero active properties are excluded on purpose: linking to an
     empty area page hands Google a thin page to index and hands a visitor a
     dead end. When inventory returns, the area reappears automatically.
@@ -1934,9 +1974,9 @@ def district_list(request):
     bounce = _clean_url(request)
     if bounce:
         return bounce
- 
+
     search = request.GET.get('q', '').strip()
- 
+
     districts = (
         District.objects
         .filter(is_active=True)
@@ -1949,17 +1989,17 @@ def district_list(request):
         districts = districts.filter(
             Q(name__icontains=search) | Q(city__name__icontains=search)
         )
- 
+
     districts = list(districts)
     count = len(districts)
     total_properties = sum(d.prop_count for d in districts)
- 
+
     covers = _cover_map([d.pk for d in districts])
     for d in districts:
         d.cover = covers.get(d.pk)
- 
+
     top_areas = [d.name for d in districts[:6]]
- 
+
     # ── SEO ──
     if search:
         meta_title = _pick([
@@ -1986,7 +2026,7 @@ def district_list(request):
             f'Browse Dubai property by area and community.',
             filler=f'Compare communities, prices and handover dates with {BRAND}.',
         )
- 
+
     # Search permutations canonicalise back to the clean directory and stay
     # noindex — the same pattern property_list / ready / off-plan already use,
     # so "?q=marina" never gets indexed as a separate thin page.
@@ -2013,14 +2053,14 @@ def district_list(request):
             ],
         },
     ]
- 
+
     return render(request, 'district_list.html', {
         'districts': districts,
         'total_count': count,
         'total_properties': total_properties,
         'top_areas': top_areas,
         'active_search': search,
- 
+
         'meta_title': meta_title,
         'meta_description': meta_description,
         'canonical': AREAS_URL,
@@ -2028,19 +2068,19 @@ def district_list(request):
                    'index, follow, max-image-preview:large, max-snippet:-1'),
         'schema_json': _json_ld(schema),
     })
- 
- 
+
+
 # ─────────────────────────────────────────
 # AREAS — one area + its properties
 # ─────────────────────────────────────────
 def district_detail(request, slug):
     """
     A single area's profile plus a paginated, filterable grid of its stock.
- 
+
     City and district are deliberately NOT exposed as filters — the URL has
     already locked the area in, so re-exposing them would only let someone
     filter themselves off the page they are on.
- 
+
     SEO: any active filter, or page > 1, flips the page to `noindex, follow`,
     and the canonical always points back at the clean area URL (page param
     only). Filter and sort permutations therefore never get indexed as thin
@@ -2049,57 +2089,57 @@ def district_detail(request, slug):
     bounce = _clean_url(request)
     if bounce:
         return bounce
- 
+
     district = get_object_or_404(
         District.objects.select_related('city'), slug=slug, is_active=True
     )
- 
+
     scope = _base_qs().filter(district=district)
- 
+
     active = _read(request)
     active['city'] = ''        # locked by the URL — ignore if someone hand-types it
     active['district'] = ''
- 
+
     status = request.GET.get('status', '').strip()
- 
+
     qs = _filtered(scope, active)
     if status:
         qs = qs.filter(property_status__slug=status)
- 
+
     has_filters = bool(status) or any(active.values())
- 
+
     paginator = Paginator(qs, PAGE_SIZE)
     page_obj = paginator.get_page(request.GET.get('page', 1))
     page = page_obj.number
- 
+
     # ── Facets, scoped to this area only ──
     # A dropdown that offers a developer with no stock here just leads to an
     # empty result set, so every option is drawn from the area's own inventory.
     facets = _facets(scope, active)
     facets.pop('cities', None)
     facets.pop('districts', None)
- 
+
     statuses = (
         PropertyStatus.objects
         .filter(is_active=True, properties__in=scope.values('pk'))
         .order_by('name').distinct()
     )
- 
+
     # ── Area stats (drive the copy, the FAQs and the schema) ──
     area_total = scope.count()
     low_price = scope.aggregate(low=Min('price'))['low']
     developer_names = list(facets['developers'].values_list('name', flat=True)[:6])
     offplan_count = scope.filter(property_status__slug='off-plan').count()
     ready_count = scope.filter(property_status__slug='ready').count()
- 
+
     years = list(
         scope.exclude(delivery_date__isnull=True)
         .annotate(_y=ExtractYear('delivery_date'))
         .values_list('_y', flat=True).order_by('_y').distinct()
     )
- 
+
     cover_image = _cover_map([district.pk]).get(district.pk)
- 
+
     # ── Body copy ──
     # An admin-written description always wins; the generated paragraphs are
     # the floor, not the ceiling, and exist so a brand-new area still ships
@@ -2112,7 +2152,7 @@ def district_detail(request, slug):
                    offplan_count, ready_count)
     )
     faqs = _area_faqs(district, area_total, low_price, developer_names, years)
- 
+
     # Other areas in the same city — internal links that give this page
     # somewhere to pass authority instead of dead-ending.
     siblings = (
@@ -2123,12 +2163,12 @@ def district_detail(request, slug):
         .filter(prop_count__gt=0)
         .order_by('-prop_count', 'name')[:8]
     )
- 
+
     # ── SEO ──
     city = district.city.name
     name = district.name
     page_tag = f' | Page {page}' if page > 1 else ''
- 
+
     meta_title = _pick([
         f'Property for Sale in {name}, {city}{page_tag} | {BRAND}',
         f'Property for Sale in {name}, {city}{page_tag} | Spacesmith',
@@ -2136,7 +2176,7 @@ def district_detail(request, slug):
         f'{name}, {city} Property{page_tag} | Spacesmith',
         f'{name} Property for Sale{page_tag}',
     ])
- 
+
     price_bit = (f' from AED {int(low_price):,}' if low_price else '')
     base_description = admin_copy or (
         f'Browse {area_total} propert{"y" if area_total == 1 else "ies"} for sale '
@@ -2151,14 +2191,14 @@ def district_detail(request, slug):
             f'Page {page} \u2014 {meta_description}',
             filler=None,
         )
- 
+
     canonical = AREAS_URL + f'{district.slug}/' + (f'?page={page}' if page > 1 else '')
- 
+
     def url_for(target_page):
         return AREAS_URL + f'{district.slug}/' + (
             f'?page={target_page}' if target_page > 1 else ''
         )
- 
+
     schema = [
         {
             '@context': 'https://schema.org',
@@ -2195,20 +2235,20 @@ def district_detail(request, slug):
             ],
         },
     ]
- 
+
     # Filters are never written into the canonical, so the pagination
     # querystring is kept separate from it.
     querystring_parts = {k: v for k, v in active.items() if v}
     if status:
         querystring_parts['status'] = status
- 
+
     return render(request, 'district_detail.html', {
         'district': district,
         'cover_image': cover_image,
         'area_paragraphs': area_paragraphs,
         'faqs': faqs,
         'siblings': siblings,
- 
+
         'page_obj': page_obj,
         'properties': page_obj.object_list,
         'total_count': paginator.count,
@@ -2219,10 +2259,10 @@ def district_detail(request, slug):
         'developer_count': len(developer_names),
         'page_range': paginator.get_elided_page_range(page, on_each_side=1, on_ends=1),
         'querystring': urlencode(querystring_parts),
- 
+
         'statuses': statuses,
         **facets,
- 
+
         'active_status': status,
         'active_type': active['type'],
         'active_developer': active['developer'],
@@ -2230,10 +2270,10 @@ def district_detail(request, slug):
         'active_bedrooms': active['bedrooms'],
         'active_price_min': active['price_min'],
         'active_price_max': active['price_max'],
-        'active_sort': active['sort'] or 'DEFAULT_SORT',
+        'active_sort': active['sort'] or DEFAULT_SORT,
         'active_search': active['q'],
         'has_filters': has_filters,
- 
+
         'meta_title': meta_title,
         'meta_description': meta_description,
         'canonical': canonical,
@@ -2243,26 +2283,22 @@ def district_detail(request, slug):
         'rel_next': url_for(page_obj.next_page_number()) if page_obj.has_next() else None,
         'schema_json': _json_ld(schema),
     })
-    
-
-
-
 
 
 from django.db.models import Q
 from django.shortcuts import render
 from django.urls import reverse
- 
+
 from properties.models import DeveloperCompany, District
- 
+
 MAP_URL = f'{SITE_URL}/properties/map/'
- 
+
 # Safety cap, not a UX limit — Orange Spaces ships ~800 properties in one
 # payload with no problem. Raise this only if the catalogue grows past a
 # size where a single page load becomes noticeably slow.
 MAP_PIN_LIMIT = 2000
- 
- 
+
+
 def property_map(request):
     """
     Interactive map of every active, geocoded property that matches the
@@ -2273,20 +2309,20 @@ def property_map(request):
     bounce = _clean_url(request)
     if bounce:
         return bounce
- 
+
     search = request.GET.get('q', '').strip()
     district_slug = request.GET.get('district', '').strip()
     developer_slug = request.GET.get('developer', '').strip()
- 
+
     # Only properties with real coordinates can go on the map at all —
     # everything else would either crash Leaflet or need a fake fallback
     # pin, which is worse than just not listing it here.
     scope = (
-    _base_qs()
-    .filter(latitude__isnull=False, longitude__isnull=False)
-    .exclude(latitude=0, longitude=0)
-)
- 
+        _base_qs()
+        .filter(latitude__isnull=False, longitude__isnull=False)
+        .exclude(latitude=0, longitude=0)
+    )
+
     qs = scope
     if district_slug:
         qs = qs.filter(district__slug=district_slug)
@@ -2299,14 +2335,14 @@ def property_map(request):
             | Q(city__name__icontains=search)
             | Q(developer_company__name__icontains=search)
         ).distinct()
- 
+
     # Same client-priority ordering as the rest of the site, so the
     # developers the client cares about surface first in the card list.
     qs = qs.annotate(dev_priority=_priority_annotation()).order_by('dev_priority', '-created_at')
- 
+
     total_count = qs.count()
     properties = list(qs[:MAP_PIN_LIMIT])
- 
+
     # ── Pins for the map ──
     # Rendered via |json_script in the template — handles escaping for us.
     pins = []
@@ -2329,7 +2365,7 @@ def property_map(request):
             'units': p.residential_units or 0,
             'url': reverse('properties:property_detail', args=[p.slug]),
         })
- 
+
     # ── Facets — scoped to properties that can actually appear on the map ──
     districts = (
         District.objects
@@ -2341,52 +2377,43 @@ def property_map(request):
         .filter(is_active=True, properties__in=scope.values('pk'))
         .order_by('name').distinct()
     )
- 
+
     has_filters = bool(search or district_slug or developer_slug)
- 
+
     # ── SEO ──
     meta_title = _pick([
-    f'UAE Properties — Explore on the Map | {BRAND}',
-    f'UAE Property Map | {BRAND}',
-    f'Property Map | Spacesmith',
+        f'UAE Properties — Explore on the Map | {BRAND}',
+        f'UAE Property Map | {BRAND}',
+        f'Property Map | Spacesmith',
     ])
     meta_description = _describe(
-    f'Browse {total_count} properties across the UAE on an interactive map '
-    f'— filter by area and developer to find what fits.',
-    filler=f'Curated by {BRAND}.',
+        f'Browse {total_count} properties across the UAE on an interactive map '
+        f'— filter by area and developer to find what fits.',
+        filler=f'Curated by {BRAND}.',
     )
- 
+
     return render(request, 'property_map.html', {
         'pins': pins,
         'properties': properties,
         'total_count': total_count,
         'shown_count': len(pins),
- 
+
         'districts': districts,
         'developers': developers,
- 
+
         'active_search': search,
         'active_district': district_slug,
         'active_developer': developer_slug,
         'has_filters': has_filters,
- 
+
         'meta_title': meta_title,
         'meta_description': meta_description,
         'canonical': MAP_URL,
         'robots': 'noindex, follow' if has_filters else
                   'index, follow, max-image-preview:large, max-snippet:-1',
     })
-    
 
 
-
-
-
-
-
-ELLINGTON_PROPERTY_SLUG = 'al-yalayis-1/dubai/ellington-master-community-al-yalayis-1'
- 
- 
 def ellington(request):
     """
     Ellington Master Community, Al Yalayis 1 — community + project SEO
@@ -2400,12 +2427,12 @@ def ellington(request):
         .filter(slug=ELLINGTON_PROPERTY_SLUG, is_active=True)
         .first()
     )
- 
+
     enquiry_form = PropertyEnquiryForm()
- 
+
     if request.method == 'POST':
         enquiry_form = PropertyEnquiryForm(request.POST)
- 
+
         if property_obj is None:
             # Fails closed rather than 500ing or silently dropping the lead.
             logger.error(
@@ -2423,7 +2450,7 @@ def ellington(request):
             enquiry.property = property_obj
             enquiry.source = 'Ellington Al Yalayis 1 Landing Page'
             enquiry.save()
- 
+
             for sender, label in (
                 (_send_property_admin_email, 'admin'),
                 (_send_property_client_email, 'client'),
@@ -2432,7 +2459,7 @@ def ellington(request):
                     sender(enquiry)
                 except Exception as exc:
                     logger.error('Ellington enquiry %s email failed: %s', label, exc)
- 
+
             messages.success(
                 request,
                 'Thank you. Your enquiry has been received — our team will '
@@ -2441,9 +2468,9 @@ def ellington(request):
             return redirect(f"{reverse('properties:ellington')}#enquiry")
         else:
             messages.error(request, 'Please correct the highlighted fields and try again.')
- 
+
     canonical = f'{SITE_URL}/properties/ellington-new-launch-dubai/'
- 
+
     # Static, SEO-team-authored title/description — audited through the same
     # length checks as property_detail so nothing ships outside Google's
     # display windows.
@@ -2453,25 +2480,24 @@ def ellington(request):
         'Discover Ellington New Launch Dubai at Al Yalayis 1 featuring luxury villas, '
         'townhouses & apartments in a premium master community by Ellington Properties.',
     )
- 
+
     return render(request, 'ellington_al_yalayis_landing.html', {
         'property': property_obj,
         'enquiry_form': enquiry_form,
- 
+
         'meta_title': meta_title,
         'meta_description': meta_description,
         'canonical': canonical,
         'robots': 'index, follow, max-image-preview:large, max-snippet:-1',
         'og_type': 'article',
         'og_image': _absolute(property_obj.cover_image) if property_obj and property_obj.cover_image else None,
- 
+
         # Swap for '{lat},{lng}' once you have exact coordinates for the plot,
         # e.g. f'{property_obj.latitude},{property_obj.longitude}&z=14'
         'map_embed_url': 'https://www.google.com/maps?q=Al+Yalayis+1,+Dubai,+UAE&z=13&output=embed',
- 
+
         'seo_report': seo_report if settings.DEBUG else None,
     })
-
 
 
 # azizi
@@ -2534,7 +2560,7 @@ def azizi_florence(request):
         else:
             messages.error(request, 'Please correct the highlighted fields and try again.')
 
-    canonical = f'{SITE_URL}/properties/azizi-florence-dubai/'
+    canonical = f'{SITE_URL}/properties/azizi_florece/'
 
     # Static, SEO-team-authored title/description — audited through the same
     # length checks as property_detail so nothing ships outside Google's
@@ -2562,8 +2588,7 @@ def azizi_florence(request):
         'map_embed_url': 'https://www.google.com/maps?q=Dubai,+UAE&z=11&output=embed',
 
         'seo_report': seo_report if settings.DEBUG else None,
-    })   
-
+    })
 
 
 # Vally by emaar
@@ -2756,6 +2781,7 @@ def seefa_by_alef(request):
 
 BINGHATTI_STARFALL_PROPERTY_SLUG = ("binghatti/starfall/al-jaddaf")
 
+
 def binghatti_starfall(request):
     """
     Binghatti Starfall, Al Jaddaf — project landing page.
@@ -2782,7 +2808,7 @@ def binghatti_starfall(request):
                 "Your enquiry has been submitted successfully."
             )
 
-            return render(request, "binghatti.html", context)
+            return redirect(request.path)
     else:
         form = PropertyEnquiryForm()
 
