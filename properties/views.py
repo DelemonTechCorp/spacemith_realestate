@@ -223,11 +223,110 @@ def _clean_url(request):
     if cleaned:
         url += '?' + urlencode(cleaned, doseq=True)
     return redirect(url)
+def ready_properties(request, page=None):
+    """Completed, move-in-ready properties."""
 
+    # ?page=N  ->  /properties/ready/page/N/  (301)
+    query_page = request.GET.get('page', '').strip()
+    if page is None and query_page:
+        rest = request.GET.copy()
+        rest.pop('page', None)
+        if query_page.isdigit() and int(query_page) > 1:
+            target = f'/properties/ready/page/{int(query_page)}/'
+        else:
+            target = '/properties/ready/'
+        rest = {k: v for k, v in rest.items() if v.strip()}
+        if rest:
+            target += f'?{urlencode(rest)}'
+        return redirect(f'{SITE_URL}{target}', permanent=True)
 
-def _read(request):
-    return {k: request.GET.get(k, '').strip() for k in FILTER_KEYS}
+    # /page/1/ -> /properties/ready/
+    if page is not None and page <= 1:
+        rest = {k: v for k, v in request.GET.items() if v.strip()}
+        target = '/properties/ready/' + (f'?{urlencode(rest)}' if rest else '')
+        return redirect(f'{SITE_URL}{target}', permanent=True)
 
+    bounce = _clean_url(request)
+    if bounce:
+        return bounce
+
+    scope = _base_qs(STATUS_READY)
+    active = _read(request)
+    qs = _filtered(scope, active)
+
+    paginator = Paginator(qs, PAGE_SIZE)
+    page_obj = paginator.get_page(page or 1)
+    current_page = page_obj.number
+
+    # page beyond last -> redirect to the real last page
+    if page and page != current_page:
+        target = (f'/properties/ready/page/{current_page}/'
+                  if current_page > 1 else '/properties/ready/')
+        return redirect(f'{SITE_URL}{target}', permanent=True)
+
+    facets = _facets(scope, active)
+
+    location = ' in Dubai & the UAE'
+    if active['city']:
+        name = facets['cities'].filter(slug=active['city']).values_list('name', flat=True).first()
+        if name:
+            location = f' in {name}'
+
+    page_tag = f' | Page {current_page}' if current_page > 1 else ''
+
+    meta_title = _pick([
+        f'Ready Properties for Sale{location}{page_tag} | {BRAND}',
+        f'Ready Properties for Sale{location}{page_tag} | Spacesmith',
+        f'Ready Properties{location}{page_tag} | Spacesmith',
+        f'Ready Properties{location}{page_tag}',
+    ])
+
+    meta_description = _describe(
+        f'Browse {paginator.count} ready, completed properties{location} '
+        f'available for immediate handover — apartments, villas and penthouses.',
+        filler='Book a viewing this week.',
+    )
+    if current_page > 1:
+        meta_description = f'Page {current_page} — {meta_description}'[:160]
+
+    canonical_params = {k: active[k] for k in INDEXABLE_FACETS if active[k]}
+    index = any(active[k] for k in FILTER_KEYS if k not in INDEXABLE_FACETS)
+
+    def url_for(target_page=None):
+        base = (f'{SITE_URL}/properties/ready/page/{target_page}/'
+                if target_page and target_page > 1
+                else f'{SITE_URL}/properties/ready/')
+        return base + (f'?{urlencode(canonical_params)}' if canonical_params else '')
+
+    return render(request, 'ready_properties.html', {
+        'page_obj': page_obj,
+        'properties': page_obj.object_list,
+        'total_count': paginator.count,
+        'page_range': paginator.get_elided_page_range(current_page, on_each_side=1, on_ends=1),
+        'querystring': urlencode({k: v for k, v in active.items() if v}),
+
+        **facets,
+
+        'active_city': active['city'],
+        'active_district': active['district'],
+        'active_type': active['type'],
+        'active_developer': active['developer'],
+        'active_unit_type': active['unit_type'],
+        'active_bedrooms': active['bedrooms'],
+        'active_price_min': active['price_min'],
+        'active_price_max': active['price_max'],
+        'active_sort': active['sort'] or DEFAULT_SORT,
+        'active_search': active['q'],
+        'has_filters': any(active.values()),
+
+        'meta_title': meta_title,
+        'meta_description': meta_description,
+        'canonical': url_for(current_page),
+        'robots': 'noindex, follow' if index else
+                  'index, follow, max-image-preview:large, max-snippet:-1',
+        'rel_prev': url_for(page_obj.previous_page_number()) if page_obj.has_previous() else None,
+        'rel_next': url_for(page_obj.next_page_number()) if page_obj.has_next() else None,
+    })
 
 def _base_qs(status_slug=None):
     qs = (
@@ -1242,30 +1341,15 @@ def ready_properties(request):
     if bounce:
         return bounce
 
-    # select_related pulls all six FKs in the same query — without it, 12
-    # cards fire 60 extra queries. prefetch_related gets the images (ordered
-    # once) and grouped_apartments, which is what makes compare_bedroom_options
-    # / compare_unit_size_range / compare_starting_price free on every card.
     scope = _base_qs(STATUS_READY)
 
     active = _read(request)
     qs = _filtered(scope, active)
 
-    scope = _base_qs()
-    qs = _filtered(scope, active)
-
     paginator = Paginator(qs, PAGE_SIZE)
-
-    page_obj = paginator.get_page(
-        request.GET.get('page', 1)
-    )
-
+    page_obj = paginator.get_page(request.GET.get('page', 1))
     page = page_obj.number
 
-    facets = _facets(scope, active)
-
-    # Dropdowns scoped to ready stock only, so the city list never offers a
-    # city with zero ready properties.
     facets = _facets(scope, active)
 
     # ── Location wording ──
@@ -1274,10 +1358,6 @@ def ready_properties(request):
         name = facets['cities'].filter(slug=active['city']).values_list('name', flat=True).first()
         if name:
             location = f' in {name}'
-
-    paginator = Paginator(qs, PAGE_SIZE)
-    page_obj = paginator.get_page(request.GET.get('page', 1))
-    page = page_obj.number
 
     page_tag = f' | Page {page}'
 

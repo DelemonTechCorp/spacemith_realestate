@@ -58,10 +58,16 @@ urlpatterns = [
     # ============================================================
 
     path(
-        'ready/',
-        views.ready_properties,
-        name='ready_properties',
-    ),
+    'ready/',
+    views.ready_properties,
+    name='ready_properties',
+),
+
+path(
+    'ready/page/<int:page>/',
+    views.ready_properties,
+    name='ready_properties_page',
+),
 
     # OFFPLN
 
