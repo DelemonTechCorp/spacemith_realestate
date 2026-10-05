@@ -20,6 +20,11 @@ from django.urls import path, include, re_path
 from django.conf import settings
 from django.conf.urls.static import static
 from django.views.static import serve
+from properties import views as property_views
+
+from django.urls import path, include
+from django.shortcuts import redirect
+
 
 
 from sitemaps import sitemaps  # ✅ CORRECT - looks in project root
@@ -44,6 +49,10 @@ urlpatterns = [
     path('', include('main.urls')),
     path('properties/', include('properties.urls')),
     path('', include('blogs.urls')),
+
+    
+
+
 ]
 
 

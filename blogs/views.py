@@ -282,7 +282,7 @@ def event_list(request):
         'meta_keywords':    'Spacesmith events, Dubai property launches, '
                             'real estate events Dubai',
         'canonical':        canonical,
-        'robots':           'noindex, follow' if is_paginated
+        'robots':           'index, follow' if is_paginated
                             else 'index, follow, max-image-preview:large',
         'og_image':         request.build_absolute_uri(static('img/og-default.jpg')),
     }

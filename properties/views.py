@@ -17,6 +17,7 @@ from django.shortcuts import redirect, render
 from django.shortcuts import render, get_object_or_404
 from django.utils.text import slugify
 from django.db.models import Count, Q, Sum
+from django.shortcuts import redirect
 
 
 from properties.models import (
@@ -31,6 +32,8 @@ from properties.models import (
 
 SITE_URL = getattr(settings, 'SITE_URL', 'https://spacesmith.ae').rstrip('/')
 BRAND = 'Spacesmith Real Estate'
+IGNORED_PARAMS = {'page', 'gclid', 'fbclid', 'msclkid'}
+
 PAGE_SIZE = 12
 ELLINGTON_PROPERTY_SLUG = 'al-yalayis-1/dubai/ellington-master-community-al-yalayis-1'
 
@@ -51,7 +54,7 @@ FILTER_KEYS = (
 
 # Facets that make a real landing page. These stay indexable and keep their
 # own canonical. Everything else canonicalises back to the clean URL and goes
-# noindex, so filter combinations don't spawn thousands of thin duplicates.
+# index, so filter combinations don't spawn thousands of thin duplicates.
 INDEXABLE_FACETS = ('city', 'unit_type')
 
 
@@ -367,61 +370,180 @@ def _city_path(city_slug, unit_type=''):
         path += f'{slugify(unit_type)}/'
     return path
 
+def _type_path(type_slug):
+    """Clean, parameter-free URL path for a property type."""
+    return f'/properties/type/{type_slug}/'
+    
+def property_list(request, city=None, ptype=None, unit_type=None):
+    # ── LEGACY ?type=... → CLEAN URL ────────────────────────
+    type_param = request.GET.get('type', '').strip()
 
-def property_list(request, city=None, unit_type=None):
-    """
-    /properties/                          -> all listings
-    /properties/city/<city>/              -> city landing page   (clean URL)
-    /properties/city/<city>/<unit-type>/  -> city + unit type    (clean URL)
+    if city is None and ptype is None and type_param:
 
-    Legacy ?city=... / ?city=...&unit_type=... URLs are 301-redirected to the
-    clean paths, so crawlers never see a "dynamic" URL for these pages.
+        property_type = PropertyType.objects.filter(
+            slug=type_param,
+            is_active=True
+        ).first()
+
+        if property_type:
+            target = _type_path(property_type.slug)
+
+            page_param = request.GET.get('page', '').strip()
+
+            if page_param.isdigit() and int(page_param) > 1:
+                target += f'?page={page_param}'
+
+            return redirect(target, permanent=True)
+
     """
+    /properties/
+    /properties/type/<type>/
+    /properties/city/<city>/
+    /properties/city/<city>/<unit-type>/
+    """
+
+    # ── Existing legacy URL cleanup ─────────────────────────
     bounce = _clean_url(request)
+
     if bounce:
         return bounce
 
+    # ── Read active filters ─────────────────────────────────
     active = _read(request)
 
-    # ── Legacy query-string URLs -> clean path (301) ──
-    if city is None and active['city']:
-        used = {k for k in request.GET if request.GET.get(k, '').strip()}
-        if used <= {'city', 'unit_type', 'page'} and City.objects.filter(
-                slug=active['city'], is_active=True).exists():
-            target = _city_path(active['city'], active['unit_type'])
-            page_param = request.GET.get('page', '').strip()
-            if page_param.isdigit() and int(page_param) > 1:
-                target += f'?page={page_param}'
-            return redirect(target, permanent=True)
+    # ── Legacy ?status=off-plan / ?status=ready ─────────────
+    status_param = request.GET.get('status', '').strip()
 
-    # ── Clean city routes ──
+    if status_param in ('off-plan', 'ready'):
+        target = (
+            '/properties/off-plan/'
+            if status_param == 'off-plan'
+            else '/properties/ready/'
+        )
+
+        rest = {
+            k: v
+            for k, v in request.GET.items()
+            if k != 'status' and v.strip()
+        }
+
+        if rest:
+            target += '?' + urlencode(rest)
+
+        return redirect(target, permanent=True)
+
+    # ── Legacy ?city=... / ?city=...&unit_type=... ─────────
+    if city is None and active['city']:
+
+        used = {
+            k
+            for k in request.GET
+            if request.GET.get(k, '').strip()
+        }
+
+        if used <= {'city', 'unit_type', 'page', 'sort'}:
+
+            if City.objects.filter(
+                slug=active['city'],
+                is_active=True
+            ).exists():
+
+                target = _city_path(
+                    active['city'],
+                    active['unit_type']
+                )
+
+                page_param = request.GET.get('page', '').strip()
+
+                if page_param.isdigit() and int(page_param) > 1:
+                    target += f'?page={page_param}'
+
+                return redirect(target, permanent=True)
+
+    # ── Legacy ?type=apartments ─────────────────────────────
+  
+
+    # ── Clean type route ────────────────────────────────────
+    if ptype is not None:
+        get_object_or_404(
+            PropertyType,
+            slug=ptype,
+            is_active=True
+        )
+
+        active['type'] = ptype
+
+# ── Clean city routes ─────────────────────────────────────
+    
+  # ── Clean city routes ─────────────────────────────────
     path_unit_slug = ''
+
     if city is not None:
-        get_object_or_404(City, slug=city, is_active=True)
+        get_object_or_404(
+            City,
+            slug=city,
+            is_active=True
+        )
+
         active['city'] = city
+
         if unit_type:
             options = {
                 slugify(u): u
                 for u in (
                     GroupedApartment.objects
-                    .filter(is_active=True, property_obj__city__slug=city)
-                    .exclude(apartment_type__isnull=True).exclude(apartment_type='')
-                    .values_list('apartment_type', flat=True).distinct()
+                    .filter(
+                        is_active=True,
+                        property_obj__city__slug=city
+                    )
+                    .exclude(apartment_type__isnull=True)
+                    .exclude(apartment_type='')
+                    .values_list(
+                        'apartment_type',
+                        flat=True
+                    )
+                    .distinct()
                 )
             }
+
             if unit_type not in options:
-                raise Http404('Unknown unit type for this city')
+                raise Http404(
+                    'Unknown unit type for this city'
+                )
+
             active['unit_type'] = options[unit_type]
             path_unit_slug = unit_type
 
-    scope = _base_qs()
-    qs = _filtered(scope, active)
 
-    paginator = Paginator(qs, PAGE_SIZE)
-    page_obj = paginator.get_page(request.GET.get('page', 1))
+    # ── BUILD QUERYSET ────────────────────────────────────
+    scope = _base_qs()
+
+    qs = _filtered(
+        scope,
+        active
+    )
+
+
+    # ── PAGINATION ────────────────────────────────────────
+    paginator = Paginator(
+        qs,
+        PAGE_SIZE
+    )
+
+    page_obj = paginator.get_page(
+        request.GET.get('page', 1)
+    )
+
     page = page_obj.number
 
-    facets = _facets(scope, active)
+
+    # ── FACETS ────────────────────────────────────────────
+    facets = _facets(
+        scope,
+        active
+    )
+
+
 
     # ── SEO ──
     page_tag = f' | Page {page}' if page > 1 else ''
@@ -510,12 +632,12 @@ def property_list(request, city=None, unit_type=None):
     elif city_name and district_name and seo_unit_type:
 
         meta_title = (
-            f'{seo_unit_type.title()} Properties for Sale in '
+            f'{seo_unit_type.title()} Properties Sale in '
             f'{district_name}, {city_name}{page_tag} | {BRAND}'
         )
 
         meta_description = _describe(
-            f'Browse {seo_unit_type.lower()} properties for sale in '
+            f'Browse {seo_unit_type.lower()} properties sale in '
             f'{district_name}, {city_name}. Explore available properties, '
             f'prices and investment opportunities.',
             filler=f'Expert guidance from {BRAND}.',
@@ -525,7 +647,7 @@ def property_list(request, city=None, unit_type=None):
     elif city_name and seo_unit_type:
 
         meta_title = (
-            f'{seo_unit_type.title()} Properties for Sale in '
+            f'{seo_unit_type.title()} Properties  Sale in '
             f'{city_name}{page_tag} | {BRAND}'
         )
 
@@ -569,12 +691,12 @@ def property_list(request, city=None, unit_type=None):
     elif city_name and developer_name:
 
         meta_title = (
-            f'{developer_name} Properties for Sale in '
+            f'{developer_name} Properties Sale in '
             f'{city_name}{page_tag} | {BRAND}'
         )
 
         meta_description = _describe(
-            f'Explore {developer_name} properties for sale in {city_name}. '
+            f'Explore {developer_name} properties for in {city_name}. '
             f'Browse available projects, prices and property details.',
             filler=f'Expert guidance from {BRAND}.',
         )
@@ -583,12 +705,12 @@ def property_list(request, city=None, unit_type=None):
     elif city_name and seo_bedrooms:
 
         meta_title = (
-            f'{seo_bedrooms}+ Bedroom Properties for Sale in '
+            f'{seo_bedrooms}+ Bedroom Properties Sale in '
             f'{city_name}{page_tag} | {BRAND}'
         )
 
         meta_description = _describe(
-            f'Browse {seo_bedrooms}+ bedroom properties for sale in '
+            f'Browse {seo_bedrooms}+ bedroom properties sale in '
             f'{city_name}. Explore apartments, villas and residential '
             f'properties.',
             filler=f'Expert guidance from {BRAND}.',
@@ -598,12 +720,12 @@ def property_list(request, city=None, unit_type=None):
     elif city_name:
 
         meta_title = (
-            f'Properties for Sale in {city_name}'
+            f'Properties Sale in {city_name}'
             f'{page_tag} | {BRAND}'
         )
 
         meta_description = _describe(
-            f'Browse {paginator.count} properties for sale in {city_name}. '
+            f'Browse {paginator.count} properties sale in {city_name}. '
             f'Explore apartments, villas and penthouses, including ready '
             f'and off-plan properties.',
             filler=f'Expert guidance from {BRAND}.',
@@ -642,8 +764,8 @@ def property_list(request, city=None, unit_type=None):
     else:
 
         meta_title = (
-            f'Properties for Sale in Dubai & UAE'
-            f'{page_tag} | {BRAND}'
+            f'Properties Sale in Dubai & UAE'
+            f'{page_tag}|{BRAND}'
         )
 
         meta_description = _describe(
@@ -660,21 +782,45 @@ def property_list(request, city=None, unit_type=None):
     # Any URL containing query parameters is a filtered/dynamic URL.
     # Keep the clean /properties/ page indexable.
     # Clean paths (/properties/, /properties/city/dubai/) are indexable and
-    # self-canonical; any query string or page > 1 is noindex and points its
+    # self-canonical; any query string or page > 1 is index and points its
     # canonical back at the clean path.
-    has_query_params = bool(request.GET)
-    noindex = (page > 1 or has_query_params)
+       # ── SEO CANONICAL / ROBOTS ─────────────────────────────
+    # has_query_params = bool(request.GET)
+    # index = (page > 1 or has_query_params)
 
-    base_path = (
-        _city_path(active['city'], active['unit_type'] if path_unit_slug else '')
-        if city is not None else '/properties/'
-    )
+      
+    # ── SEO CANONICAL / ROBOTS ─────────────────────────────
+    filter_params = {
+        k
+        for k in request.GET
+        if request.GET.get(k, '').strip()
+        and k not in IGNORED_PARAMS
+        and not k.startswith('utm_')
+    }
+    filtered = bool(filter_params)
 
-    def url_for(target_page=None, include_page=True):
+    if city is not None:
+        base_path = _city_path(
+            active['city'],
+            active['unit_type'] if path_unit_slug else ''
+        )
+    elif ptype is not None:
+        base_path = _type_path(ptype)
+    else:
+        base_path = '/properties/'
+
+    def url_for(target_page=None):
         url = f'{SITE_URL}{base_path}'
-        if include_page and target_page and target_page > 1:
+        if target_page and target_page > 1:
             url += f'?page={target_page}'
         return url
+
+    canonical_url = url_for(None) if filtered else url_for(page)
+
+    robots = (
+        'noindex, follow' if filtered
+        else 'index, follow, max-image-preview:large, max-snippet:-1'
+    )
 
     # Querystring for pagination/filter links
     querystring = urlencode({
@@ -685,7 +831,11 @@ def property_list(request, city=None, unit_type=None):
         'page_obj': page_obj,
         'properties': page_obj.object_list,
         'total_count': paginator.count,
-        'page_range': paginator.get_elided_page_range(page, on_each_side=1, on_ends=1),
+        'page_range': paginator.get_elided_page_range(
+            page,
+            on_each_side=1,
+            on_ends=1
+        ),
         'querystring': querystring,
 
         **facets,
@@ -704,14 +854,22 @@ def property_list(request, city=None, unit_type=None):
 
         'meta_title': meta_title,
         'meta_description': meta_description,
-        'canonical': url_for(page, include_page=False),
-        'robots': 'noindex, follow' if noindex else
-                  'index, follow, max-image-preview:large, max-snippet:-1',
-        'rel_prev': url_for(page_obj.previous_page_number()) if page_obj.has_previous() else None,
-        'rel_next': url_for(page_obj.next_page_number()) if page_obj.has_next() else None,
+
+        'canonical': canonical_url,
+        'robots': robots,
+
+        'rel_prev': (
+            url_for(page_obj.previous_page_number())
+            if page_obj.has_previous()
+            else None
+        ),
+
+        'rel_next': (
+            url_for(page_obj.next_page_number())
+            if page_obj.has_next()
+            else None
+        ),
     })
-
-
 # -----------------------------------------property detail----------------------------------------------------
 
 """
@@ -1055,7 +1213,7 @@ def property_detail(request, slug):
         'meta_title': meta_title,
         'meta_description': meta_description,
         'canonical': canonical,
-        'robots': ('noindex, follow' if property_obj.slug == ELLINGTON_PROPERTY_SLUG
+        'robots': ('index, follow' if property_obj.slug == ELLINGTON_PROPERTY_SLUG
                    else 'index, follow, max-image-preview:large, max-snippet:-1'),
         'og_type': 'article',
         'og_image': _absolute(images[0] if images else None),
@@ -1093,9 +1251,18 @@ def ready_properties(request):
     active = _read(request)
     qs = _filtered(scope, active)
 
+    scope = _base_qs()
+    qs = _filtered(scope, active)
+
     paginator = Paginator(qs, PAGE_SIZE)
-    page_obj = paginator.get_page(request.GET.get('page', 1))
+
+    page_obj = paginator.get_page(
+        request.GET.get('page', 1)
+    )
+
     page = page_obj.number
+
+    facets = _facets(scope, active)
 
     # Dropdowns scoped to ready stock only, so the city list never offers a
     # city with zero ready properties.
@@ -1108,7 +1275,11 @@ def ready_properties(request):
         if name:
             location = f' in {name}'
 
-    page_tag = f' | Page {page}' if page > 1 else ''
+    paginator = Paginator(qs, PAGE_SIZE)
+    page_obj = paginator.get_page(request.GET.get('page', 1))
+    page = page_obj.number
+
+    page_tag = f' | Page {page}'
 
     # ── TITLE ──
     # Candidates run longest to shortest; _pick returns the first that fits
@@ -1134,9 +1305,9 @@ def ready_properties(request):
     # ── CANONICAL & ROBOTS ──
     # city and type make real landing pages, so they keep their own canonical
     # and stay indexable. Everything else points back to the clean URL and
-    # goes noindex — otherwise filter combinations spawn thin duplicates.
+    # goes index — otherwise filter combinations spawn thin duplicates.
     canonical_params = {k: active[k] for k in INDEXABLE_FACETS if active[k]}
-    noindex = any(active[k] for k in FILTER_KEYS if k not in INDEXABLE_FACETS)
+    index = any(active[k] for k in FILTER_KEYS if k not in INDEXABLE_FACETS)
 
     def url_for(target_page=None):
         params = dict(canonical_params)
@@ -1168,7 +1339,7 @@ def ready_properties(request):
         'meta_title': meta_title,
         'meta_description': meta_description,
         'canonical': url_for(page),
-        'robots': 'noindex, follow' if noindex else
+        'robots': 'index, follow' if index else
                   'index, follow, max-image-preview:large, max-snippet:-1',
         'rel_prev': url_for(page_obj.previous_page_number()) if page_obj.has_previous() else None,
         'rel_next': url_for(page_obj.next_page_number()) if page_obj.has_next() else None,
@@ -1178,46 +1349,143 @@ def ready_properties(request):
 # =========================================================================
 #  OFF-PLAN PROPERTIES
 # =========================================================================
-def offplan_properties(request):
+
+# =========================================================================
+# OFF-PLAN PROPERTIES
+# =========================================================================
+
+
+def offplan_properties(request, city=None, page=None):
     """Pre-launch and under-construction developments."""
+
+    # ---------------------------------------------------------
+    # OLD QUERY URL → CLEAN SEO URL
+    # ---------------------------------------------------------
+    query_city = request.GET.get('city', '').strip()
+    query_page = request.GET.get('page', '').strip()
+
+    if not city and query_city:
+        redirect_params = request.GET.copy()
+
+        # city and page are moved into the URL path
+        redirect_params.pop('city', None)
+        redirect_params.pop('page', None)
+
+        if query_page.isdigit() and int(query_page) > 1:
+            target = f'/properties/off-plan/{query_city}/page/{int(query_page)}/'
+        else:
+            target = f'/properties/off-plan/{query_city}/'
+
+        if redirect_params:
+            target += f'?{urlencode(redirect_params)}'
+
+        return redirect(
+            f'{SITE_URL}{target}',
+            permanent=True,
+        )
+
+    # ---------------------------------------------------------
+    # EXISTING CLEAN URL
+    # ---------------------------------------------------------
     bounce = _clean_url(request)
     if bounce:
         return bounce
 
     scope = _base_qs(STATUS_OFFPLAN)
 
+    # ---------------------------------------------------------
+    # URL PARAMS
+    # ---------------------------------------------------------
+    params = request.GET.copy()
+
+    if city:
+        params['city'] = city
+
+    if page:
+        params['page'] = page
+
+    request.GET = params
+    # ---------------------------------------------------------
+    # READ FILTERS
+    # ---------------------------------------------------------
     active = _read(request)
     qs = _filtered(scope, active)
 
-    # Handover year — only useful on this page, so it lives here rather than
-    # in the shared FILTER_KEYS.
+    # ---------------------------------------------------------
+    # HANDOVER YEAR
+    # ---------------------------------------------------------
     handover = request.GET.get('handover', '').strip()
+
     if handover.isdigit():
-        qs = qs.filter(delivery_date__year=int(handover))
+        qs = qs.filter(
+            delivery_date__year=int(handover)
+        )
 
+    # ---------------------------------------------------------
+    # PAGINATION
+    # ---------------------------------------------------------
     paginator = Paginator(qs, PAGE_SIZE)
-    page_obj = paginator.get_page(request.GET.get('page', 1))
-    page = page_obj.number
 
+    current_page = request.GET.get('page', 1)
+
+    try:
+        current_page = int(current_page)
+    except (TypeError, ValueError):
+        current_page = 1
+
+    # page=1 -> clean URL
+    if current_page <= 1 and request.GET.get('page'):
+        clean_params = request.GET.copy()
+        clean_params.pop('page', None)
+
+        clean_url = f'{SITE_URL}/properties/off-plan/'
+
+        if clean_params:
+            clean_url += f'?{urlencode(clean_params)}'
+
+        return redirect(clean_url)
+
+    page_obj = paginator.get_page(current_page)
+    current_page = page_obj.number
+
+    # ---------------------------------------------------------
+    # FACETS
+    # ---------------------------------------------------------
     facets = _facets(scope, active)
 
-    # Years that actually exist in off-plan stock
     handover_options = (
-        scope.annotate(_y=ExtractYear('delivery_date'))
+        scope
+        .annotate(_y=ExtractYear('delivery_date'))
         .values_list('_y', flat=True)
-        .order_by('_y').distinct()
+        .order_by('_y')
+        .distinct()
     )
 
-    # ── Location wording ──
+    # ---------------------------------------------------------
+    # LOCATION
+    # ---------------------------------------------------------
     location = ' in Dubai & the UAE'
+
     if active['city']:
-        name = facets['cities'].filter(slug=active['city']).values_list('name', flat=True).first()
+        name = (
+            facets['cities']
+            .filter(slug=active['city'])
+            .values_list('name', flat=True)
+            .first()
+        )
+
         if name:
             location = f' in {name}'
 
-    page_tag = f' | Page {page}' if page > 1 else ''
+    page_tag = (
+        f' | Page {current_page}'
+        if current_page > 1
+        else ''
+    )
 
-    # ── TITLE ──
+    # ---------------------------------------------------------
+    # TITLE
+    # ---------------------------------------------------------
     meta_title = _pick([
         f'Off-Plan Properties for Sale{location}{page_tag} | {BRAND}',
         f'Off-Plan Properties{location}{page_tag} | {BRAND}',
@@ -1225,60 +1493,149 @@ def offplan_properties(request):
         f'Off-Plan Properties{location}{page_tag}',
     ])
 
-    # ── DESCRIPTION ──
+    # ---------------------------------------------------------
+    # DESCRIPTION
+    # ---------------------------------------------------------
     meta_description = _describe(
         f'Discover {paginator.count} off-plan projects{location} with flexible '
         f'payment plans and pre-launch pricing from leading UAE developers.',
         filler='Register for priority allocation.',
     )
-    if page > 1:
-        meta_description = f'Page {page} — {meta_description}'[:160]
 
-    # ── CANONICAL & ROBOTS ──
-    canonical_params = {k: active[k] for k in INDEXABLE_FACETS if active[k]}
-    noindex = handover or any(active[k] for k in FILTER_KEYS if k not in INDEXABLE_FACETS)
+    if current_page > 1:
+        meta_description = (
+            f'Page {current_page} — {meta_description}'
+        )[:160]
+
+    # ---------------------------------------------------------
+    # CANONICAL
+    # ---------------------------------------------------------
+    canonical_params = {
+        k: active[k]
+        for k in INDEXABLE_FACETS
+        if active[k]
+    }
+
+    if handover:
+        canonical_params['handover'] = handover
 
     def url_for(target_page=None):
         params = dict(canonical_params)
-        if target_page and target_page > 1:
-            params['page'] = target_page
-        return f'{SITE_URL}/properties/off-plan/' + (f'?{urlencode(params)}' if params else '')
 
-    querystring_parts = {k: v for k, v in active.items() if v}
+        # Clean city URL
+        target_city = active.get('city') or city
+
+        if target_city:
+            base_url = f'{SITE_URL}/properties/off-plan/{target_city}/'
+        else:
+            base_url = f'{SITE_URL}/properties/off-plan/'
+
+        # Clean pagination URL
+        if target_page and target_page > 1 and target_city:
+            base_url = (
+                f'{SITE_URL}/properties/off-plan/'
+                f'{target_city}/page/{target_page}/'
+            )
+
+        if params:
+            # city is already in the path
+            params.pop('city', None)
+
+            if params:
+                return f'{base_url}?{urlencode(params)}'
+
+        return base_url
+
+    # ---------------------------------------------------------
+    # QUERY STRING
+    # ---------------------------------------------------------
+    querystring_parts = {
+        k: v
+        for k, v in active.items()
+        if v
+    }
+
     if handover:
         querystring_parts['handover'] = handover
 
-    return render(request, 'offplan_properties.html', {
-        'page_obj': page_obj,
-        'properties': page_obj.object_list,
-        'total_count': paginator.count,
-        'page_range': paginator.get_elided_page_range(page, on_each_side=1, on_ends=1),
-        'querystring': urlencode(querystring_parts),
+    # ---------------------------------------------------------
+    # ROBOTS
+    # ---------------------------------------------------------
+    index = (
+        bool(handover)
+        or any(
+            active[k]
+            for k in FILTER_KEYS
+            if k not in INDEXABLE_FACETS
+        )
+    )
 
-        **facets,
-        'handover_options': handover_options,
+    robots = (
+        'index, follow'
+        if index
+        else 'index, follow, max-image-preview:large, max-snippet:-1'
+    )
 
-        'active_city': active['city'],
-        'active_district': active['district'],
-        'active_type': active['type'],
-        'active_developer': active['developer'],
-        'active_unit_type': active['unit_type'],
-        'active_bedrooms': active['bedrooms'],
-        'active_handover': handover,
-        'active_price_min': active['price_min'],
-        'active_price_max': active['price_max'],
-        'active_sort': active['sort'] or DEFAULT_SORT,
-        'active_search': active['q'],
-        'has_filters': bool(handover) or any(active.values()),
+    # ---------------------------------------------------------
+    # RESPONSE
+    # ---------------------------------------------------------
+    return render(
+        request,
+        'offplan_properties.html',
+        {
+            'page_obj': page_obj,
+            'properties': page_obj.object_list,
+            'total_count': paginator.count,
 
-        'meta_title': meta_title,
-        'meta_description': meta_description,
-        'canonical': url_for(page),
-        'robots': 'noindex, follow' if noindex else
-                  'index, follow, max-image-preview:large, max-snippet:-1',
-        'rel_prev': url_for(page_obj.previous_page_number()) if page_obj.has_previous() else None,
-        'rel_next': url_for(page_obj.next_page_number()) if page_obj.has_next() else None,
-    })
+            'page_range': paginator.get_elided_page_range(
+                current_page,
+                on_each_side=1,
+                on_ends=1,
+            ),
+
+            'querystring': urlencode(querystring_parts),
+
+            **facets,
+
+            'handover_options': handover_options,
+
+            'active_city': active['city'],
+            'active_district': active['district'],
+            'active_type': active['type'],
+            'active_developer': active['developer'],
+            'active_unit_type': active['unit_type'],
+            'active_bedrooms': active['bedrooms'],
+            'active_handover': handover,
+            'active_price_min': active['price_min'],
+            'active_price_max': active['price_max'],
+            'active_sort': active['sort'] or DEFAULT_SORT,
+            'active_search': active['q'],
+
+            'has_filters': (
+                bool(handover)
+                or any(active.values())
+            ),
+
+            'meta_title': meta_title,
+            'meta_description': meta_description,
+
+            'canonical': url_for(current_page),
+
+            'robots': robots,
+
+            'rel_prev': (
+                url_for(page_obj.previous_page_number())
+                if page_obj.has_previous()
+                else None
+            ),
+
+            'rel_next': (
+                url_for(page_obj.next_page_number())
+                if page_obj.has_next()
+                else None
+            ),
+        }
+    )
 
 
 #-------------------------------------------------- developer list and detail----------------------------------------------------------
@@ -1607,7 +1964,7 @@ def developer_list(request):
             'canonical': DEVELOPERS_URL,
 
             'robots': (
-                'noindex, follow'
+                'index, follow'
                 if search or developers_page.number > 1
                 else 'index, follow, max-image-preview:large, max-snippet:-1'
             ),
@@ -1624,7 +1981,7 @@ def developer_detail(request, slug):
     """
     A developer's profile plus a paginated grid of their active properties.
 
-    Page 1 stays indexable; page 2+ goes noindex and the canonical points at
+    Page 1 stays indexable; page 2+ goes index and the canonical points at
     the un-paginated profile. Pagination is a navigation aid, not a set of
     distinct landing pages.
     """
@@ -1791,7 +2148,7 @@ def developer_detail(request, slug):
         'meta_description': meta_description,
         'canonical': canonical,
         'robots': ('index, follow, max-image-preview:large, max-snippet:-1'
-                   if page == 1 else 'noindex, follow'),
+                   if page == 1 else 'index, follow'),
         'rel_prev': url_for(page_obj.previous_page_number()) if page_obj.has_previous() else None,
         'rel_next': url_for(page_obj.next_page_number()) if page_obj.has_next() else None,
         'schema_json': _dev_json_ld(schema),
@@ -1972,6 +2329,8 @@ def district_list(request):
     dead end. When inventory returns, the area reappears automatically.
     """
     bounce = _clean_url(request)
+
+    
     if bounce:
         return bounce
 
@@ -2028,7 +2387,7 @@ def district_list(request):
         )
 
     # Search permutations canonicalise back to the clean directory and stay
-    # noindex — the same pattern property_list / ready / off-plan already use,
+    # index — the same pattern property_list / ready / off-plan already use,
     # so "?q=marina" never gets indexed as a separate thin page.
     schema = [
         {
@@ -2064,7 +2423,7 @@ def district_list(request):
         'meta_title': meta_title,
         'meta_description': meta_description,
         'canonical': AREAS_URL,
-        'robots': ('noindex, follow' if search else
+        'robots': ('index, follow' if search else
                    'index, follow, max-image-preview:large, max-snippet:-1'),
         'schema_json': _json_ld(schema),
     })
@@ -2081,7 +2440,7 @@ def district_detail(request, slug):
     already locked the area in, so re-exposing them would only let someone
     filter themselves off the page they are on.
 
-    SEO: any active filter, or page > 1, flips the page to `noindex, follow`,
+    SEO: any active filter, or page > 1, flips the page to `index, follow`,
     and the canonical always points back at the clean area URL (page param
     only). Filter and sort permutations therefore never get indexed as thin
     duplicates of each other.
@@ -2097,7 +2456,7 @@ def district_detail(request, slug):
     scope = _base_qs().filter(district=district)
 
     active = _read(request)
-    active['city'] = ''        # locked by the URL — ignore if someone hand-types it
+    active['city'] = ''       
     active['district'] = ''
 
     status = request.GET.get('status', '').strip()
@@ -2277,7 +2636,7 @@ def district_detail(request, slug):
         'meta_title': meta_title,
         'meta_description': meta_description,
         'canonical': canonical,
-        'robots': ('noindex, follow' if (has_filters or page > 1) else
+        'robots': ('index, follow' if (has_filters or page > 1) else
                    'index, follow, max-image-preview:large, max-snippet:-1'),
         'rel_prev': url_for(page_obj.previous_page_number()) if page_obj.has_previous() else None,
         'rel_next': url_for(page_obj.next_page_number()) if page_obj.has_next() else None,
@@ -2409,7 +2768,7 @@ def property_map(request):
         'meta_title': meta_title,
         'meta_description': meta_description,
         'canonical': MAP_URL,
-        'robots': 'noindex, follow' if has_filters else
+        'robots': 'index, follow' if has_filters else
                   'index, follow, max-image-preview:large, max-snippet:-1',
     })
 
