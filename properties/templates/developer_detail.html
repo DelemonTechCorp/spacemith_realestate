@@ -482,7 +482,7 @@
     {% if page_obj.paginator.num_pages > 1 %}
     <nav class="dd-pager" aria-label="Pagination">
       {% if page_obj.has_previous %}
-        <a href="{% if page_obj.previous_page_number == 1 %}{% url 'properties:developer_detail' developer.slug %}{% else %}?page={{ page_obj.previous_page_number }}{% endif %}"
+        <a href="{% if page_obj.previous_page_number == 1 %}{% url 'properties:developer_detail' developer.slug %}{% else %}{% url 'properties:developer_detail_page' slug=developer.slug page=page_obj.previous_page_number %}{% endif %}"
            rel="prev" aria-label="Previous page">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
@@ -497,12 +497,12 @@
         {% elif num == 1 %}
           <a href="{% url 'properties:developer_detail' developer.slug %}">1</a>
         {% else %}
-          <a href="?page={{ num }}">{{ num }}</a>
+          <a href="{% url 'properties:developer_detail_page' slug=developer.slug page=num %}">{{ num }}</a>
         {% endif %}
       {% endfor %}
 
       {% if page_obj.has_next %}
-        <a href="?page={{ page_obj.next_page_number }}" rel="next" aria-label="Next page">
+        <a href="{% url 'properties:developer_detail_page' slug=developer.slug page=page_obj.next_page_number %}" rel="next" aria-label="Next page">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
         </a>

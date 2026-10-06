@@ -1993,7 +1993,9 @@ def developer_list(request):
 # ─────────────────────────────────────────
 # DEVELOPERS — profile + their properties
 # ─────────────────────────────────────────
-def developer_detail(request, slug, page=None):
+
+
+def developer_detail(request, slug, page=1):
     """
     A developer's profile plus a paginated grid of their active properties.
 
@@ -2006,6 +2008,7 @@ def developer_detail(request, slug, page=None):
     base_url = f'{DEVELOPERS_URL}{developer.slug}/'
 
     # ── LEGACY ?page=N → CLEAN /page/N/ ─────────────────────
+        
     page_param = request.GET.get('page', '').strip()
 
     if page_param.isdigit() and int(page_param) > 1:
@@ -2014,20 +2017,56 @@ def developer_detail(request, slug, page=None):
             permanent=True
         )
     # ── LEGACY ?page=N → CLEAN /page/N/ ─────────────────────
+
+        # /page/1/ -> clean profile URL
+    if page <= 1 and request.path.endswith('/page/1/'):
+        return redirect(base_url, permanent=True)
+
+    # Legacy ?page=N -> /page/N/
     page_param = request.GET.get('page', '').strip()
-
     if page_param.isdigit() and int(page_param) > 1:
-        return redirect(
-            f'{base_url}page/{page_param}/',
-            permanent=True
-        )
+        return redirect(f'{base_url}page/{page_param}/', permanent=True)
 
-    # Clean URL page
-    page = page or 1
+
+
+    qs = (
+        Property.objects
+        .filter(
+            is_active=True,
+            developer_company=developer
+        )
+        .exclude(slug=ELLINGTON_PROPERTY_SLUG)
+        .select_related(
+            'city',
+            'district',
+            'property_status',
+            'sales_status',
+            'property_type',
+        )
+        .prefetch_related(
+            Prefetch(
+                'images',
+                queryset=PropertyImage.objects.order_by('order'),
+                to_attr='prefetched_images',
+            ),
+            Prefetch(
+                'grouped_apartments',
+                queryset=GroupedApartment.objects.filter(is_active=True),
+            ),
+        )
+        .order_by('-created_at')
+    )
 
     paginator = Paginator(qs, PAGE_SIZE)
     page_obj = paginator.get_page(page)
-    page = page_obj.number
+    current_page = page_obj.number
+
+    # Beyond last page -> real last page
+    if page > 1 and page != current_page:
+        target = base_url + (f'page/{current_page}/' if current_page > 1 else '')
+        return redirect(target, permanent=True)
+
+    page = current_page
 
     # ── Portfolio stats — these drive the copy, the FAQs and the schema ──
     total = paginator.count
@@ -2110,15 +2149,10 @@ def developer_detail(request, slug, page=None):
     if page > 1:
         meta_description = _describe(f'Page {page} \u2014 {meta_description}')
 
-        
-        canonical = base_url + (f'page/{page}/' if page > 1 else '')
+    canonical = base_url + (f'page/{page}/' if page > 1 else '')
 
-        def url_for(target_page):
-            return base_url + (
-                f'page/{target_page}/'
-                if target_page > 1
-                else ''
-            )
+    def url_for(target_page):
+        return base_url + (f'page/{target_page}/' if target_page > 1 else '')
 
     schema = [
         {
@@ -2467,31 +2501,39 @@ def district_list(request):
 # ─────────────────────────────────────────
 # AREAS — one area + its properties
 # ─────────────────────────────────────────
-def district_detail(request, slug):
-    """
-    A single area's profile plus a paginated, filterable grid of its stock.
 
-    City and district are deliberately NOT exposed as filters — the URL has
-    already locked the area in, so re-exposing them would only let someone
-    filter themselves off the page they are on.
-
-    SEO: any active filter, or page > 1, flips the page to `index, follow`,
-    and the canonical always points back at the clean area URL (page param
-    only). Filter and sort permutations therefore never get indexed as thin
-    duplicates of each other.
+def district_detail(request, slug, page=1):
     """
+    /properties/areas/<slug>/
+    /properties/areas/<slug>/page/<n>/
+    """
+    district = get_object_or_404(
+        District.objects.select_related('city'), slug=slug, is_active=True
+    )
+    base_url = f'{AREAS_URL}{district.slug}/'
+
+    rest = {k: v for k, v in request.GET.items() if k != 'page' and v.strip()}
+    rest_qs = f'?{urlencode(rest)}' if rest else ''
+
+    # /page/1/ -> clean URL
+    if page <= 1 and request.path.endswith('/page/1/'):
+        return redirect(base_url + rest_qs, permanent=True)
+
+    # Legacy ?page=N -> /page/N/
+    page_param = request.GET.get('page', '').strip()
+    if page_param.isdigit():
+        if int(page_param) > 1:
+            return redirect(f'{base_url}page/{int(page_param)}/{rest_qs}', permanent=True)
+        return redirect(base_url + rest_qs, permanent=True)
+
     bounce = _clean_url(request)
     if bounce:
         return bounce
 
-    district = get_object_or_404(
-        District.objects.select_related('city'), slug=slug, is_active=True
-    )
-
     scope = _base_qs().filter(district=district)
 
     active = _read(request)
-    active['city'] = ''       
+    active['city'] = ''
     active['district'] = ''
 
     status = request.GET.get('status', '').strip()
@@ -2503,12 +2545,16 @@ def district_detail(request, slug):
     has_filters = bool(status) or any(active.values())
 
     paginator = Paginator(qs, PAGE_SIZE)
-    page_obj = paginator.get_page(request.GET.get('page', 1))
-    page = page_obj.number
+    page_obj = paginator.get_page(page)
+    current_page = page_obj.number
 
-    # ── Facets, scoped to this area only ──
-    # A dropdown that offers a developer with no stock here just leads to an
-    # empty result set, so every option is drawn from the area's own inventory.
+    # Page range-ine kazhinjal -> real last page-ilekku redirect
+    if page > 1 and page != current_page:
+        target = base_url + (f'page/{current_page}/' if current_page > 1 else '')
+        return redirect(target + rest_qs, permanent=True)
+
+    page = current_page
+
     facets = _facets(scope, active)
     facets.pop('cities', None)
     facets.pop('districts', None)
@@ -2519,7 +2565,6 @@ def district_detail(request, slug):
         .order_by('name').distinct()
     )
 
-    # ── Area stats (drive the copy, the FAQs and the schema) ──
     area_total = scope.count()
     low_price = scope.aggregate(low=Min('price'))['low']
     developer_names = list(facets['developers'].values_list('name', flat=True)[:6])
@@ -2534,10 +2579,6 @@ def district_detail(request, slug):
 
     cover_image = _cover_map([district.pk]).get(district.pk)
 
-    # ── Body copy ──
-    # An admin-written description always wins; the generated paragraphs are
-    # the floor, not the ceiling, and exist so a brand-new area still ships
-    # with enough indexable copy to stand on its own.
     admin_copy = (getattr(district, 'description', '') or '').strip()
     area_paragraphs = (
         [p.strip() for p in admin_copy.split('\n') if p.strip()]
@@ -2547,8 +2588,6 @@ def district_detail(request, slug):
     )
     faqs = _area_faqs(district, area_total, low_price, developer_names, years)
 
-    # Other areas in the same city — internal links that give this page
-    # somewhere to pass authority instead of dead-ending.
     siblings = (
         District.objects
         .filter(is_active=True, city=district.city)
@@ -2571,27 +2610,23 @@ def district_detail(request, slug):
         f'{name} Property for Sale{page_tag}',
     ])
 
-    price_bit = (f' from AED {int(low_price):,}' if low_price else '')
+    price_bit = f' from AED {int(low_price):,}' if low_price else ''
     base_description = admin_copy or (
         f'Browse {area_total} propert{"y" if area_total == 1 else "ies"} for sale '
-        f'in {name}, {city}{price_bit} — off-plan and ready homes with flexible payment plans, premium amenities, and investment opportunities in Dubai.'
+        f'in {name}, {city}{price_bit} — off-plan and ready homes with flexible '
+        f'payment plans, premium amenities, and investment opportunities in Dubai.'
     )
     meta_description = _describe(
         strip_tags(base_description),
         filler=f'Floor plans and pricing from {BRAND}.',
     )
     if page > 1:
-        meta_description = _describe(
-            f'Page {page} \u2014 {meta_description}',
-            filler=None,
-        )
+        meta_description = _describe(f'Page {page} \u2014 {meta_description}', filler=None)
 
-    canonical = AREAS_URL + f'{district.slug}/' + (f'?page={page}' if page > 1 else '')
+    canonical = base_url + (f'page/{page}/' if page > 1 else '')
 
     def url_for(target_page):
-        return AREAS_URL + f'{district.slug}/' + (
-            f'?page={target_page}' if target_page > 1 else ''
-        )
+        return base_url + (f'page/{target_page}/' if target_page > 1 else '')
 
     schema = [
         {
@@ -2602,15 +2637,14 @@ def district_detail(request, slug):
                 {'@type': 'ListItem', 'position': 2, 'name': 'Properties',
                  'item': f'{SITE_URL}/properties/'},
                 {'@type': 'ListItem', 'position': 3, 'name': 'Areas', 'item': AREAS_URL},
-                {'@type': 'ListItem', 'position': 4, 'name': name,
-                 'item': f'{AREAS_URL}{district.slug}/'},
+                {'@type': 'ListItem', 'position': 4, 'name': name, 'item': base_url},
             ],
         },
         {
             '@context': 'https://schema.org',
             '@type': 'Place',
             'name': f'{name}, {city}',
-            'url': f'{AREAS_URL}{district.slug}/',
+            'url': base_url,
             'description': strip_tags(area_paragraphs[0])[:300],
             'address': {
                 '@type': 'PostalAddress',
@@ -2630,8 +2664,6 @@ def district_detail(request, slug):
         },
     ]
 
-    # Filters are never written into the canonical, so the pagination
-    # querystring is kept separate from it.
     querystring_parts = {k: v for k, v in active.items() if v}
     if status:
         querystring_parts['status'] = status
@@ -2677,6 +2709,8 @@ def district_detail(request, slug):
         'rel_next': url_for(page_obj.next_page_number()) if page_obj.has_next() else None,
         'schema_json': _json_ld(schema),
     })
+
+
 
 
 from django.db.models import Q
