@@ -1993,7 +1993,7 @@ def developer_list(request):
 # ─────────────────────────────────────────
 # DEVELOPERS — profile + their properties
 # ─────────────────────────────────────────
-def developer_detail(request, slug):
+def developer_detail(request, slug, page=None):
     """
     A developer's profile plus a paginated grid of their active properties.
 
