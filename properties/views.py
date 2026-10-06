@@ -373,8 +373,12 @@ def _city_path(city_slug, unit_type=''):
 def _type_path(type_slug):
     """Clean, parameter-free URL path for a property type."""
     return f'/properties/type/{type_slug}/'
+
+
     
-def property_list(request, city=None, ptype=None, unit_type=None):
+def property_list(request,city=None,ptype=None,unit_type=None, page=None,):
+
+
     # ── LEGACY ?type=... → CLEAN URL ────────────────────────
     type_param = request.GET.get('type', '').strip()
 
@@ -391,16 +395,26 @@ def property_list(request, city=None, ptype=None, unit_type=None):
             page_param = request.GET.get('page', '').strip()
 
             if page_param.isdigit() and int(page_param) > 1:
-                target += f'?page={page_param}'
+                target += f'page/{page_param}/'
 
             return redirect(target, permanent=True)
 
-    """
-    /properties/
-    /properties/type/<type>/
-    /properties/city/<city>/
-    /properties/city/<city>/<unit-type>/
-    """
+
+                # ── Legacy ?page=N → CLEAN /page/N/ ─────────────────
+    page_param = request.GET.get('page', '').strip()
+
+    if (
+        page_param.isdigit()
+        and int(page_param) > 1
+        and not type_param
+        and not request.GET.get('city')
+    ):
+        return redirect(
+            f'/properties/page/{page_param}/',
+            permanent=True
+        )
+
+  
 
     # ── Existing legacy URL cleanup ─────────────────────────
     bounce = _clean_url(request)
@@ -433,6 +447,7 @@ def property_list(request, city=None, ptype=None, unit_type=None):
         return redirect(target, permanent=True)
 
     # ── Legacy ?city=... / ?city=...&unit_type=... ─────────
+# ── Legacy ?city=... / ?city=...&unit_type=... ─────────
     if city is None and active['city']:
 
         used = {
@@ -456,10 +471,9 @@ def property_list(request, city=None, ptype=None, unit_type=None):
                 page_param = request.GET.get('page', '').strip()
 
                 if page_param.isdigit() and int(page_param) > 1:
-                    target += f'?page={page_param}'
+                    target += f'page/{page_param}/'
 
                 return redirect(target, permanent=True)
-
     # ── Legacy ?type=apartments ─────────────────────────────
   
 
@@ -530,9 +544,7 @@ def property_list(request, city=None, ptype=None, unit_type=None):
         PAGE_SIZE
     )
 
-    page_obj = paginator.get_page(
-        request.GET.get('page', 1)
-    )
+    page_obj = paginator.get_page(page or 1)
 
     page = page_obj.number
 
@@ -812,7 +824,7 @@ def property_list(request, city=None, ptype=None, unit_type=None):
     def url_for(target_page=None):
         url = f'{SITE_URL}{base_path}'
         if target_page and target_page > 1:
-            url += f'?page={target_page}'
+            url += f'page/{target_page}/'
         return url
 
     canonical_url = url_for(None) if filtered else url_for(page)
@@ -1221,6 +1233,13 @@ def property_detail(request, slug):
         # Visible only when DEBUG is on — see the badge in property_detail.html
         'seo_report': seo_report if settings.DEBUG else None,
     })
+
+
+
+
+
+
+
 
 
 # -----------------------------------------property detail----------------------------------------------------
@@ -1984,23 +2003,30 @@ def developer_detail(request, slug):
     """
     developer = get_object_or_404(DeveloperCompany, slug=slug, is_active=True)
 
-    qs = (
-        Property.objects
-        .filter(is_active=True, developer_company=developer)
-        .exclude(slug=ELLINGTON_PROPERTY_SLUG)
-        .select_related('city', 'district', 'property_status', 'sales_status',
-                        'property_type')
-        .prefetch_related(
-            Prefetch('images', queryset=PropertyImage.objects.order_by('order'),
-                     to_attr='prefetched_images'),
-            Prefetch('grouped_apartments',
-                     queryset=GroupedApartment.objects.filter(is_active=True)),
+    base_url = f'{DEVELOPERS_URL}{developer.slug}/'
+
+    # ── LEGACY ?page=N → CLEAN /page/N/ ─────────────────────
+    page_param = request.GET.get('page', '').strip()
+
+    if page_param.isdigit() and int(page_param) > 1:
+        return redirect(
+            f'{base_url}page/{page_param}/',
+            permanent=True
         )
-        .order_by('-created_at')
-    )
+    # ── LEGACY ?page=N → CLEAN /page/N/ ─────────────────────
+    page_param = request.GET.get('page', '').strip()
+
+    if page_param.isdigit() and int(page_param) > 1:
+        return redirect(
+            f'{base_url}page/{page_param}/',
+            permanent=True
+        )
+
+    # Clean URL page
+    page = page or 1
 
     paginator = Paginator(qs, PAGE_SIZE)
-    page_obj = paginator.get_page(request.GET.get('page', 1))
+    page_obj = paginator.get_page(page)
     page = page_obj.number
 
     # ── Portfolio stats — these drive the copy, the FAQs and the schema ──
@@ -2084,10 +2110,15 @@ def developer_detail(request, slug):
     if page > 1:
         meta_description = _describe(f'Page {page} \u2014 {meta_description}')
 
-    canonical = base_url + (f'?page={page}' if page > 1 else '')
+        
+        canonical = base_url + (f'page/{page}/' if page > 1 else '')
 
-    def url_for(target_page):
-        return base_url + (f'?page={target_page}' if target_page > 1 else '')
+        def url_for(target_page):
+            return base_url + (
+                f'page/{target_page}/'
+                if target_page > 1
+                else ''
+            )
 
     schema = [
         {
@@ -2154,7 +2185,14 @@ def developer_detail(request, slug):
 
 def developer_detail_redirect(request, slug):
     """Permanently redirect legacy /developers/<slug>/N/A/ URLs to the profile."""
-    return redirect('properties:developer_detail', slug=slug, permanent=True)
+    return redirect(
+        'properties:developer_detail',
+        slug=slug,
+        permanent=True,
+    )
+
+
+
 
 
 # ----------------------------------------------------------area------------------------------------------------------
@@ -2916,7 +2954,7 @@ def azizi_florence(request):
         else:
             messages.error(request, 'Please correct the highlighted fields and try again.')
 
-    canonical = f'{SITE_URL}/properties/azizi_florece/'
+    canonical = f'{SITE_URL}/properties/azizi-florence/'
 
     # Static, SEO-team-authored title/description — audited through the same
     # length checks as property_detail so nothing ships outside Google's

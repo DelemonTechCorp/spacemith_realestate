@@ -1,13 +1,8 @@
 from django.urls import path, re_path
 from django.shortcuts import redirect
-
-
 from . import views
 
-
 app_name = 'properties'
-
-
 urlpatterns = [
 
     # ============================================================
@@ -15,22 +10,49 @@ urlpatterns = [
     # ============================================================
 
     # All properties
-    path(
-        '',
-        views.property_list,
-        name='property_list',
-    ),
+# All properties
+path(
+    '',
+    views.property_list,
+    name='property_list',
+),
 
-    # City only
-    # Example:
-    # /properties/city/dubai/
+# All properties pagination
+path(
+    'page/<int:page>/',
+    views.property_list,
+    name='property_list_page',
+),
 
-    
+# City only
+
+path(
+    'city/<slug:city>/',
+    views.property_list,
+    name='property_list_city',
+),
+
+
+path(
+    'city/<slug:city>/page/<int:page>/',
+    views.property_list,
+    name='property_list_city_page',
+),
+
+path(
+    'developers/<slug:slug>/page/<int:page>/',
+    views.developer_detail,
+    name='developer_detail_page',
+),
+
+#   CITY
+
+
     path(
-        'city/<slug:city>/',
-        views.property_list,
-        name='property_list_city',
-    ),
+    'city/<slug:city>/<slug:unit_type>/page/<int:page>/',
+    views.property_list,
+    name='property_list_city_unit_type_page',
+),
 
     # City + Unit Type
     # Example:
@@ -42,6 +64,13 @@ urlpatterns = [
         views.property_list,
         name='property_list_city_unit_type',
     ),
+
+
+    path(
+    'type/<slug:ptype>/page/<int:page>/',
+    views.property_list,
+    name='property_list_type_page',
+),
 
     # Property Type
     # Example:
@@ -143,6 +172,9 @@ path(
     # AREAS
     # ============================================================
 
+
+    
+
     path(
         'areas/',
         views.district_list,
@@ -169,13 +201,6 @@ path(
 
 # AZIZI
 
-path(
-    'azizi-florece/',
-    lambda request: redirect(
-        'properties:aziziflorence',
-        permanent=True,
-    ),
-),
 
 path(
     'azizi-florence/',
