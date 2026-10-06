@@ -47,7 +47,7 @@ class StaticPagesSitemap(Sitemap):
             {'path': '/faq/', 'priority': 0.6, 'changefreq': 'monthly'},
             {'path': '/privacy-policy/', 'priority': 0.5, 'changefreq': 'monthly'},
             {'path': '/properties/ellington-new-launch-dubai/', 'priority': 0.9, 'changefreq': 'weekly'},
-            {'path': '/properties/azizi_florece/', 'priority': 0.9, 'changefreq': 'weekly'},
+            {'path': '/properties/azizi-florece/', 'priority': 0.9, 'changefreq': 'weekly'},
             {'path': '/properties/valley-by-emaar-dubai/', 'priority': 0.9, 'changefreq': 'weekly'},
             {'path': '/properties/seefa-by-alef-sharjah/', 'priority': 0.9, 'changefreq': 'weekly'},
             {'path': '/properties/binghatti-starfall-al-jaddaf/', 'priority': 0.9, 'changefreq': 'weekly'},
