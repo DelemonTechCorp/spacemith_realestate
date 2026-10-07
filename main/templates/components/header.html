@@ -479,6 +479,11 @@
             class="dropdown-link {% if '/binghatti-starfall-al-jaddaf' in request.path %}is-active{% endif %}">
             Binghatti Starfall
           </a>
+          <a href="{% url 'properties:shahrukhz' %}"
+            class="dropdown-link {% if request.resolver_match.view_name == 'properties:shahrukhz' %}is-active{% endif %}">
+            Shahrukhz Residences
+          </a>
+
 
 
 

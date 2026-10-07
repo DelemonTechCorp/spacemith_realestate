@@ -3247,3 +3247,70 @@ def binghatti_starfall(request):
     }
 
     return render(request, "binghatti.html", context)
+
+
+
+    # SHARUKHZ
+
+
+
+from django.templatetags.static import static  # add at the top of views.py if it isn't already there
+
+SHAHRUKHZ_PROPERTY_SLUG = None  # replace with the real Property slug once you create one in admin
+
+
+def shahrukhz(request):
+    """
+    Shahrukhz Residences by Danube, Dubai Maritime City: project landing page.
+    """
+
+    property_obj = None
+    if SHAHRUKHZ_PROPERTY_SLUG:
+        property_obj = Property.objects.filter(
+            slug=SHAHRUKHZ_PROPERTY_SLUG
+        ).first()
+
+    if request.method == "POST":
+        # Honeypot: the template has a hidden "website" field, bots fill it
+        if request.POST.get("website"):
+            return redirect(request.path)
+
+        form = PropertyEnquiryForm(request.POST)
+
+        if form.is_valid():
+            enquiry = form.save(commit=False)
+            enquiry.property = property_obj
+
+            if request.user.is_authenticated:
+                enquiry.user = request.user
+
+            enquiry.save()
+
+            messages.success(
+                request,
+                "Your enquiry has been submitted successfully."
+            )
+
+            return redirect(f"{request.path}#enquiry")
+    else:
+        form = PropertyEnquiryForm()
+
+    site_url = getattr(settings, "SITE_URL", "")
+
+    context = {
+        # the template reads `enquiry_form`, not `form`
+        "enquiry_form": form,
+        "property": property_obj,
+        "site_url": site_url,
+        "meta_title": "Shahrukhz Residences by Danube | Dubai Maritime City Waterfront Apartments",
+        "meta_description": (
+            "Shahrukhz Residences by Danube Properties: furnished waterfront studios, "
+            "1 to 4 bedroom apartments and penthouses in Dubai Maritime City. "
+            "30/70 payment plan, completion Q4 2029."
+        ),
+        "canonical": f"{site_url}{request.path}",
+        "robots": "index, follow",
+        "og_image": f"{site_url}{static('img/shahrukhz-hero.webp')}",
+    }
+
+    return render(request, "shahrukhz.html", context)

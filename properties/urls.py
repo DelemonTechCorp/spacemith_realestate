@@ -49,6 +49,7 @@ urlpatterns = [
     path('valley-by-emaar-dubai/', views.valley_by_emaar, name='valley_by_emaar'),
     path('seefa-by-alef-sharjah/', views.seefa_by_alef, name='seefa_by_alef'),
     path('binghatti-starfall-al-jaddaf/', views.binghatti_starfall, name='binghatti_starfall'),
+    path("shahrukhz-residences/", views.shahrukhz, name="shahrukhz"),
 
     # ───────── PROPERTY DETAIL: MUST BE LAST ─────────
     re_path(r'^(?P<slug>[\w\-/]+?)/?$', views.property_detail, name='property_detail'),
