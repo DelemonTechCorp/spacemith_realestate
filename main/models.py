@@ -3,25 +3,13 @@ from django.utils import timezone
 from main.base import TimeStampedModel
 
 # Create your models here.
-# Update your GeneralEnquiry model in models.py to include the 'source' field:
 
-# ============================================================================
-#   — GeneralEnquiry (updated)
-#
-#  Drop-in replacement for your existing GeneralEnquiry. Adds `subject` and
-#  `message` so the contact form can capture a real enquiry (your current
-#  model only had name/email/phone/whatsapp).
-#
-#  AFTER swapping this in, run:
-#      python manage.py makemigrations
-#      python manage.py migrate
-#
-#  Newsletter and Testimonial are unchanged — keep them as they are.
-# ============================================================================
 
 from django.db import models
 from django.utils import timezone
 from main.base import TimeStampedModel
+
+
 
 class GeneralEnquiry(TimeStampedModel):
     """Model for general contact form submissions."""
@@ -62,6 +50,38 @@ class GeneralEnquiry(TimeStampedModel):
 
 
 
+class CareerApplication(TimeStampedModel):
+    """Model for job applications submitted via the Careers section on the contact page."""
+
+    name     = models.CharField(max_length=255)
+    email    = models.EmailField()
+    phone    = models.CharField(max_length=25, default='')   # stored with dial code, e.g. +971501234567
+    message  = models.TextField(blank=True, default='')
+    cv       = models.FileField(upload_to='career_applications/%Y/%m/', blank=True, null=True)
+
+    source        = models.CharField(max_length=255, blank=True, null=True, default='Careers — Contact Page')
+    is_read       = models.BooleanField(default=False, db_index=True)
+    responded_at  = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        verbose_name        = 'Career Application'
+        verbose_name_plural = 'Career Applications'
+        ordering            = ['-created_at']
+        indexes = [
+            models.Index(fields=['is_read', '-created_at']),
+            models.Index(fields=['-created_at']),
+        ]
+
+    def __str__(self):
+        return f"{self.name} — {self.email}"
+
+    def mark_as_responded(self):
+        self.is_read      = True
+        self.responded_at = timezone.now()
+        self.save(update_fields=['is_read', 'responded_at', 'updated_at'])    
+
+
+
 class Newsletter(TimeStampedModel):
     """Model for newsletter subscriptions"""
     email = models.EmailField(unique=True)
@@ -93,8 +113,7 @@ class Testimonial(models.Model):
     def __str__(self):
         return self.name
     
-    
-    
+       
     
     
 
@@ -134,32 +153,3 @@ class InstagramHighlight(models.Model):
     
     
     
-class CareerApplication(TimeStampedModel):
-    """Model for job applications submitted via the Careers section on the contact page."""
-
-    name     = models.CharField(max_length=255)
-    email    = models.EmailField()
-    phone    = models.CharField(max_length=25, default='')   # stored with dial code, e.g. +971501234567
-    message  = models.TextField(blank=True, default='')
-    cv       = models.FileField(upload_to='career_applications/%Y/%m/', blank=True, null=True)
-
-    source        = models.CharField(max_length=255, blank=True, null=True, default='Careers — Contact Page')
-    is_read       = models.BooleanField(default=False, db_index=True)
-    responded_at  = models.DateTimeField(null=True, blank=True)
-
-    class Meta:
-        verbose_name        = 'Career Application'
-        verbose_name_plural = 'Career Applications'
-        ordering            = ['-created_at']
-        indexes = [
-            models.Index(fields=['is_read', '-created_at']),
-            models.Index(fields=['-created_at']),
-        ]
-
-    def __str__(self):
-        return f"{self.name} — {self.email}"
-
-    def mark_as_responded(self):
-        self.is_read      = True
-        self.responded_at = timezone.now()
-        self.save(update_fields=['is_read', 'responded_at', 'updated_at'])    

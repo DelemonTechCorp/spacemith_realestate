@@ -5,24 +5,44 @@ from .models import GeneralEnquiry, CareerApplication
 
 # At the TOP of forms.py (before the form classes)
 
+
+
+
+
+
 def normalize_phone(phone_input, country_code='+971'):
-    """Normalize phone to E.164 format"""
+    """Normalize local and international phone numbers."""
+
     if not phone_input:
         return None
-    
-    digits_only = re.sub(r'\D', '', phone_input)
-    
-    if digits_only.startswith('0'):
-        digits_only = digits_only[1:]
-    
-    cc_digits = re.sub(r'\D', '', country_code)
-    
-    if digits_only.startswith(cc_digits):
-        full_phone = '+' + digits_only
-    else:
-        full_phone = '+' + cc_digits + digits_only
-    
-    return full_phone
+
+    phone = str(phone_input).strip()
+
+    # Number already includes international country code
+    if phone.startswith('+'):
+        digits = re.sub(r'\D', '', phone)
+        return '+' + digits if digits else None
+
+    # International number beginning with 00
+    if phone.startswith('00'):
+        digits = re.sub(r'\D', '', phone[2:])
+        return '+' + digits if digits else None
+
+    # Local phone number
+    digits = re.sub(r'\D', '', phone)
+
+    if not digits:
+        return None
+
+    country_digits = re.sub(r'\D', '', country_code)
+
+    if digits.startswith('0'):
+        digits = digits[1:]
+
+    if digits.startswith(country_digits):
+        return '+' + digits
+
+    return '+' + country_digits + digits
 
 
 
@@ -83,7 +103,7 @@ class GeneralEnquiryForm(forms.ModelForm):
         
         # Validation 3: Check minimum digit count
         digits = ''.join(c for c in normalized if c.isdigit())
-        if len(digits) < 7:
+        if not 8 <= len(digits) <= 15:
             raise forms.ValidationError('Please enter a valid phone number.')
         
         return normalized  # ← Return normalized phone
@@ -103,8 +123,8 @@ class GeneralEnquiryForm(forms.ModelForm):
             raise forms.ValidationError('Please enter a valid WhatsApp number.')
         
         digits = ''.join(c for c in normalized if c.isdigit())
-        if len(digits) < 7:
-            raise forms.ValidationError('Please enter a valid WhatsApp number.')
+        if not 8 <= len(digits) <= 15:
+            raise forms.ValidationError('Please enter a valid phone number.')
         
         return normalized
 
@@ -155,7 +175,7 @@ class CareerApplicationForm(forms.ModelForm):
         
         # Validation 3: Check minimum digit count
         digits = ''.join(c for c in normalized if c.isdigit())
-        if len(digits) < 7:
+        if not 8 <= len(digits) <= 15:
             raise forms.ValidationError('Please enter a valid phone number.')
         
         return normalized  # ← Return normalized phone

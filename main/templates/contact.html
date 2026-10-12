@@ -1062,6 +1062,20 @@
     }
   });
 
+
+  const originalPhoneSelect = phoneWidget._select.bind(phoneWidget);
+
+  phoneWidget._select = function (country, silent) {
+    originalPhoneSelect(country, silent);
+
+    if (sameChk.checked) {
+      waWidget._select(country, true);
+      waWidget.numInput.value = phoneWidget.numInput.value;
+      waWidget._assemble();
+    }
+  };
+
+
   function showErr(wrapEl, errEl, msg) { if (wrapEl) wrapEl.classList.add('is-invalid'); if (errEl) errEl.textContent = msg; }
   function clearErr(wrapEl, errEl) { if (wrapEl) wrapEl.classList.remove('is-invalid'); if (errEl) errEl.textContent = ''; }
 
@@ -1090,9 +1104,9 @@
     var messageInput = document.getElementById('{{ form.message.id_for_label }}');
     var messageErr = document.getElementById('messageError');
     clearErr(messageInput, messageErr);
-    if (!messageInput.value.trim() || messageInput.value.trim().length < 5) {
+    if (messageInput.value.trim().length < 10) {
       messageInput.classList.add('is-invalid');
-      showErr(null, messageErr, 'Please tell us a little about what you need.');
+      showErr(null, messageErr, 'Please enter at least 10 characters.');
       valid = false;
     }
 

@@ -631,6 +631,26 @@
            class="mobile-dropdown-link {% if '/ellington-new-launch-dubai' in request.path %}is-active{% endif %}">
           Ellington Al Yalayis 1
         </a>
+        <a href="{% url 'properties:aziziflorence' %}"
+           class="mobile-dropdown-link {% if '/aziziflorece' in request.path %}is-active{% endif %}">
+          Azizi Florence
+        </a>
+        <a href="{% url 'properties:valley_by_emaar' %}"
+           class="mobile-dropdown-link {% if '/valley_by_emaar' in request.path %}is-active{% endif %}">
+          Valley by emaar
+        </a>
+        <a href="{% url 'properties:seefa_by_alef' %}"
+           class="mobile-dropdown-link {% if '/seefa_by_alef' in request.path %}is-active{% endif %}">
+          Seefa by Alef
+        </a>
+        <a href="{% url 'properties:binghatti_starfall' %}"
+           class="mobile-dropdown-link {% if '/binghatti-starfall-al-jaddaf' in request.path %}is-active{% endif %}">
+          Binghatti Starfall
+        </a>
+        <a href="{% url 'properties:shahrukhz' %}"
+           class="mobile-dropdown-link {% if request.resolver_match.view_name == 'properties:shahrukhz' %}}is-active{% endif %}">
+          Shahrukhz Residences
+        </a>
       </div>
 
 

@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import GeneralEnquiry, Newsletter, Testimonial, Newsletter, InstagramHighlight, CareerApplication
+from .models import GeneralEnquiry, Newsletter, Testimonial, InstagramHighlight, CareerApplication
 
 admin.site.register(GeneralEnquiry)
 

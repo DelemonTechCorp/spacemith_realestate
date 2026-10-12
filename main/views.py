@@ -9,7 +9,7 @@ from django.db.models import Case, IntegerField, Q, Value, When
 from blogs.models import BlogPost
 from properties.models import DeveloperCompany
 from .models import InstagramHighlight, Testimonial, Newsletter
- 
+from .crm_integration import send_lead_to_crm
 
 
 
@@ -137,6 +137,23 @@ def contact(request):
                 message  = cd['message'],
                 source   = 'Contact Page',
             )
+            
+            # Send enquiry to X-Opp CRM
+            try:
+                crm_sent = send_lead_to_crm(enquiry)
+
+                if not crm_sent:
+                    logger.warning(
+                        "CRM not delivered for contact enquiry %s",
+                        enquiry.pk
+                    )
+
+            except Exception:
+                logger.exception(
+                    "CRM integration error for contact enquiry %s",
+                    enquiry.pk
+                )
+                        
 
             # ── Send emails ───────────────────────────────────
             admin_sent  = True
@@ -170,8 +187,12 @@ def contact(request):
 
             return redirect('contact')
         else:
-            messages.error(request, "Please fill in all required fields correctly.")
+            print("FORM ERRORS:", form.errors)
 
+            messages.error(
+                request,
+                "Please fill in all required fields correctly."
+            )
     return render(request, 'contact.html', {
         'form':        form,
         'meta_title':  'Contact Us | Spacesmith Real Estate',
@@ -400,96 +421,204 @@ def _send_quick_enquiry_client_email(enquiry):
     msg.send(fail_silently=True)
 
 
+# @require_http_methods(["POST"])
+# def quick_enquiry(request):
+#     """
+#     Handle popup enquiry form submission via AJAX.
+    
+#     Accepts: POST with name, email, phone, website (honeypot)
+#     Returns: JSON { status: 'success'|'error', message: '...' }
+    
+#     URL: /quick-enquiry/ (add to urls.py)
+#     """
+    
+#     name    = request.POST.get('name', '').strip()
+#     email   = request.POST.get('email', '').strip().lower()
+#     phone   = request.POST.get('phone', '').strip()
+#     website = request.POST.get('website', '').strip()  # honeypot
+    
+#     # ── HONEYPOT CHECK ──
+#     if website:
+#         # Bot filled in the hidden "website" field — reject silently
+#         return JsonResponse({
+#             'status': 'error',
+#             'message': 'Please try again.'
+#         }, status=400)
+    
+#     # ── VALIDATION ──
+#     errors = []
+    
+#     if not name or len(name) < 2:
+#         errors.append('Please enter a valid name.')
+    
+#     if not email:
+#         errors.append('Email is required.')
+#     else:
+#         try:
+#             validate_email(email)
+#         except ValidationError:
+#             errors.append('Please enter a valid email.')
+    
+#     if not phone or len(phone) < 7:
+#         errors.append('Please enter a valid phone number.')
+    
+#     if errors:
+#         return JsonResponse({
+#             'status': 'error',
+#             'message': errors[0]  # return first error
+#         }, status=400)
+    
+#     # ── SAVE TO DATABASE ──
+#     try:
+#         enquiry = GeneralEnquiry.objects.create(
+#             name    = name,
+#             email   = email,
+#             phone   = phone,
+#             subject = 'Quick Enquiry — Website Popup',  # indicate it came from popup
+#             message = '',  # no message for popup form
+#             source  = 'Website Popup',
+#         )
+#     except Exception as exc:
+#         logger.error("Failed to save quick enquiry: %s", exc)
+#         return JsonResponse({
+#             'status': 'error',
+#             'message': 'Server error. Please try again.'
+#         }, status=500)
+    
+    
+#     # Send popup enquiry to X-Opp CRM
+#     try:
+#         crm_sent = send_lead_to_crm(enquiry)
+
+#         if not crm_sent:
+#             logger.warning(
+#                 "CRM not delivered for popup enquiry %s",
+#                 enquiry.pk
+#             )
+
+#     except Exception:
+#         logger.exception(
+#             "CRM integration error for popup enquiry %s",
+#             enquiry.pk
+#         )
+    
+    
+#     # ── SEND EMAILS (don't block on failure) ──
+#     admin_sent = True
+#     try:
+#         _send_quick_enquiry_admin_email(enquiry)
+#     except Exception as exc:
+#         logger.error("Admin quick-enquiry email failed: %s", exc)
+#         admin_sent = False
+    
+#     try:
+#         _send_quick_enquiry_client_email(enquiry)
+#     except Exception as exc:
+#         logger.error("Client quick-enquiry email failed: %s", exc)
+    
+#     # ── RESPONSE ──
+#     if admin_sent:
+#         return JsonResponse({
+#             'status': 'success',
+#             'message': 'Thank you! We will contact you within one business day.'
+#         })
+#     else:
+#         # Saved to DB but email failed — still consider it success from user perspective
+#         # (admin can see it in the dashboard)
+#         return JsonResponse({
+#             'status': 'success',
+#             'message': 'Your enquiry was received. We will be in touch shortly.'
+#         })
+
+
+from .forms import normalize_phone
+
+# Only these values are accepted from the hidden "source" field
+QUICK_ENQUIRY_SOURCES = {
+    'Website Popup': 'Quick Enquiry — Website Popup',
+    'Blog Detail':   'Blog Enquiry',
+}
+
+
 @require_http_methods(["POST"])
 def quick_enquiry(request):
-    """
-    Handle popup enquiry form submission via AJAX.
-    
-    Accepts: POST with name, email, phone, website (honeypot)
-    Returns: JSON { status: 'success'|'error', message: '...' }
-    
-    URL: /quick-enquiry/ (add to urls.py)
-    """
-    
-    name    = request.POST.get('name', '').strip()
-    email   = request.POST.get('email', '').strip().lower()
-    phone   = request.POST.get('phone', '').strip()
-    website = request.POST.get('website', '').strip()  # honeypot
-    
-    # ── HONEYPOT CHECK ──
+    """AJAX enquiry handler shared by the site popup and the blog sidebar form."""
+
+    name       = request.POST.get('name', '').strip()[:255]
+    email      = request.POST.get('email', '').strip().lower()
+    phone_raw  = request.POST.get('phone', '').strip()
+    website    = request.POST.get('website', '').strip()          # honeypot
+    source     = request.POST.get('source', 'Website Popup').strip()
+    page_title = request.POST.get('page_title', '').strip()[:200]
+    page_url   = request.POST.get('page_url', '').strip()[:500]
+
     if website:
-        # Bot filled in the hidden "website" field — reject silently
-        return JsonResponse({
-            'status': 'error',
-            'message': 'Please try again.'
-        }, status=400)
-    
-    # ── VALIDATION ──
-    errors = []
-    
-    if not name or len(name) < 2:
-        errors.append('Please enter a valid name.')
-    
-    if not email:
-        errors.append('Email is required.')
-    else:
-        try:
-            validate_email(email)
-        except ValidationError:
-            errors.append('Please enter a valid email.')
-    
-    if not phone or len(phone) < 7:
-        errors.append('Please enter a valid phone number.')
-    
-    if errors:
-        return JsonResponse({
-            'status': 'error',
-            'message': errors[0]  # return first error
-        }, status=400)
-    
-    # ── SAVE TO DATABASE ──
+        return JsonResponse({'status': 'error', 'message': 'Please try again.'}, status=400)
+
+    if source not in QUICK_ENQUIRY_SOURCES:
+        source = 'Website Popup'
+
+    # ── Validation ──
+    if len(name) < 2:
+        return JsonResponse({'status': 'error', 'message': 'Please enter a valid name.'}, status=400)
+
+    try:
+        validate_email(email)
+    except ValidationError:
+        return JsonResponse({'status': 'error', 'message': 'Please enter a valid email.'}, status=400)
+
+    phone = normalize_phone(phone_raw)          # 050 123 4567 → +971501234567
+    digits = ''.join(c for c in (phone or '') if c.isdigit())
+    if not phone or not 8 <= len(digits) <= 15:
+        return JsonResponse({'status': 'error', 'message': 'Please enter a valid phone number.'}, status=400)
+
+    # ── Build subject + message with page context ──
+    subject = QUICK_ENQUIRY_SOURCES[source]
+    message = ''
+    if source == 'Blog Detail' and page_title:
+        subject = f"Blog Enquiry — {page_title}"[:255]
+        message = f"Enquired while reading: {page_title}"
+        if page_url:
+            message += f"\n{page_url}"
+
+    # ── Save ──
     try:
         enquiry = GeneralEnquiry.objects.create(
-            name    = name,
-            email   = email,
-            phone   = phone,
-            subject = 'Quick Enquiry — Website Popup',  # indicate it came from popup
-            message = '',  # no message for popup form
-            source  = 'Website Popup',
+            name=name, email=email, phone=phone,
+            subject=subject, message=message, source=source,
         )
-    except Exception as exc:
-        logger.error("Failed to save quick enquiry: %s", exc)
-        return JsonResponse({
-            'status': 'error',
-            'message': 'Server error. Please try again.'
-        }, status=500)
-    
-    # ── SEND EMAILS (don't block on failure) ──
+    except Exception:
+        logger.exception("Failed to save quick enquiry")
+        return JsonResponse({'status': 'error', 'message': 'Server error. Please try again.'}, status=500)
+
+    # ── CRM (never blocks the user) ──
+    try:
+        if not send_lead_to_crm(enquiry):
+            logger.warning("CRM not delivered for %s enquiry %s", source, enquiry.pk)
+    except Exception:
+        logger.exception("CRM integration error for %s enquiry %s", source, enquiry.pk)
+
+    # ── Emails ──
     admin_sent = True
     try:
         _send_quick_enquiry_admin_email(enquiry)
     except Exception as exc:
         logger.error("Admin quick-enquiry email failed: %s", exc)
         admin_sent = False
-    
+
     try:
         _send_quick_enquiry_client_email(enquiry)
     except Exception as exc:
         logger.error("Client quick-enquiry email failed: %s", exc)
-    
-    # ── RESPONSE ──
-    if admin_sent:
-        return JsonResponse({
-            'status': 'success',
-            'message': 'Thank you! We will contact you within one business day.'
-        })
-    else:
-        # Saved to DB but email failed — still consider it success from user perspective
-        # (admin can see it in the dashboard)
-        return JsonResponse({
-            'status': 'success',
-            'message': 'Your enquiry was received. We will be in touch shortly.'
-        })
+
+    return JsonResponse({
+        'status': 'success',
+        'message': 'Thank you! We will contact you within one business day.'
+                   if admin_sent else
+                   'Your enquiry was received. We will be in touch shortly.',
+    })
+
+
         
         
         

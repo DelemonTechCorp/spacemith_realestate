@@ -929,7 +929,8 @@ FROM_EMAIL = getattr(settings, 'DEFAULT_FROM_EMAIL',
 # EMAIL
 # ─────────────────────────────────────────
 def _send_property_admin_email(enquiry):
-    subject = f'New enquiry: {enquiry.property.title} — {enquiry.name}'
+    # subject = f'New enquiry: {enquiry.property.title} — {enquiry.name}'
+    subject = f'New enquiry: {enquiry.display_title} — {enquiry.name}'
     html = render_to_string('emails/property_enquiry_admin.html', {'enquiry': enquiry})
     msg = EmailMultiAlternatives(subject, strip_tags(html), FROM_EMAIL, [ADMIN_EMAIL])
     msg.attach_alternative(html, 'text/html')
@@ -939,11 +940,71 @@ def _send_property_admin_email(enquiry):
 
 
 def _send_property_client_email(enquiry):
-    subject = f'Thank you for your enquiry — {enquiry.property.title}'
+    # subject = f'Thank you for your enquiry — {enquiry.property.title}'
+    subject = f'Thank you for your enquiry — {enquiry.display_title}'
     html = render_to_string('emails/property_enquiry_client.html', {'enquiry': enquiry})
     msg = EmailMultiAlternatives(subject, strip_tags(html), FROM_EMAIL, [enquiry.email])
     msg.attach_alternative(html, 'text/html')
     msg.send(fail_silently=True)
+
+
+
+from main.crm_integration import send_lead_to_crm
+
+
+def _notify_property_enquiry(enquiry, label='Property'):
+    """
+    Send a saved PropertyEnquiry to the CRM, then email admin + client.
+    Never raises — the lead is already saved, so the visitor always sees success.
+    """
+    try:
+        if not send_lead_to_crm(enquiry):
+            logger.warning('CRM not delivered for %s enquiry %s', label, enquiry.pk)
+    except Exception:
+        logger.exception('CRM integration error for %s enquiry %s', label, enquiry.pk)
+
+    for sender, kind in (
+        (_send_property_admin_email, 'admin'),
+        (_send_property_client_email, 'client'),
+    ):
+        try:
+            sender(enquiry)
+        except Exception as exc:
+            logger.error('%s enquiry %s email failed: %s', label, kind, exc)
+
+
+
+
+def _handle_landing_enquiry(request, *, property_obj, source, page_title, redirect_url):
+    """
+    Shared POST handling for every project landing page.
+
+    Saves a PropertyEnquiry (linked to the property if one exists, otherwise
+    just tagged with the page name and URL), sends it to the CRM and emails.
+
+    Returns (form, response). If response is not None, return it from the view.
+    """
+    form = PropertyEnquiryForm(request.POST)
+
+    if not form.is_valid():
+        messages.error(request, 'Please correct the highlighted fields and try again.')
+        return form, None
+
+    enquiry = form.save(commit=False)
+    enquiry.property = property_obj          # may be None — that's fine now
+    enquiry.source = source
+    enquiry.page_title = page_title
+    enquiry.page_url = f'{SITE_URL}{request.path}'
+    enquiry.save()
+
+    _notify_property_enquiry(enquiry, page_title)
+
+    messages.success(
+        request,
+        'Thank you. Your enquiry has been received — our team will '
+        'be in touch within 24 hours.'
+    )
+    return form, redirect(redirect_url)
 
 
 # ─────────────────────────────────────────
@@ -1131,14 +1192,16 @@ def property_detail(request, slug):
             enquiry.source = 'Property Detail'
             enquiry.save()
 
-            for sender, label in (
-                (_send_property_admin_email, 'admin'),
-                (_send_property_client_email, 'client'),
-            ):
-                try:
-                    sender(enquiry)
-                except Exception as exc:
-                    logger.error('Property enquiry %s email failed: %s', label, exc)
+            # for sender, label in (
+            #     (_send_property_admin_email, 'admin'),
+            #     (_send_property_client_email, 'client'),
+            # ):
+            #     try:
+            #         sender(enquiry)
+            #     except Exception as exc:
+            #         logger.error('Property enquiry %s email failed: %s', label, exc)
+
+            _notify_property_enquiry(enquiry, 'Property Detail')
 
             messages.success(
                 request,
@@ -2859,44 +2922,15 @@ def ellington(request):
     enquiry_form = PropertyEnquiryForm()
 
     if request.method == 'POST':
-        enquiry_form = PropertyEnquiryForm(request.POST)
-
-        if property_obj is None:
-            # Fails closed rather than 500ing or silently dropping the lead.
-            logger.error(
-                'Ellington landing page: ELLINGTON_PROPERTY_SLUG "%s" not found — '
-                'set it to a real Property slug before enquiries can be saved.',
-                ELLINGTON_PROPERTY_SLUG,
-            )
-            messages.error(
-                request,
-                'Sorry, enquiries are temporarily unavailable. Please call or '
-                'WhatsApp us directly and we\u2019ll help right away.'
-            )
-        elif enquiry_form.is_valid():
-            enquiry = enquiry_form.save(commit=False)
-            enquiry.property = property_obj
-            enquiry.source = 'Ellington Al Yalayis 1 Landing Page'
-            enquiry.save()
-
-            for sender, label in (
-                (_send_property_admin_email, 'admin'),
-                (_send_property_client_email, 'client'),
-            ):
-                try:
-                    sender(enquiry)
-                except Exception as exc:
-                    logger.error('Ellington enquiry %s email failed: %s', label, exc)
-
-            messages.success(
-                request,
-                'Thank you. Your enquiry has been received — our team will '
-                'be in touch within 24 hours.'
-            )
-            return redirect(f"{reverse('properties:ellington')}#enquiry")
-        else:
-            messages.error(request, 'Please correct the highlighted fields and try again.')
-
+        enquiry_form, response = _handle_landing_enquiry(
+            request,
+            property_obj=property_obj,
+            source='Ellington Al Yalayis 1 Landing Page',
+            page_title='Ellington Al Yalayis 1',
+            redirect_url=f"{reverse('properties:ellington')}#enquiry",
+        )
+        if response:
+            return response
     canonical = f'{SITE_URL}/properties/ellington-new-launch-dubai/'
 
     # Static, SEO-team-authored title/description — audited through the same
@@ -2950,44 +2984,16 @@ def azizi_florence(request):
     enquiry_form = PropertyEnquiryForm()
 
     if request.method == 'POST':
-        enquiry_form = PropertyEnquiryForm(request.POST)
-
-        if property_obj is None:
-            # Fails closed rather than 500ing or silently dropping the lead.
-            logger.error(
-                'Azizi Florence landing page: AZIZI_FLORENCE_PROPERTY_SLUG "%s" not found — '
-                'set it to a real Property slug before enquiries can be saved.',
-                AZIZI_FLORENCE_PROPERTY_SLUG,
-            )
-            messages.error(
-                request,
-                'Sorry, enquiries are temporarily unavailable. Please call or '
-                'WhatsApp us directly and we\u2019ll help right away.'
-            )
-        elif enquiry_form.is_valid():
-            enquiry = enquiry_form.save(commit=False)
-            enquiry.property = property_obj
-            enquiry.source = 'Azizi Florence Landing Page'
-            enquiry.save()
-
-            for sender, label in (
-                (_send_property_admin_email, 'admin'),
-                (_send_property_client_email, 'client'),
-            ):
-                try:
-                    sender(enquiry)
-                except Exception as exc:
-                    logger.error('Azizi Florence enquiry %s email failed: %s', label, exc)
-
-            messages.success(
-                request,
-                'Thank you. Your enquiry has been received — our team will '
-                'be in touch within 24 hours.'
-            )
-            return redirect(f"{reverse('properties:azizi_florence')}#enquiry")
-        else:
-            messages.error(request, 'Please correct the highlighted fields and try again.')
-
+        enquiry_form, response = _handle_landing_enquiry(
+            request,
+            property_obj=property_obj,
+            source='Azizi Florence Landing Page',
+            page_title='Azizi Florence',
+            redirect_url=f"{reverse('properties:aziziflorence')}#enquiry",
+        )
+        if response:
+            return response
+        
     canonical = f'{SITE_URL}/properties/azizi-florence/'
 
     # Static, SEO-team-authored title/description — audited through the same
@@ -3044,44 +3050,15 @@ def valley_by_emaar(request):
     enquiry_form = PropertyEnquiryForm()
 
     if request.method == 'POST':
-        enquiry_form = PropertyEnquiryForm(request.POST)
-
-        if property_obj is None:
-            # Fails closed rather than 500ing or silently dropping the lead.
-            logger.error(
-                'Valley by Emaar landing page: VALLEY_PROPERTY_SLUG "%s" not found — '
-                'set it to a real Property slug before enquiries can be saved.',
-                VALLEY_PROPERTY_SLUG,
-            )
-            messages.error(
-                request,
-                'Sorry, enquiries are temporarily unavailable. Please call or '
-                'WhatsApp us directly and we\u2019ll help right away.'
-            )
-        elif enquiry_form.is_valid():
-            enquiry = enquiry_form.save(commit=False)
-            enquiry.property = property_obj
-            enquiry.source = 'Valley by Emaar Landing Page'
-            enquiry.save()
-
-            for sender, label in (
-                (_send_property_admin_email, 'admin'),
-                (_send_property_client_email, 'client'),
-            ):
-                try:
-                    sender(enquiry)
-                except Exception as exc:
-                    logger.error('Valley by Emaar enquiry %s email failed: %s', label, exc)
-
-            messages.success(
-                request,
-                'Thank you. Your enquiry has been received — our team will '
-                'be in touch within 24 hours.'
-            )
-            return redirect(f"{reverse('properties:valley_by_emaar')}#enquiry")
-        else:
-            messages.error(request, 'Please correct the highlighted fields and try again.')
-
+        enquiry_form, response = _handle_landing_enquiry(
+            request,
+            property_obj=property_obj,
+            source='Valley by Emaar Landing Page',
+            page_title='Valley by Emaar',
+            redirect_url=f"{reverse('properties:valley_by_emaar')}#enquiry",
+        )
+        if response:
+            return response
     canonical = f'{SITE_URL}/properties/valley-by-emaar-dubai/'
 
     # Static, SEO-team-authored title/description — audited through the same
@@ -3135,44 +3112,15 @@ def seefa_by_alef(request):
     enquiry_form = PropertyEnquiryForm()
 
     if request.method == 'POST':
-        enquiry_form = PropertyEnquiryForm(request.POST)
-
-        if property_obj is None:
-            # Fails closed rather than 500ing or silently dropping the lead.
-            logger.error(
-                'SEEFA by Alef landing page: SEEFA_PROPERTY_SLUG "%s" not found — '
-                'set it to a real Property slug before enquiries can be saved.',
-                SEEFA_PROPERTY_SLUG,
-            )
-            messages.error(
-                request,
-                'Sorry, enquiries are temporarily unavailable. Please call or '
-                'WhatsApp us directly and we\u2019ll help right away.'
-            )
-        elif enquiry_form.is_valid():
-            enquiry = enquiry_form.save(commit=False)
-            enquiry.property = property_obj
-            enquiry.source = 'SEEFA by Alef Landing Page'
-            enquiry.save()
-
-            for sender, label in (
-                (_send_property_admin_email, 'admin'),
-                (_send_property_client_email, 'client'),
-            ):
-                try:
-                    sender(enquiry)
-                except Exception as exc:
-                    logger.error('SEEFA by Alef enquiry %s email failed: %s', label, exc)
-
-            messages.success(
-                request,
-                'Thank you. Your enquiry has been received — our team will '
-                'be in touch within 24 hours.'
-            )
-            return redirect(f"{reverse('properties:seefa_by_alef')}#enquiry")
-        else:
-            messages.error(request, 'Please correct the highlighted fields and try again.')
-
+        enquiry_form, response = _handle_landing_enquiry(
+            request,
+            property_obj=property_obj,
+            source='SEEFA by Alef Landing Page',
+            page_title='SEEFA by Alef',
+            redirect_url=f"{reverse('properties:seefa_by_alef')}#enquiry",
+        )
+        if response:
+            return response
     canonical = f'{SITE_URL}/properties/seefa-by-alef-sharjah/'
 
     # Static, SEO-team-authored title/description — audited through the same
@@ -3211,43 +3159,32 @@ BINGHATTI_STARFALL_PROPERTY_SLUG = ("binghatti/starfall/al-jaddaf")
 
 
 def binghatti_starfall(request):
-    """
-    Binghatti Starfall, Al Jaddaf — project landing page.
-    """
+    """Binghatti Starfall, Al Jaddaf — project landing page."""
+    property_obj = (
+        Property.objects
+        .filter(slug=BINGHATTI_STARFALL_PROPERTY_SLUG, is_active=True)
+        .first()
+    )
 
-    property_obj = Property.objects.filter(
-        slug=BINGHATTI_STARFALL_PROPERTY_SLUG
-    ).first()
+    form = PropertyEnquiryForm()
 
-    if request.method == "POST":
-        form = PropertyEnquiryForm(request.POST)
-
-        if form.is_valid():
-            enquiry = form.save(commit=False)
-            enquiry.property = property_obj
-
-            if request.user.is_authenticated:
-                enquiry.user = request.user
-
-            enquiry.save()
-
-            messages.success(
-                request,
-                "Your enquiry has been submitted successfully."
-            )
-
-            return redirect(request.path)
-    else:
-        form = PropertyEnquiryForm()
+    if request.method == 'POST':
+        form, response = _handle_landing_enquiry(
+            request,
+            property_obj=property_obj,
+            source='Binghatti Starfall Landing Page',
+            page_title='Binghatti Starfall',
+            redirect_url=f"{reverse('properties:binghatti_starfall')}#enquiry",
+        )
+        if response:
+            return response
 
     context = {
         "property": property_obj,
         "form": form,
         "site_url": getattr(settings, "SITE_URL", ""),
     }
-
     return render(request, "binghatti.html", context)
-
 
 
     # SHARUKHZ
@@ -3260,46 +3197,30 @@ SHAHRUKHZ_PROPERTY_SLUG = None  # replace with the real Property slug once you c
 
 
 def shahrukhz(request):
-    """
-    Shahrukhz Residences by Danube, Dubai Maritime City: project landing page.
-    """
-
+    """Shahrukhz Residences by Danube, Dubai Maritime City: project landing page."""
     property_obj = None
     if SHAHRUKHZ_PROPERTY_SLUG:
         property_obj = Property.objects.filter(
-            slug=SHAHRUKHZ_PROPERTY_SLUG
+            slug=SHAHRUKHZ_PROPERTY_SLUG, is_active=True
         ).first()
 
-    if request.method == "POST":
-        # Honeypot: the template has a hidden "website" field, bots fill it
-        if request.POST.get("website"):
-            return redirect(request.path)
+    enquiry_form = PropertyEnquiryForm()
 
-        form = PropertyEnquiryForm(request.POST)
-
-        if form.is_valid():
-            enquiry = form.save(commit=False)
-            enquiry.property = property_obj
-
-            if request.user.is_authenticated:
-                enquiry.user = request.user
-
-            enquiry.save()
-
-            messages.success(
-                request,
-                "Your enquiry has been submitted successfully."
-            )
-
-            return redirect(f"{request.path}#enquiry")
-    else:
-        form = PropertyEnquiryForm()
+    if request.method == 'POST':
+        enquiry_form, response = _handle_landing_enquiry(
+            request,
+            property_obj=property_obj,
+            source='Shahrukhz Residences Landing Page',
+            page_title='Shahrukhz Residences by Danube',
+            redirect_url=f"{reverse('properties:shahrukhz')}#enquiry",
+        )
+        if response:
+            return response
 
     site_url = getattr(settings, "SITE_URL", "")
 
     context = {
-        # the template reads `enquiry_form`, not `form`
-        "enquiry_form": form,
+        "enquiry_form": enquiry_form,
         "property": property_obj,
         "site_url": site_url,
         "meta_title": "Shahrukhz Residences by Danube | Dubai Maritime City Waterfront Apartments",
@@ -3312,5 +3233,4 @@ def shahrukhz(request):
         "robots": "index, follow",
         "og_image": f"{site_url}{static('img/shahrukhz-hero.webp')}",
     }
-
     return render(request, "shahrukhz.html", context)

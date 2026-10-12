@@ -817,6 +817,11 @@
         <div class="bd-widget__body">
           <form id="bdContactForm" class="bd-contact-form" novalidate>
             {% csrf_token %}
+
+            <input type="hidden" name="source" value="Blog Detail">
+            <input type="hidden" name="page_title" value="{{ post.title }}">
+            <input type="hidden" name="page_url" value="{{ canonical }}">
+
             <div class="field">
               <label for="bdName">Name</label>
               <input id="bdName" type="text" name="name" placeholder="Your name" required autocomplete="name">

@@ -17,6 +17,7 @@ from django.db.models import F, Q, Count, Min, Max
 from django.utils.text import slugify
 from django.utils.html import strip_tags
 from main.base import TimeStampedModel
+import builtins
 
 import logging
 logger = logging.getLogger(__name__)
@@ -868,22 +869,62 @@ class Apartment(TimeStampedModel):
         return f"{self.property.title} - {self.apartment_type} - {self.no_of_bedrooms} BR - {self.price} AED"
 
 
+# class PropertyEnquiry(TimeStampedModel):
+#     """Model to track property enquiries"""
+#     property = models.ForeignKey(
+#         Property,
+#         on_delete=models.CASCADE,
+#         related_name='enquiries'
+#     )
+#     name = models.CharField(max_length=255)
+#     email = models.EmailField(db_index=True)
+#     phone = models.CharField(max_length=25)
+#     whatsapp = models.CharField(max_length=25, default='')  # ← new field
+#     message  = models.TextField(blank=True, default='')   
+#     is_read = models.BooleanField(default=False, db_index=True)
+#     responded_at = models.DateTimeField(null=True, blank=True)
+#     source = models.CharField(max_length=255, blank=True, null=True)  # Add this line to track the source
+    
+#     class Meta:
+#         verbose_name_plural = "Property Enquiries"
+#         ordering = ['-created_at']
+#         indexes = [
+#             models.Index(fields=['property', '-created_at']),
+#             models.Index(fields=['is_read', '-created_at']),
+#             models.Index(fields=['-created_at']),
+#         ]
+    
+#     def __str__(self):
+#         return f"{self.name} - {self.property.title}"
+    
+#     def mark_as_responded(self):
+#         """Mark enquiry as responded"""
+#         self.is_read = True
+#         self.responded_at = timezone.now()
+#         self.save(update_fields=['is_read', 'responded_at', 'updated_at'])
+
 class PropertyEnquiry(TimeStampedModel):
-    """Model to track property enquiries"""
+    """Enquiries from property detail pages and project landing pages."""
     property = models.ForeignKey(
         Property,
-        on_delete=models.CASCADE,
-        related_name='enquiries'
+        on_delete=models.SET_NULL,      # keep the lead even if the property is deleted
+        related_name='enquiries',
+        null=True,
+        blank=True,
     )
     name = models.CharField(max_length=255)
     email = models.EmailField(db_index=True)
     phone = models.CharField(max_length=25)
-    whatsapp = models.CharField(max_length=25, default='')  # ← new field
-    message  = models.TextField(blank=True, default='')   
+    whatsapp = models.CharField(max_length=25, default='')
+    message = models.TextField(blank=True, default='')
     is_read = models.BooleanField(default=False, db_index=True)
     responded_at = models.DateTimeField(null=True, blank=True)
-    source = models.CharField(max_length=255, blank=True, null=True)  # Add this line to track the source
-    
+    source = models.CharField(max_length=255, blank=True, null=True)
+
+    # Landing pages: which project/page the lead came from
+    page_title = models.CharField(max_length=255, blank=True, default='')
+    page_url = models.URLField(max_length=500, blank=True, default='')
+
     class Meta:
         verbose_name_plural = "Property Enquiries"
         ordering = ['-created_at']
@@ -892,15 +933,23 @@ class PropertyEnquiry(TimeStampedModel):
             models.Index(fields=['is_read', '-created_at']),
             models.Index(fields=['-created_at']),
         ]
-    
+
+    @builtins.property
+    def display_title(self):
+        """Property title if linked, otherwise the landing page's project name. Never crashes."""
+        if self.property_id:
+            return self.property.title
+        return self.page_title or self.source or 'Spacesmith Real Estate'
+
     def __str__(self):
-        return f"{self.name} - {self.property.title}"
-    
+        return f"{self.name} - {self.display_title}"
+
     def mark_as_responded(self):
         """Mark enquiry as responded"""
         self.is_read = True
         self.responded_at = timezone.now()
         self.save(update_fields=['is_read', 'responded_at', 'updated_at'])
+
 
 
 

@@ -52,4 +52,4 @@ Thumbs.db
 # ====================
 # Cache
 # ====================
-cache/
+cache/*/migrations/0*.py

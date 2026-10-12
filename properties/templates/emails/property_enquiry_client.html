@@ -14,7 +14,7 @@
         <tr><td style="height:3px;background:#d4af37;line-height:0;font-size:0;">&nbsp;</td></tr>
 
         <!-- property strip -->
-        <tr><td style="padding:28px 36px 0;">
+        <!-- <tr><td style="padding:28px 36px 0;">
           <div style="padding:18px 20px;background:#f7f5ef;border:1px solid #e5e2da;">
             <div style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#888;margin-bottom:6px;">Your Enquiry</div>
             <div style="font-size:17px;font-weight:bold;color:#0a2a20;">{{ enquiry.property.title }}</div>
@@ -23,13 +23,31 @@
               {% if enquiry.property.compare_starting_price %} · Starting from AED {{ enquiry.property.compare_starting_price|floatformat:0 }}{% endif %}
             </div>
           </div>
+        </td></tr> -->
+
+
+                <!-- property strip -->
+        <tr><td style="padding:28px 36px 0;">
+          <div style="padding:18px 20px;background:#f7f5ef;border:1px solid #e5e2da;">
+            <div style="font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#888;margin-bottom:6px;">Your Enquiry</div>
+            <div style="font-size:17px;font-weight:bold;color:#0a2a20;">{{ enquiry.display_title }}</div>
+            {% if enquiry.property %}
+            <div style="font-size:13px;color:#666;margin-top:4px;">
+              {{ enquiry.property.district.name }}, {{ enquiry.property.city.name }}
+              {% if enquiry.property.compare_starting_price %} · Starting from AED {{ enquiry.property.compare_starting_price|floatformat:0 }}{% endif %}
+            </div>
+            {% endif %}
+          </div>
         </td></tr>
+
+
+
 
         <!-- body -->
         <tr><td style="padding:28px 36px 36px;">
           <p style="margin:0 0 18px;font-size:15px;color:#0b1512;line-height:1.7;">Dear {{ enquiry.name }},</p>
           <p style="margin:0 0 18px;font-size:14px;color:#444;line-height:1.75;">
-            Thank you for your interest in <strong>{{ enquiry.property.title }}</strong>. We've received your enquiry, and a Spacesmith advisor will be in touch shortly with the floor plans, full price list and payment plan.
+            Thank you for your interest in <strong>{{ enquiry.display_title }}</strong>. We've received your enquiry, and a Spacesmith advisor will be in touch shortly with the floor plans, full price list and payment plan.
           </p>
           <p style="margin:0 0 26px;font-size:14px;color:#444;line-height:1.75;">
             Every enquiry reaches a real advisor with deep, on-the-ground knowledge of Dubai's communities and off-plan launches — no automated hand-offs, no call centres.

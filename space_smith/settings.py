@@ -392,3 +392,14 @@ SOCIAL_LINKS = {
 # RECAPTCHA_SECRET_KEY = config('RECAPTCHA_SECRET_KEY', default='')
 
 SITE_URL = 'https://spacesmith.ae'
+
+
+
+# ============================
+# X-OPP ERP CRM INTEGRATION
+# ============================
+
+XOPP_CRM_API_TOKEN = config('XOPP_CRM_API_TOKEN', default='')
+
+XOPP_CRM_ENABLED = config('XOPP_CRM_ENABLED', default=False, cast=bool)
+

@@ -35,5 +35,13 @@ admin.site.register(GroupedApartment)
 admin.site.register(Apartment)
 admin.site.register(PaymentPlan)
 admin.site.register(PaymentPlanValue)
-admin.site.register(PropertyEnquiry)
 admin.site.register(Unit)
+
+# admin.site.register(PropertyEnquiry)
+
+class PropertyEnquiryAdmin(admin.ModelAdmin):
+    list_display = ('name', 'email', 'phone', 'display_title', 'source', 'created_at', 'is_read')
+    list_filter = ('source', 'is_read')
+    search_fields = ('name', 'email', 'phone', 'page_title', 'property__title')
+
+admin.site.register(PropertyEnquiry, PropertyEnquiryAdmin)
