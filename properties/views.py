@@ -360,9 +360,546 @@ def _describe(text, filler=None, low=120, high=160):
     return text
 
 
-# ─────────────────────────────────────────
-# VIEW
-# ─────────────────────────────────────────
+# # ─────────────────────────────────────────
+# # VIEW
+# # ─────────────────────────────────────────
+# def _city_path(city_slug, unit_type=''):
+#     """Clean, parameter-free URL path for a city (and optional unit type)."""
+#     path = f'/properties/city/{city_slug}/'
+#     if unit_type:
+#         path += f'{slugify(unit_type)}/'
+#     return path
+
+# def _type_path(type_slug):
+#     """Clean, parameter-free URL path for a property type."""
+#     return f'/properties/type/{type_slug}/'
+
+
+    
+# def property_list(request,city=None,ptype=None,unit_type=None, page=None,):
+
+
+#     # ── LEGACY ?type=... → CLEAN URL ────────────────────────
+#     type_param = request.GET.get('type', '').strip()
+
+#     if city is None and ptype is None and type_param:
+
+#         property_type = PropertyType.objects.filter(
+#             slug=type_param,
+#             is_active=True
+#         ).first()
+
+#         if property_type:
+#             target = _type_path(property_type.slug)
+
+#             page_param = request.GET.get('page', '').strip()
+
+#             if page_param.isdigit() and int(page_param) > 1:
+#                 target += f'page/{page_param}/'
+
+#             return redirect(target, permanent=True)
+
+
+#                 # ── Legacy ?page=N → CLEAN /page/N/ ─────────────────
+#     page_param = request.GET.get('page', '').strip()
+
+#     if (
+#         page_param.isdigit()
+#         and int(page_param) > 1
+#         and not type_param
+#         and not request.GET.get('city')
+#     ):
+#         return redirect(
+#             f'/properties/page/{page_param}/',
+#             permanent=True
+#         )
+
+  
+
+#     # ── Existing legacy URL cleanup ─────────────────────────
+#     bounce = _clean_url(request)
+
+#     if bounce:
+#         return bounce
+
+#     # ── Read active filters ─────────────────────────────────
+#     active = _read(request)
+
+#     # ── Legacy ?status=off-plan / ?status=ready ─────────────
+#     status_param = request.GET.get('status', '').strip()
+
+#     if status_param in ('off-plan', 'ready'):
+#         target = (
+#             '/properties/off-plan/'
+#             if status_param == 'off-plan'
+#             else '/properties/ready/'
+#         )
+
+#         rest = {
+#             k: v
+#             for k, v in request.GET.items()
+#             if k != 'status' and v.strip()
+#         }
+
+#         if rest:
+#             target += '?' + urlencode(rest)
+
+#         return redirect(target, permanent=True)
+
+#     # ── Legacy ?city=... / ?city=...&unit_type=... ─────────
+# # ── Legacy ?city=... / ?city=...&unit_type=... ─────────
+#     if city is None and active['city']:
+
+#         used = {
+#             k
+#             for k in request.GET
+#             if request.GET.get(k, '').strip()
+#         }
+
+#         if used <= {'city', 'unit_type', 'page', 'sort'}:
+
+#             if City.objects.filter(
+#                 slug=active['city'],
+#                 is_active=True
+#             ).exists():
+
+#                 target = _city_path(
+#                     active['city'],
+#                     active['unit_type']
+#                 )
+
+#                 page_param = request.GET.get('page', '').strip()
+
+#                 if page_param.isdigit() and int(page_param) > 1:
+#                     target += f'page/{page_param}/'
+
+#                 return redirect(target, permanent=True)
+#     # ── Legacy ?type=apartments ─────────────────────────────
+  
+
+#     # ── Clean type route ────────────────────────────────────
+#     if ptype is not None:
+#         get_object_or_404(
+#             PropertyType,
+#             slug=ptype,
+#             is_active=True
+#         )
+
+#         active['type'] = ptype
+
+# # ── Clean city routes ─────────────────────────────────────
+    
+#   # ── Clean city routes ─────────────────────────────────
+#     path_unit_slug = ''
+
+#     if city is not None:
+#         get_object_or_404(
+#             City,
+#             slug=city,
+#             is_active=True
+#         )
+
+#         active['city'] = city
+
+#         if unit_type:
+#             options = {
+#                 slugify(u): u
+#                 for u in (
+#                     GroupedApartment.objects
+#                     .filter(
+#                         is_active=True,
+#                         property_obj__city__slug=city
+#                     )
+#                     .exclude(apartment_type__isnull=True)
+#                     .exclude(apartment_type='')
+#                     .values_list(
+#                         'apartment_type',
+#                         flat=True
+#                     )
+#                     .distinct()
+#                 )
+#             }
+
+#             if unit_type not in options:
+#                 raise Http404(
+#                     'Unknown unit type for this city'
+#                 )
+
+#             active['unit_type'] = options[unit_type]
+#             path_unit_slug = unit_type
+
+
+#     # ── BUILD QUERYSET ────────────────────────────────────
+#     scope = _base_qs()
+
+#     qs = _filtered(
+#         scope,
+#         active
+#     )
+
+
+#     # ── PAGINATION ────────────────────────────────────────
+#     paginator = Paginator(
+#         qs,
+#         PAGE_SIZE
+#     )
+
+#     page_obj = paginator.get_page(page or 1)
+
+#     page = page_obj.number
+
+
+#     # ── FACETS ────────────────────────────────────────────
+#     facets = _facets(
+#         scope,
+#         active
+#     )
+
+
+
+#     # ── SEO ──
+#     page_tag = f' | Page {page}' if page > 1 else ''
+
+#     # Read selected values directly from request
+#     seo_city = active.get('city', '').strip()
+#     seo_district = active.get('district', '').strip()
+#     seo_type = active.get('type', '').strip()
+#     seo_developer = active.get('developer', '').strip()
+
+#     # IMPORTANT: read unit_type directly from URL
+#     seo_unit_type = active.get('unit_type', '').strip()
+#     seo_bedrooms = request.GET.get('bedrooms', '').strip()
+#     seo_price_min = request.GET.get('price_min', '').strip()
+#     seo_price_max = request.GET.get('price_max', '').strip()
+#     seo_search = request.GET.get('q', '').strip()
+
+#     # Get readable city name
+#     city_name = ''
+
+#     if seo_city:
+#         city_name = (
+#             facets['cities']
+#             .filter(slug=seo_city)
+#             .values_list('name', flat=True)
+#             .first()
+#             or ''
+#         )
+
+#     # Get readable district name
+#     district_name = ''
+
+#     if seo_district:
+#         district_name = (
+#             facets['districts']
+#             .filter(slug=seo_district)
+#             .values_list('name', flat=True)
+#             .first()
+#             or ''
+#         )
+
+#     # Get readable property type
+#     type_name = ''
+
+#     if seo_type:
+#         type_name = (
+#             facets['types']
+#             .filter(slug=seo_type)
+#             .values_list('name', flat=True)
+#             .first()
+#             or ''
+#         )
+
+#     # Get readable developer
+#     developer_name = ''
+
+#     if seo_developer:
+#         developer_name = (
+#             facets['developers']
+#             .filter(slug=seo_developer)
+#             .values_list('name', flat=True)
+#             .first()
+#             or ''
+#         )
+
+#     # =========================================================
+#     # SEO TITLE + DESCRIPTION
+#     # =========================================================
+
+#     # SEARCH
+#     if seo_search:
+
+#         meta_title = (
+#             f'{seo_search.title()} Properties for Sale'
+#             f'{page_tag} | {BRAND}'
+#         )
+
+#         meta_description = _describe(
+#             f'Browse properties matching {seo_search} for sale '
+#             f'in Dubai & the UAE. Explore available properties, '
+#             f'prices, locations and project details.',
+#             filler=f'Expert guidance from {BRAND}.',
+#         )
+
+#     # CITY + DISTRICT + UNIT TYPE
+#     elif city_name and district_name and seo_unit_type:
+
+#         meta_title = (
+#             f'{seo_unit_type.title()} Properties Sale in '
+#             f'{district_name}, {city_name}{page_tag} | {BRAND}'
+#         )
+
+#         meta_description = _describe(
+#             f'Browse {seo_unit_type.lower()} properties sale in '
+#             f'{district_name}, {city_name}. Explore available properties, '
+#             f'prices and investment opportunities.',
+#             filler=f'Expert guidance from {BRAND}.',
+#         )
+
+#     # CITY + UNIT TYPE
+#     elif city_name and seo_unit_type:
+
+#         meta_title = (
+#             f'{seo_unit_type.title()} Properties  Sale in '
+#             f'{city_name}{page_tag} | {BRAND}'
+#         )
+
+#         meta_description = _describe(
+#             f'Browse {seo_unit_type.lower()} properties for sale '
+#             f'in {city_name}. Explore available properties, prices, '
+#             f'locations and investment opportunities.',
+#             filler=f'Expert guidance from {BRAND}.',
+#         )
+
+#     # CITY + DISTRICT + PROPERTY TYPE
+#     elif city_name and district_name and type_name:
+
+#         meta_title = (
+#             f'{type_name} for Sale in {district_name}, '
+#             f'{city_name}{page_tag} | {BRAND}'
+#         )
+
+#         meta_description = _describe(
+#             f'Browse {type_name.lower()} for sale in {district_name}, '
+#             f'{city_name}. Explore ready and off-plan properties with '
+#             f'prices and project details.',
+#             filler=f'Expert guidance from {BRAND}.',
+#         )
+
+#     # CITY + PROPERTY TYPE
+#     elif city_name and type_name:
+
+#         meta_title = (
+#             f'{type_name} for Sale in {city_name}'
+#             f'{page_tag} | {BRAND}'
+#         )
+
+#         meta_description = _describe(
+#             f'Browse {type_name.lower()} for sale in {city_name}. '
+#             f'Explore available properties, prices and project details.',
+#             filler=f'Expert guidance from {BRAND}.',
+#         )
+
+#     # CITY + DEVELOPER
+#     elif city_name and developer_name:
+
+#         meta_title = (
+#             f'{developer_name} Properties Sale in '
+#             f'{city_name}{page_tag} | {BRAND}'
+#         )
+
+#         meta_description = _describe(
+#             f'Explore {developer_name} properties for in {city_name}. '
+#             f'Browse available projects, prices and property details.',
+#             filler=f'Expert guidance from {BRAND}.',
+#         )
+
+#     # CITY + BEDROOM
+#     elif city_name and seo_bedrooms:
+
+#         meta_title = (
+#             f'{seo_bedrooms}+ Bedroom Properties Sale in '
+#             f'{city_name}{page_tag} | {BRAND}'
+#         )
+
+#         meta_description = _describe(
+#             f'Browse {seo_bedrooms}+ bedroom properties sale in '
+#             f'{city_name}. Explore apartments, villas and residential '
+#             f'properties.',
+#             filler=f'Expert guidance from {BRAND}.',
+#         )
+
+#     # CITY ONLY
+#     elif city_name:
+
+#         meta_title = (
+#             f'Properties Sale in {city_name}'
+#             f'{page_tag} | {BRAND}'
+#         )
+
+#         meta_description = _describe(
+#             f'Browse {paginator.count} properties sale in {city_name}. '
+#             f'Explore apartments, villas and penthouses, including ready '
+#             f'and off-plan properties.',
+#             filler=f'Expert guidance from {BRAND}.',
+#         )
+
+#     # UNIT TYPE ONLY
+#     elif seo_unit_type:
+
+#         meta_title = (
+#             f'{seo_unit_type.title()} Properties for Sale'
+#             f'{page_tag} | {BRAND}'
+#         )
+
+#         meta_description = _describe(
+#             f'Browse {seo_unit_type.lower()} properties for sale '
+#             f'in Dubai & the UAE. Explore available properties and '
+#             f'investment opportunities.',
+#             filler=f'Expert guidance from {BRAND}.',
+#         )
+
+#     # PROPERTY TYPE ONLY
+#     elif type_name:
+
+#         meta_title = (
+#             f'{type_name} for Sale in Dubai & the UAE'
+#             f'{page_tag} | {BRAND}'
+#         )
+
+#         meta_description = _describe(
+#             f'Browse {type_name.lower()} for sale in Dubai & the UAE. '
+#             f'Explore available properties, prices and project details.',
+#             filler=f'Expert guidance from {BRAND}.',
+#         )
+
+#     # STATIC
+#     else:
+
+#         meta_title = (
+#             f'Properties Sale in Dubai & UAE'
+#             f'{page_tag}|{BRAND}'
+#         )
+
+#         meta_description = _describe(
+#             f'Browse {paginator.count} properties in Dubai & the UAE — '
+#             f'apartments, villas and penthouses, ready and off-plan.',
+#             filler=f'Expert guidance from {BRAND}.',
+#         )
+
+#     if page > 1:
+#         meta_description = f'Page {page} — {meta_description}'[:160]
+
+#     # ── SEO CANONICAL / ROBOTS ─────────────────────────────
+
+#     # Any URL containing query parameters is a filtered/dynamic URL.
+#     # Keep the clean /properties/ page indexable.
+#     # Clean paths (/properties/, /properties/city/dubai/) are indexable and
+#     # self-canonical; any query string or page > 1 is index and points its
+#     # canonical back at the clean path.
+#        # ── SEO CANONICAL / ROBOTS ─────────────────────────────
+#     # has_query_params = bool(request.GET)
+#     # index = (page > 1 or has_query_params)
+
+      
+#     # ── SEO CANONICAL / ROBOTS ─────────────────────────────
+#     filter_params = {
+#         k
+#         for k in request.GET
+#         if request.GET.get(k, '').strip()
+#         and k not in IGNORED_PARAMS
+#         and not k.startswith('utm_')
+#     }
+#     filtered = bool(filter_params)
+
+#     if city is not None:
+#         base_path = _city_path(
+#             active['city'],
+#             active['unit_type'] if path_unit_slug else ''
+#         )
+#     elif ptype is not None:
+#         base_path = _type_path(ptype)
+#     else:
+#         base_path = '/properties/'
+
+#     def url_for(target_page=None):
+#         url = f'{SITE_URL}{base_path}'
+#         if target_page and target_page > 1:
+#             url += f'page/{target_page}/'
+#         return url
+
+#     canonical_url = url_for(None) if filtered else url_for(page)
+
+#     robots = (
+#         'noindex, follow' if filtered
+#         else 'index, follow, max-image-preview:large, max-snippet:-1'
+#     )
+
+#     # Querystring for pagination/filter links
+#     querystring = urlencode({
+#         k: v for k, v in active.items() if v
+#     })
+
+#     return render(request, 'property_list.html', {
+#         'page_obj': page_obj,
+#         'properties': page_obj.object_list,
+#         'total_count': paginator.count,
+#         'page_range': paginator.get_elided_page_range(
+#             page,
+#             on_each_side=1,
+#             on_ends=1
+#         ),
+#         'querystring': querystring,
+
+#         **facets,
+
+#         'active_city': active['city'],
+#         'active_district': active['district'],
+#         'active_type': active['type'],
+#         'active_developer': active['developer'],
+#         'active_unit_type': active['unit_type'],
+#         'active_bedrooms': active['bedrooms'],
+#         'active_price_min': active['price_min'],
+#         'active_price_max': active['price_max'],
+#         'active_sort': active['sort'] or DEFAULT_SORT,
+#         'active_search': active['q'],
+#         'has_filters': any(active.values()),
+
+#         'meta_title': meta_title,
+#         'meta_description': meta_description,
+
+#         'canonical': canonical_url,
+#         'robots': robots,
+
+#         'rel_prev': (
+#             url_for(page_obj.previous_page_number())
+#             if page_obj.has_previous()
+#             else None
+#         ),
+
+#         'rel_next': (
+#             url_for(page_obj.next_page_number())
+#             if page_obj.has_next()
+#             else None
+#         ),
+#     })
+    
+    
+    
+    
+    
+# =====================================================================
+# HOW TO USE (one paste, no splicing)
+#
+# In properties/views.py find `def _city_path(` (just under the "# VIEW"
+# comment). Delete EVERYTHING from there down to the end of `property_list`
+# (the line right before "# ---- property detail ----"), then paste this
+# whole file in its place.
+#
+# Keep everything above it (_clean_url, _read, _base_qs, _filtered,
+# _facets, _pick, _describe ...). No new imports are needed.
+# =====================================================================
+
+
 def _city_path(city_slug, unit_type=''):
     """Clean, parameter-free URL path for a city (and optional unit type)."""
     path = f'/properties/city/{city_slug}/'
@@ -370,135 +907,135 @@ def _city_path(city_slug, unit_type=''):
         path += f'{slugify(unit_type)}/'
     return path
 
+
 def _type_path(type_slug):
     """Clean, parameter-free URL path for a property type."""
     return f'/properties/type/{type_slug}/'
 
 
-    
-def property_list(request,city=None,ptype=None,unit_type=None, page=None,):
+def _qs_page(request):
+    """?page=N as a safe int, 0 if missing/invalid."""
+    raw = request.GET.get('page', '').strip()
+    return int(raw) if raw.isascii() and raw.isdigit() and len(raw) <= 6 else 0
 
 
-    # ── LEGACY ?type=... → CLEAN URL ────────────────────────
+def _legacy_redirect(request, base_path, consumed=()):
+    """
+    301 an old query-string URL to its clean path WITHOUT losing anything.
+
+    `consumed` = params that the clean path already expresses (city, type...).
+    Every other param (q, district, developer, price, non-default sort...) is
+    carried over in the querystring. The page number goes into the path
+    (/page/N/) only when nothing else is carried; otherwise it stays ?page=N.
+    """
+    rest = {}
+    for key, value in request.GET.items():
+        value = value.strip()
+        if not value or key in consumed or key == 'page':
+            continue
+        if key == 'sort' and value == DEFAULT_SORT:
+            continue
+        rest[key] = value
+
+    page_no = _qs_page(request)
+    if page_no > 1:
+        if rest:
+            rest['page'] = page_no
+        else:
+            base_path += f'page/{page_no}/'
+
+    if rest:
+        base_path += '?' + urlencode(rest)
+    return redirect(base_path, permanent=True)
+
+
+def property_list(request, city=None, ptype=None, unit_type=None, page=None):
+
     type_param = request.GET.get('type', '').strip()
-
-    if city is None and ptype is None and type_param:
-
-        property_type = PropertyType.objects.filter(
-            slug=type_param,
-            is_active=True
-        ).first()
-
-        if property_type:
-            target = _type_path(property_type.slug)
-
-            page_param = request.GET.get('page', '').strip()
-
-            if page_param.isdigit() and int(page_param) > 1:
-                target += f'page/{page_param}/'
-
-            return redirect(target, permanent=True)
-
-
-                # ── Legacy ?page=N → CLEAN /page/N/ ─────────────────
+    city_param = request.GET.get('city', '').strip()
+    unit_param = request.GET.get('unit_type', '').strip()
     page_param = request.GET.get('page', '').strip()
-
-    if (
-        page_param.isdigit()
-        and int(page_param) > 1
-        and not type_param
-        and not request.GET.get('city')
-    ):
-        return redirect(
-            f'/properties/page/{page_param}/',
-            permanent=True
-        )
-
-  
-
-    # ── Existing legacy URL cleanup ─────────────────────────
-    bounce = _clean_url(request)
-
-    if bounce:
-        return bounce
-
-    # ── Read active filters ─────────────────────────────────
-    active = _read(request)
-
-    # ── Legacy ?status=off-plan / ?status=ready ─────────────
     status_param = request.GET.get('status', '').strip()
 
+    # params that actually carry a value (default sort is just noise)
+    used = {k for k in request.GET if request.GET.get(k, '').strip()}
+    if request.GET.get('sort', '').strip() == DEFAULT_SORT:
+        used.discard('sort')
+
+    # the clean path this request lives on
+    if city is not None:
+        base_path = _city_path(city, unit_type or '')
+    elif ptype is not None:
+        base_path = _type_path(ptype)
+    else:
+        base_path = '/properties/'
+
+    # ── 1. legacy ?status=off-plan / ?status=ready ──────────
     if status_param in ('off-plan', 'ready'):
         target = (
             '/properties/off-plan/'
             if status_param == 'off-plan'
             else '/properties/ready/'
         )
-
         rest = {
-            k: v
-            for k, v in request.GET.items()
+            k: v for k, v in request.GET.items()
             if k != 'status' and v.strip()
         }
-
         if rest:
             target += '?' + urlencode(rest)
-
         return redirect(target, permanent=True)
 
-    # ── Legacy ?city=... / ?city=...&unit_type=... ─────────
-# ── Legacy ?city=... / ?city=...&unit_type=... ─────────
-    if city is None and active['city']:
+    # ── 2. legacy ?type=apartments → /properties/type/apartments/ ──
+    # Only when no city/unit_type is involved (type+city can't be one path).
+    # Other params (q, price, ...) are carried over, never dropped.
+    if (
+        city is None and ptype is None and type_param
+        and not ({'city', 'unit_type'} & used)
+    ):
+        if PropertyType.objects.filter(slug=type_param, is_active=True).exists():
+            return _legacy_redirect(
+                request, _type_path(type_param), consumed={'type'}
+            )
 
-        used = {
-            k
-            for k in request.GET
-            if request.GET.get(k, '').strip()
-        }
+    # ── 3. legacy ?city=dubai[&unit_type=...] → /properties/city/dubai/ ──
+    if city is None and ptype is None and city_param and not type_param:
+        if City.objects.filter(slug=city_param, is_active=True).exists():
+            return _legacy_redirect(
+                request,
+                _city_path(city_param, unit_param),
+                consumed={'city', 'unit_type'},
+            )
 
-        if used <= {'city', 'unit_type', 'page', 'sort'}:
+    # ── 4. duplicate params already in the path + bare ?page=N ──
+    #   /properties/city/dubai/?city=dubai&page=3  → /properties/city/dubai/page/3/
+    #   /properties/?page=3                        → /properties/page/3/
+    # If ANY real filter is present (q, developer, district, ...) we do NOT
+    # redirect: the page number stays in the query string and is honoured below.
+    redundant = set()
+    if city is not None and city_param == city:
+        redundant.add('city')
+    if ptype is not None and type_param == ptype:
+        redundant.add('type')
 
-            if City.objects.filter(
-                slug=active['city'],
-                is_active=True
-            ).exists():
+    if (redundant or page_param) and not (used - redundant - {'page'}):
+        return _legacy_redirect(request, base_path, consumed=redundant)
 
-                target = _city_path(
-                    active['city'],
-                    active['unit_type']
-                )
+    # ── 5. drop empty params / ?page=1 ──────────────────────
+    bounce = _clean_url(request)
+    if bounce:
+        return bounce
 
-                page_param = request.GET.get('page', '').strip()
-
-                if page_param.isdigit() and int(page_param) > 1:
-                    target += f'page/{page_param}/'
-
-                return redirect(target, permanent=True)
-    # ── Legacy ?type=apartments ─────────────────────────────
-  
+    # ── Read active filters ─────────────────────────────────
+    active = _read(request)
 
     # ── Clean type route ────────────────────────────────────
     if ptype is not None:
-        get_object_or_404(
-            PropertyType,
-            slug=ptype,
-            is_active=True
-        )
-
+        get_object_or_404(PropertyType, slug=ptype, is_active=True)
         active['type'] = ptype
 
-# ── Clean city routes ─────────────────────────────────────
-    
-  # ── Clean city routes ─────────────────────────────────
-    path_unit_slug = ''
-
+    # ── Clean city routes ───────────────────────────────────
     if city is not None:
-        get_object_or_404(
-            City,
-            slug=city,
-            is_active=True
-        )
-
+        get_object_or_404(City, slug=city, is_active=True)
         active['city'] = city
 
         if unit_type:
@@ -506,56 +1043,30 @@ def property_list(request,city=None,ptype=None,unit_type=None, page=None,):
                 slugify(u): u
                 for u in (
                     GroupedApartment.objects
-                    .filter(
-                        is_active=True,
-                        property_obj__city__slug=city
-                    )
+                    .filter(is_active=True, property_obj__city__slug=city)
                     .exclude(apartment_type__isnull=True)
                     .exclude(apartment_type='')
-                    .values_list(
-                        'apartment_type',
-                        flat=True
-                    )
+                    .values_list('apartment_type', flat=True)
                     .distinct()
                 )
             }
-
             if unit_type not in options:
-                raise Http404(
-                    'Unknown unit type for this city'
-                )
-
+                raise Http404('Unknown unit type for this city')
             active['unit_type'] = options[unit_type]
-            path_unit_slug = unit_type
 
-
-    # ── BUILD QUERYSET ────────────────────────────────────
+    # ── BUILD QUERYSET ──────────────────────────────────────
     scope = _base_qs()
+    qs = _filtered(scope, active)
 
-    qs = _filtered(
-        scope,
-        active
-    )
-
-
-    # ── PAGINATION ────────────────────────────────────────
-    paginator = Paginator(
-        qs,
-        PAGE_SIZE
-    )
-
-    page_obj = paginator.get_page(page or 1)
-
+    # ── PAGINATION ──────────────────────────────────────────
+    # THE FIX: read the page from ?page=N as well as from /page/N/.
+    # Filtered links are ?...&page=N, so the query string must win.
+    paginator = Paginator(qs, PAGE_SIZE)
+    page_obj = paginator.get_page(_qs_page(request) or page or 1)
     page = page_obj.number
 
-
-    # ── FACETS ────────────────────────────────────────────
-    facets = _facets(
-        scope,
-        active
-    )
-
-
+    # ── FACETS ──────────────────────────────────────────────
+    facets = _facets(scope, active)
 
     # ── SEO ──
     page_tag = f' | Page {page}' if page > 1 else ''
@@ -790,18 +1301,9 @@ def property_list(request,city=None,ptype=None,unit_type=None, page=None,):
         meta_description = f'Page {page} — {meta_description}'[:160]
 
     # ── SEO CANONICAL / ROBOTS ─────────────────────────────
-
-    # Any URL containing query parameters is a filtered/dynamic URL.
-    # Keep the clean /properties/ page indexable.
-    # Clean paths (/properties/, /properties/city/dubai/) are indexable and
-    # self-canonical; any query string or page > 1 is index and points its
-    # canonical back at the clean path.
-       # ── SEO CANONICAL / ROBOTS ─────────────────────────────
-    # has_query_params = bool(request.GET)
-    # index = (page > 1 or has_query_params)
-
-      
-    # ── SEO CANONICAL / ROBOTS ─────────────────────────────
+    # Clean paths (/properties/, /properties/city/dubai/, page/N/) are
+    # indexable and self-canonical. Anything with real filter params is
+    # noindex and points its canonical back at the clean path.
     filter_params = {
         k
         for k in request.GET
@@ -811,30 +1313,31 @@ def property_list(request,city=None,ptype=None,unit_type=None, page=None,):
     }
     filtered = bool(filter_params)
 
-    if city is not None:
-        base_path = _city_path(
-            active['city'],
-            active['unit_type'] if path_unit_slug else ''
-        )
-    elif ptype is not None:
-        base_path = _type_path(ptype)
-    else:
-        base_path = '/properties/'
+    # real filters to carry on prev/next URLs (not params the path already has)
+    carry = {
+        k: request.GET[k].strip()
+        for k in sorted(filter_params)
+        if k not in redundant
+    }
 
-    def url_for(target_page=None):
-        url = f'{SITE_URL}{base_path}'
-        if target_page and target_page > 1:
-            url += f'page/{target_page}/'
-        return url
+    def page_url(n):
+        """Absolute URL of page n, keeping filters when there are any."""
+        if carry:
+            params = dict(carry)
+            if n > 1:
+                params['page'] = n
+            return f'{SITE_URL}{base_path}?{urlencode(params)}'
+        return f'{SITE_URL}{base_path}' + (f'page/{n}/' if n > 1 else '')
 
-    canonical_url = url_for(None) if filtered else url_for(page)
+    canonical_url = f'{SITE_URL}{base_path}' if filtered else page_url(page)
 
     robots = (
         'noindex, follow' if filtered
         else 'index, follow, max-image-preview:large, max-snippet:-1'
     )
 
-    # Querystring for pagination/filter links
+    # Querystring for pagination/filter links (unchanged — your template
+    # builds its page links from this)
     querystring = urlencode({
         k: v for k, v in active.items() if v
     })
@@ -871,17 +1374,20 @@ def property_list(request,city=None,ptype=None,unit_type=None, page=None,):
         'robots': robots,
 
         'rel_prev': (
-            url_for(page_obj.previous_page_number())
+            page_url(page_obj.previous_page_number())
             if page_obj.has_previous()
             else None
         ),
 
         'rel_next': (
-            url_for(page_obj.next_page_number())
+            page_url(page_obj.next_page_number())
             if page_obj.has_next()
             else None
         ),
-    })
+    })    
+    
+    
+    
 # -----------------------------------------property detail----------------------------------------------------
 
 """
@@ -3223,7 +3729,7 @@ def shahrukhz(request):
         "enquiry_form": enquiry_form,
         "property": property_obj,
         "site_url": site_url,
-        "meta_title": "Shahrukhz Residences by Danube | Dubai Maritime City Waterfront Apartments",
+        "meta_title": "Shahrukhz Residences by Danube | Dubai Maritime City",
         "meta_description": (
             "Shahrukhz Residences by Danube Properties: furnished waterfront studios, "
             "1 to 4 bedroom apartments and penthouses in Dubai Maritime City. "
