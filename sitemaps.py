@@ -61,8 +61,15 @@ class StaticPagesSitemap(Sitemap):
         # Return path only — Django prepends domain automatically
         return item['path']
     
+    # def lastmod(self, item):
+    #     return timezone.now()
+    # ⬇️ WITH this
     def lastmod(self, item):
-        return timezone.now()
+        if item['path'] == '/insights/':
+            latest = BlogPost.objects.filter(is_published=True).order_by('-updated_at').first()
+            return latest.updated_at if latest else None
+        return None  # omit lastmod rather than fake it
+
     
     def changefreq(self, item):
         return item['changefreq']
@@ -228,7 +235,7 @@ class AreasSitemap(Sitemap):
 class BlogSitemap(Sitemap):
     """Published blog posts."""
     
-    changefreq = 'weekly'
+    changefreq = 'daily'   # was 'weekly'
     priority = 0.7
     
     def items(self):
