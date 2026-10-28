@@ -52,7 +52,7 @@ class StaticPagesSitemap(Sitemap):
             {'path': '/properties/seefa-by-alef-sharjah/', 'priority': 0.9, 'changefreq': 'weekly'},
             {'path': '/properties/binghatti-starfall-al-jaddaf/', 'priority': 0.9, 'changefreq': 'weekly'},
             {'path': '/properties/shahrukhz-residences/', 'priority': 0.9, 'changefreq': 'weekly'},
-            
+            {'path': '/properties/kore-by-imtiaz/', 'priority': 0.9, 'changefreq': 'weekly'},
             
              
         ]

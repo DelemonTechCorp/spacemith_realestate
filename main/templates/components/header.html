@@ -484,7 +484,10 @@
             Shahrukhz Residences
           </a>
 
-
+          <a href="{% url 'properties:kure' %}"
+            class="dropdown-link {% if request.resolver_match.view_name == 'properties:kure' %}is-active{% endif %}">
+            Kore by Imtiaz
+          </a>
 
 
             
@@ -648,8 +651,12 @@
           Binghatti Starfall
         </a>
         <a href="{% url 'properties:shahrukhz' %}"
-           class="mobile-dropdown-link {% if request.resolver_match.view_name == 'properties:shahrukhz' %}}is-active{% endif %}">
+           class="mobile-dropdown-link {% if request.resolver_match.view_name == 'properties:shahrukhz' %}is-active{% endif %}">
           Shahrukhz Residences
+        </a>
+        <a href="{% url 'properties:kure' %}"
+           class="mobile-dropdown-link {% if request.resolver_match.view_name == 'properties:kure' %}is-active{% endif %}">
+          Kore by Imtiaz
         </a>
       </div>
 
