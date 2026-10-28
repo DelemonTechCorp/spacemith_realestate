@@ -3411,6 +3411,8 @@ def property_map(request):
     })
 
 
+# Ellington
+
 def ellington(request):
     """
     Ellington Master Community, Al Yalayis 1 — community + project SEO
@@ -3740,3 +3742,125 @@ def shahrukhz(request):
         "og_image": f"{site_url}{static('img/shahrukhz-hero.webp')}",
     }
     return render(request, "shahrukhz.html", context)
+
+
+
+
+
+# ============================================================
+# KORE BY IMTIAZ — SEO LANDING PAGE
+# ============================================================
+
+KORE_PROPERTY_SLUG = (
+    'dubai-land-residence-complex/dubai/kore-by-imtiaz'
+)
+
+
+def kure(request):
+    """
+    Kore by Imtiaz — Dubai Land Residence Complex.
+
+    Dedicated SEO landing page with:
+    - Static project content from kure.html
+    - Existing Property database association
+    - Django enquiry form
+    - Existing CRM and email notification integrations
+    - SEO metadata and canonical URL
+    """
+
+    # --------------------------------------------------------
+    # 1. FIND PROPERTY IN DATABASE
+    # --------------------------------------------------------
+    property_obj = (
+        Property.objects
+        .filter(
+            slug=KORE_PROPERTY_SLUG,
+            is_active=True
+        )
+        .first()
+    )
+
+    # --------------------------------------------------------
+    # 2. INITIALISE ENQUIRY FORM
+    # --------------------------------------------------------
+    enquiry_form = PropertyEnquiryForm()
+
+    # --------------------------------------------------------
+    # 3. HANDLE FORM SUBMISSION
+    # --------------------------------------------------------
+    if request.method == 'POST':
+
+        enquiry_form, response = _handle_landing_enquiry(
+            request,
+            property_obj=property_obj,
+            source='Kore by Imtiaz Landing Page',
+            page_title='Kore by Imtiaz',
+            redirect_url=(
+                f"{reverse('properties:kure')}#enquiry"
+            ),
+        )
+
+        if response is not None:
+            return response
+
+    # --------------------------------------------------------
+    # 4. CANONICAL URL
+    # --------------------------------------------------------
+    canonical = (
+        f'{SITE_URL.rstrip("/")}/properties/kore-by-imtiaz/'
+    )
+
+    # --------------------------------------------------------
+    # 5. SEO META TITLE AND DESCRIPTION
+    # --------------------------------------------------------
+    meta_title, meta_description, seo_report = _audit_seo(
+        property_obj if property_obj else Property(
+            pk=0,
+            title='Kore by Imtiaz'
+        ),
+        'Kore by Imtiaz at DLRC | Apartments in Dubailand',
+        (
+            'Explore Kore by Imtiaz at Dubai Land Residence '
+            'Complex. Discover wellness-inspired studio, '
+            '1 and 2 bedroom apartments, amenities and payment plans.'
+        ),
+    )
+
+    # --------------------------------------------------------
+    # 6. OPEN GRAPH IMAGE
+    # --------------------------------------------------------
+    og_image = (
+        _absolute(property_obj.cover_image)
+        if property_obj and property_obj.cover_image
+        else f'{SITE_URL.rstrip("/")}/static/img/kure-hero.webp'
+    )
+
+    # --------------------------------------------------------
+    # 7. RENDER LANDING PAGE
+    # --------------------------------------------------------
+    return render(request, 'kure.html', {
+
+        # Property database
+        'property': property_obj,
+
+        # Enquiry form
+        'enquiry_form': enquiry_form,
+
+        # SEO metadata
+        'meta_title': meta_title,
+        'meta_description': meta_description,
+        'canonical': canonical,
+        'robots': (
+            'index, follow, '
+            'max-image-preview:large, max-snippet:-1'
+        ),
+
+        # Open Graph
+        'og_type': 'website',
+        'og_image': og_image,
+
+        # SEO diagnostics (development only)
+        'seo_report': (
+            seo_report if settings.DEBUG else None
+        ),
+    })

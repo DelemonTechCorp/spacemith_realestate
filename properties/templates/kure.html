@@ -1,0 +1,2991 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{# meta_title / meta_description / canonical / robots / og_image come from the
+   `kore_by_imtiaz` view's context, same as the Ellington page — base.html's
+   default blocks render them, so they aren't overridden here. #}
+
+{% block body_class %}has-hero{% endblock %}
+
+{% block schema %}
+{{ block.super }}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "ApartmentComplex",
+  "name": "Kore by Imtiaz at Dubai Land Residence Complex",
+  "description": "A wellness-focused off-plan development by Imtiaz Developments in Dubai Land Residence Complex (DLRC), Dubailand, offering studio, one- and two-bedroom apartments built around the Train, Nourish and Recover concept.",
+  "url": "{{ canonical }}",
+  "address": { "@type": "PostalAddress", "addressLocality": "Dubai Land Residence Complex", "addressRegion": "Dubai", "addressCountry": "AE" },
+  "amenityFeature": [
+    { "@type": "LocationFeatureSpecification", "name": "Technogym-equipped training facilities", "value": true },
+    { "@type": "LocationFeatureSpecification", "name": "Social padel court", "value": true },
+    { "@type": "LocationFeatureSpecification", "name": "Wellness pool", "value": true },
+    { "@type": "LocationFeatureSpecification", "name": "Edible and sensory gardens", "value": true }
+  ],
+  "developer": { "@type": "Organization", "name": "Imtiaz Developments" }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Where is Kore by Imtiaz located?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Kore by Imtiaz is located in Dubai Land Residence Complex (DLRC) within Dubailand, with access to Dubai–Al Ain Road and Emirates Road." }
+    },
+    {
+      "@type": "Question",
+      "name": "What is the starting price of Kore by Imtiaz?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Studio apartments at Kore by Imtiaz start from an indicative AED 679,000, subject to developer confirmation and availability." }
+    },
+    {
+      "@type": "Question",
+      "name": "What apartment types are available at Kore by Imtiaz?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Kore by Imtiaz offers studio, one-bedroom and two-bedroom apartments, with advertised starting sizes of 406 sq. ft., 669 sq. ft. and 1,406 sq. ft. respectively." }
+    },
+    {
+      "@type": "Question",
+      "name": "What is the payment plan for Kore by Imtiaz?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Two plans are advertised: a 50/50 plan (20% on booking, 30% during construction, 50% on handover) and a 60/40 post-handover plan (20% on booking, 35% during construction, 5% on handover and 40% over 36 months after handover)." }
+    },
+    {
+      "@type": "Question",
+      "name": "When is the handover of Kore by Imtiaz expected?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Handover of Kore by Imtiaz is expected in Q4 2028, subject to the developer's construction schedule." }
+    },
+    {
+      "@type": "Question",
+      "name": "How can I enquire about Kore by Imtiaz?",
+      "acceptedAnswer": { "@type": "Answer", "text": "You can contact Spacesmith Real Estate by phone, WhatsApp or the enquiry form on this page to receive the latest prices, floor plans, payment plan and availability." }
+    }
+  ]
+}
+</script>
+{% endblock %}
+
+{% block preload %}
+<link rel="preload" as="image"
+      href="{% static 'img/kure-hero.webp' %}"
+      type="image/webp"
+      fetchpriority="high">
+{% endblock %}
+
+{% block content %}
+
+<!-- ================================================================
+     1. HERO
+     ================================================================ -->
+<style>
+  .kor-hero {
+    position: relative;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    background: var(--ink);
+    min-height: 82svh;
+    padding-top: calc(var(--nav-height) + 4.5rem);
+    padding-bottom: 3rem;
+  }
+  .kor-hero__bg { position: absolute; inset: 0; z-index: 0; }
+  .kor-hero__bg img { width: 100%; height: 100%; object-fit: cover; object-position: center; }
+  .kor-hero__scrim {
+    position: absolute; inset: 0; z-index: 1;
+    background: linear-gradient(180deg, rgba(11,21,18,.65) 0%, rgba(11,21,18,.8) 60%, rgba(11,21,18,.82) 100%);
+  }
+
+  .kor-hero__inner {
+    position: relative; z-index: 2; width: 100%;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+    align-items: center;
+  }
+  @media (min-width: 1024px) {
+    .kor-hero__inner { grid-template-columns: 1.15fr .85fr; gap: 3rem; }
+  }
+
+  .kor-hero__eyebrow-row { display: flex; flex-wrap: wrap; align-items: center; gap: .9rem; margin-bottom: 1.5rem; }
+  .kor-hero__developer { font-size: .75rem; text-transform: uppercase; letter-spacing: .2em; color: rgba(246,242,233,.72); }
+
+  .kor-hero__title { max-width: 36rem; margin: 0; text-shadow: 0 2px 24px rgba(11,21,18,.4); }
+  .kor-hero__title .accent { color: var(--gold); }
+  .kor-hero__title-kicker {
+    display: block;
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: clamp(2.25rem, 5.2vw, 3.5rem);
+    line-height: 1.08;
+    color: var(--cream);
+  }
+  .kor-hero__title-sub {
+    display: block;
+    margin-top: .625rem;
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: clamp(1.125rem, 2.2vw, 1.375rem);
+    line-height: 1.35;
+    color: rgba(246,242,233,.82);
+  }
+
+  .kor-hero__lead {
+    margin-top: 1.25rem;
+    max-width: 32rem;
+    font-size: clamp(.9375rem, 1.8vw, 1.0625rem);
+    color: rgba(246,242,233,.86);
+    line-height: 1.75;
+  }
+
+  /* Train · Nourish · Recover pills */
+  .kor-hero__pillars { margin-top: 1.5rem; display: flex; flex-wrap: wrap; gap: .5rem; }
+  .kor-hero__pillars span {
+    font-size: .6875rem; font-weight: 600; text-transform: uppercase; letter-spacing: .18em;
+    color: var(--cream);
+    border: 1px solid rgba(246,242,233,.28);
+    border-radius: 9999px;
+    padding: .4rem .9rem;
+    background: rgba(11,21,18,.25);
+  }
+
+  .kor-hero__cta { margin-top: 2rem; display: flex; flex-wrap: wrap; gap: .875rem; }
+
+  /* ---- floating project snapshot card ---- */
+  .kor-hero__card {
+    background: rgba(11,21,18,.42);
+    border: 1px solid rgba(246,242,233,.18);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border-radius: .75rem;
+    padding: 1.75rem;
+    box-shadow: var(--shadow-elegant);
+    width: 100%;
+    max-width: 24rem;
+    margin-inline: auto;
+  }
+  @media (min-width: 1024px) { .kor-hero__card { margin-inline: auto 0; } }
+
+  .kor-hero__card-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+  .kor-hero__card-head p { margin: 0; font-size: .6875rem; text-transform: uppercase; letter-spacing: .16em; color: var(--gold); }
+  .kor-hero__card-head span {
+    font-size: .625rem; text-transform: uppercase; letter-spacing: .08em;
+    color: rgba(246,242,233,.6); border: 1px solid rgba(246,242,233,.25);
+    border-radius: 9999px; padding: .25rem .625rem;
+  }
+
+  .kor-hero__card-list { list-style: none; margin: 1.25rem 0 0; padding: 0; display: grid; gap: .875rem; }
+  .kor-hero__card-list li {
+    display: flex; justify-content: space-between; align-items: baseline; gap: 1rem;
+    padding-bottom: .875rem; border-bottom: 1px solid rgba(246,242,233,.14);
+  }
+  .kor-hero__card-list li:last-child { border-bottom: 0; padding-bottom: 0; }
+  .kor-hero__card-list li span:first-child { font-size: .8125rem; color: rgba(246,242,233,.65); flex-shrink: 0; }
+  .kor-hero__card-list li span:last-child { font-family: var(--font-display); font-size: 1.0625rem; color: var(--cream); text-align: right; }
+  .kor-hero__card-list li.is-price span:last-child { color: var(--gold); font-size: 1.25rem; }
+
+  .kor-hero__card-cta { margin-top: 1.5rem; width: 100%; justify-content: center; }
+
+  /* ---- small screens ---- */
+  @media (max-width: 640px) {
+    .kor-hero { min-height: auto; padding-top: calc(var(--nav-height) + 2.5rem); padding-bottom: 2.5rem; }
+    .kor-hero__eyebrow-row { margin-bottom: 1rem; }
+    .kor-hero__cta { flex-direction: column; }
+    .kor-hero__cta .btn-gold,
+    .kor-hero__cta .btn-line { width: 100%; justify-content: center; }
+  }
+  @media (max-width: 420px) {
+    .kor-hero__card { padding: 1.25rem; }
+    .kor-hero__card-list li span:first-child { font-size: .75rem; }
+    .kor-hero__card-list li span:last-child { font-size: .9375rem; }
+    .kor-hero__card-list li.is-price span:last-child { font-size: 1.0625rem; }
+  }
+</style>
+
+<section class="kor-hero">
+  <div class="kor-hero__bg">
+    <img src="{% static 'img/kure-hero.webp' %}"
+         alt="Kore by Imtiaz at Dubai Land Residence Complex exterior render"
+         width="1920" height="1080" fetchpriority="high" decoding="async">
+  </div>
+  <div class="kor-hero__scrim"></div>
+
+  <div class="container-page kor-hero__inner">
+
+    <div>
+      <div class="kor-hero__eyebrow-row">
+        <span class="badge">Off-Plan</span>
+        <span class="kor-hero__developer">By Imtiaz Developments</span>
+      </div>
+
+      <h1 class="kor-hero__title">
+        <span class="kor-hero__title-kicker">Kore by Imtiaz at <span class="accent">DLRC</span></span>
+        <span class="kor-hero__title-sub">Premium Apartments for Sale in Dubai Land Residence Complex</span>
+      </h1>
+
+      <p class="kor-hero__lead">
+        Wellness-inspired studio, one- and two-bedroom residences by Imtiaz Developments in
+        Dubailand, with fitness technology, green spaces and relaxation built into everyday living.
+      </p>
+
+      <div class="kor-hero__pillars" aria-label="Kore concept">
+        <span>Train</span>
+        <span>Nourish</span>
+        <span>Recover</span>
+      </div>
+
+      <div class="kor-hero__cta">
+        <a href="#enquiry" class="btn-gold">
+          Enquire Now
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </a>
+        <!-- <a href="#floor-plans" class="btn-line">View Floor Plans</a> -->
+        <a href="tel:+{{ phone_number|default:'971556399212' }}" class="btn-line">Call An Advisor</a>
+      </div>
+    </div>
+
+    <div class="kor-hero__card reveal" data-delay="120">
+      <div class="kor-hero__card-head">
+        <p>Project Snapshot</p>
+        <span>Freehold</span>
+      </div>
+      <ul class="kor-hero__card-list">
+        <li class="is-price"><span>Starting Price</span><span>AED 679,000</span></li>
+        <li><span>Starting Size</span><span>406 sq. ft.</span></li>
+        <li><span>Unit Types</span><span>Studio, 1 &amp; 2 BR</span></li>
+        <li><span>Payment Plan</span><span>50/50 or 60/40</span></li>
+        <li><span>Handover</span><span>Q4 2028</span></li>
+        <li><span>Location</span><span>DLRC, Dubailand</span></li>
+      </ul>
+      <a href="#enquiry" class="btn-gold kor-hero__card-cta">Get Price List &amp; Brochure</a>
+    </div>
+
+  </div>
+</section>
+
+
+<!-- ================================================================
+     2. ABOUT KORE BY IMTIAZ  (image collage + intro copy)
+     ================================================================ -->
+<style>
+  .kor-about { position: relative; padding-block: 3.5rem; background: #FAF8F3; overflow: hidden; }
+  /*.kor-about::before {
+    content: ""; position: absolute; inset: 0; z-index: 0;
+    background-image:
+      repeating-linear-gradient(90deg, color-mix(in srgb, var(--primary) 5%, transparent) 0 1px, transparent 1px 64px),
+      repeating-linear-gradient(0deg,  color-mix(in srgb, var(--primary) 5%, transparent) 0 1px, transparent 1px 64px);
+    -webkit-mask-image: radial-gradient(55% 55% at 95% 8%, #000, transparent 68%);
+            mask-image: radial-gradient(55% 55% at 95% 8%, #000, transparent 68%);
+    pointer-events: none;
+  }*/
+  .kor-about::before{
+    content:"";
+    position:absolute;
+    inset:0;
+
+    background:
+    radial-gradient(
+        circle at top right,
+        rgba(201,168,103,.08),
+        transparent 45%
+    );
+
+    pointer-events:none;
+}
+
+  .kor-about__grid {
+    position: relative; z-index: 1;
+    display: grid; gap: 3rem; align-items: center;
+    grid-template-columns: 1fr;
+  }
+  @media (min-width: 1024px) { .kor-about__grid { grid-template-columns: 1fr 1fr; gap: 4.5rem; } }
+
+  /* ---- image collage ---- */
+  .kor-about__media { position: relative; padding: 0 0 0 0; }
+  @media (min-width: 1024px) { .kor-about__media { padding: 0 2.5rem 2rem 0; }
+  .kor-about__media {
+    transform: translateY(-25px);
+  } }
+
+  /* gold offset frame behind the main image */
+  .kor-about__media::before {
+    content: ""; position: absolute; z-index: 0;
+    top: 1.25rem; left: 1.25rem; right: -0.75rem; bottom: -0.75rem;
+    border: 1px solid color-mix(in srgb, var(--gold) 55%, transparent);
+    border-radius: .5rem;
+    pointer-events: none;
+  }
+  @media (min-width: 1024px) { .kor-about__media::before { right: 1.75rem; bottom: 1.75rem; } }
+
+  .kor-about__main {
+    position: relative; z-index: 1;
+    width: 100%; height: 480px; object-fit: cover; display: block;
+    border-radius: .5rem; box-shadow: var(--shadow-elegant); background: var(--secondary);
+  }
+  @media (max-width: 1023px) { .kor-about__main { height: 380px; } }
+  @media (max-width: 640px)  { .kor-about__main { height: 280px; } }
+
+  .kor-about__inset {
+    display: none;
+    position: absolute; z-index: 2; right: 0; bottom: 0;
+    width: 46%; aspect-ratio: 4 / 3; object-fit: cover;
+    border: 6px solid var(--background);
+    border-radius: .5rem;
+    box-shadow: var(--shadow-elegant);
+    background: var(--secondary);
+  }
+  @media (min-width: 1024px) { .kor-about__inset { display: block; } }
+
+  .kor-about__badge {
+    position: absolute; z-index: 3; left: 1rem; top: 1rem;
+    display: flex; align-items: center; gap: .75rem;
+    max-width: calc(100% - 2rem);
+    padding: .8rem 1.1rem;
+    border-radius: .5rem;
+    background: var(--primary);
+    box-shadow: var(--shadow-elegant);
+  }
+  .kor-about__badge strong { font-family: var(--font-display); font-size: 1.75rem; line-height: 1; color: var(--gold); flex-shrink: 0; }
+  .kor-about__badge span {
+  font-size: .65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .12em;
+  line-height: 1.4;
+  color: rgba(246,242,233,.85);
+  max-width: none;
+}
+  @media (max-width: 480px) {
+    .kor-about__badge { left: .625rem; top: .625rem; padding: .65rem .9rem; gap: .6rem; max-width: calc(100% - 1.25rem); }
+    .kor-about__badge strong { font-size: 1.375rem; }
+  }
+
+  /* ---- copy ---- */
+  .kor-about__lead {
+    margin: 1.25rem 0 0;
+    font-family: var(--font-display);
+    font-size: clamp(1.125rem, 2vw, 1.3125rem);
+    line-height: 1.5;
+    color: var(--foreground);
+    font-weight: 500;
+  }
+  .kor-about__text { margin: 1rem 0 0; color: var(--muted-foreground); line-height: 1.8; font-size: .9375rem; }
+
+  .kor-about__label {
+    margin: 2rem 0 0;
+    font-size: .6875rem; font-weight: 600; text-transform: uppercase; letter-spacing: .2em;
+    color: var(--primary);
+  }
+  .kor-about__chips {
+    list-style: none; margin: .875rem 0 0; padding: 0;
+    display: grid; gap: .75rem;
+    grid-template-columns: 1fr;
+  }
+  @media (min-width: 480px) { .kor-about__chips { grid-template-columns: 1fr 1fr; } }
+  .kor-about__chips li {
+    display: flex; align-items: center; gap: .75rem;
+    padding: .875rem 1rem;
+    border: 1px solid #ECE7DD;
+    border-radius: var(--radius);
+    background: var(--card);
+    font-size: .875rem; font-weight: 500; line-height: 1.4;
+    color: var(--foreground);
+    transition: border-color .25s ease, transform .25s ease;
+  }
+  .kor-about__chips li:hover { border-color: color-mix(in srgb, var(--gold) 60%, transparent); transform: translateY(-2px); transform:translateY(-4px);
+
+box-shadow:0 18px 40px rgba(0,0,0,.08);}
+  .kor-about__icon {
+    flex-shrink: 0; width: 2.25rem; height: 2.25rem; border-radius: 9999px;
+    display: flex; align-items: center; justify-content: center;
+    background: color-mix(in srgb, var(--gold) 14%, transparent);
+    color: var(--gold);
+  }
+  .kor-about__icon svg { width: 1.125rem; height: 1.125rem; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+
+  .kor-about__cta { margin-top: 2.25rem; display: flex; flex-wrap: wrap; align-items: center; gap: 1.25rem; }
+  .kor-about__link {
+    font-size: .875rem; font-weight: 600; color: var(--primary);
+    text-decoration: underline; text-underline-offset: .25em;
+  }
+  .kor-about__link:hover { color: var(--gold); }
+
+  @media (max-width: 640px) {
+    .kor-about { padding-block: 3.25rem; }
+    .kor-about__cta { flex-direction: column; align-items: stretch; text-align: center; }
+    .kor-about__cta .btn-gold { justify-content: center; }
+  }
+</style>
+
+<section class="kor-about" id="about">
+  <div class="container-page kor-about__grid">
+
+    <div class="kor-about__media reveal">
+      <img class="kor-about__main" src="{% static 'img/kore-abt-1.webp' %}"
+           alt="Kore by Imtiaz residences in Dubai Land Residence Complex, Dubailand"
+           width="800" height="920" loading="lazy">
+      <img class="kor-about__inset" src="{% static 'img/kore-abt-2.webp' %}"
+           alt="Landscaped wellness gardens at Kore by Imtiaz"
+           width="600" height="450" loading="lazy">
+      <div class="kor-about__badge">
+        <!-- <strong>3,200</strong> -->
+        <span>Wellness-Inspired Living</span>
+      </div>
+    </div>
+
+    <div class="reveal" data-delay="100">
+      <p class="eyebrow" style="color:var(--primary);font-size: .6875rem;font-weight: 600;text-transform: uppercase;letter-spacing: .32em;">About The Project</p>
+      <h2 class="section-title">About Kore by Imtiaz at Dubai Land Residence Complex</h2>
+
+      <p class="kor-about__lead">
+        Kore is a wellness-focused development where modern comfort meets active, balanced living,
+        with contemporary apartments and well-planned shared spaces.
+      </p>
+      <p class="kor-about__text">
+        Developed by Imtiaz Developments in Dubai Land Residence Complex (DLRC), Dubailand, Kore offers
+        studio, one- and two-bedroom homes for residents who value an active lifestyle, as well as buyers
+        exploring Dubai's off-plan market.
+      </p>
+      <p class="kor-about__text">
+        The name KORE stands for the centre of strength, stability and movement, and puts personal
+        well-being at the heart of everyday living.
+      </p>
+
+      <p class="kor-about__label">Residents Enjoy</p>
+      <ul class="kor-about__chips">
+        <li>
+          <span class="kor-about__icon"><svg viewBox="0 0 24 24"><path d="M6 7v10M3 9v6M18 7v10M21 9v6M6 12h12"/></svg></span>
+          Fitness spaces
+        </li>
+        <li>
+          <span class="kor-about__icon"><svg viewBox="0 0 24 24"><path d="M3 12h4l2-5 4 10 2-5h6"/></svg></span>
+          Wellness facilities
+        </li>
+        <li>
+          <span class="kor-about__icon"><svg viewBox="0 0 24 24"><path d="M12 22V12"/><path d="M12 12c-3.5 0-6-2.7-6-6a6 6 0 0 1 12 0c0 3.3-2.5 6-6 6Z"/></svg></span>
+          Landscaped gardens
+        </li>
+        <li>
+          <span class="kor-about__icon"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17" cy="9" r="2.5"/><path d="M16 14.1A5 5 0 0 1 21 19"/></svg></span>
+          Family-friendly areas to relax and meet
+        </li>
+      </ul>
+
+      <div class="kor-about__cta">
+        <a href="#enquiry" class="btn-gold">
+          Enquire Now
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </a>
+        <a href="#overview" class="kor-about__link">Discover the Kore concept</a>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+
+<!-- ================================================================
+     3. PROJECT HIGHLIGHTS  (dark band, icon fact tiles)
+     ================================================================ -->
+<!-- ================================================================
+     3. PROJECT HIGHLIGHTS — cleaned <style> block
+     Replace the whole <style>…</style> above <section class="kor-facts">
+     with this one. The HTML stays the same.
+     ================================================================ -->
+<style>
+  .kor-facts { position: relative; padding-block: 3.75rem; background: var(--ink); overflow: hidden; }
+  .kor-facts::before {
+    content: ""; position: absolute; top: -20%; left: -10%;
+    width: 480px; height: 480px; border-radius: 50%;
+    background: radial-gradient(circle, color-mix(in srgb, var(--gold) 16%, transparent), transparent 70%);
+    pointer-events: none;
+  }
+
+  .kor-facts__head {
+    position: relative; z-index: 1;
+    display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between;
+    gap: 1.5rem 3rem;
+    padding-bottom: 2rem;
+    margin-bottom: 2.5rem;
+    border-bottom: 1px solid rgba(255,255,255,.08);
+  }
+  .kor-facts__head > div { max-width: 40rem; }
+  .kor-facts__head h2 { color: var(--cream); }
+  .kor-facts__head .lead { margin-top: 1rem; max-width: none; color: rgba(246,242,233,.75); }
+
+  /* separate cards with a real gap (no 1px hairline grid, so no double borders) */
+  .kor-facts__grid {
+    position: relative; z-index: 1;
+    display: grid; gap: 1rem;
+    grid-template-columns: 1fr;
+  }
+  @media (min-width: 480px)  { .kor-facts__grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (min-width: 1024px) { .kor-facts__grid { grid-template-columns: repeat(4, 1fr); } }
+
+  .kor-fact {
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: var(--radius);
+    padding: 1.75rem 1.5rem;
+    transition: background-color .3s ease, transform .3s ease, box-shadow .3s ease;
+  }
+  .kor-fact:hover {
+    
+    transform: translateY(-3px);
+    box-shadow: 0 22px 40px rgba(0,0,0,.25);
+  }
+
+  .kor-fact__icon { width: 2rem; height: 2rem; color: var(--gold); margin-bottom: 1.125rem; }
+  .kor-fact__icon svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+  .kor-fact__label {
+    margin: 0;
+    font-size: .6875rem; font-weight: 600; text-transform: uppercase; letter-spacing: .16em;
+    color: rgba(246,242,233,.75);
+  }
+  .kor-fact__value {
+    margin: .5rem 0 0;
+    font-family: var(--font-display); font-size: 1.3125rem; line-height: 1.3;
+    color: var(--cream);
+  }
+  .kor-fact--accent .kor-fact__value { color: var(--gold); }
+  .kor-fact__note { margin: .375rem 0 0; font-size: .78rem; line-height: 1.5; color: rgba(246,242,233,.68); }
+
+  .kor-facts__foot {
+    position: relative; z-index: 1;
+    margin: 1.5rem 0 0;
+    font-size: .75rem; color: rgba(246,242,233,.5);
+  }
+
+  @media (max-width: 640px) {
+    .kor-facts { padding-block: 3rem; }
+    .kor-facts__head { margin-bottom: 2rem; }
+    .kor-facts__head .btn-gold { width: 100%; justify-content: center; }
+    .kor-facts__grid { gap: .75rem; }
+    .kor-fact { padding: 1.375rem 1.25rem; }
+    .kor-fact__value { font-size: 1.1875rem; }
+  }
+</style>
+
+<section class="kor-facts" id="highlights">
+  <div class="container-page">
+
+    <div class="kor-facts__head reveal">
+      <div>
+        <p class="eyebrow" style="color:var(--gold);font-size: .6875rem;font-weight: 600;text-transform: uppercase;letter-spacing: .32em;">Project Highlights</p>
+        <h2 class="section-title">Kore by Imtiaz at a Glance</h2>
+        <p class="lead">Quick facts on apartment types, sizes, ownership and payment options.</p>
+      </div>
+      <a href="#enquiry" class="btn-gold">
+        Get The Brochure
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </a>
+    </div>
+
+    <div class="kor-facts__grid">
+      <div class="kor-fact reveal">
+        <div class="kor-fact__icon"><svg viewBox="0 0 24 24"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 9h1M14 9h1M9 13h1M14 13h1M9 17h1M14 17h1"/></svg></div>
+        <p class="kor-fact__label">Developer</p>
+        <p class="kor-fact__value">Imtiaz Developments</p>
+        <p class="kor-fact__note">UAE-based, lifestyle-led communities</p>
+      </div>
+      <div class="kor-fact reveal" data-delay="60">
+        <div class="kor-fact__icon"><svg viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-12a7 7 0 0 1 14 0c0 5.8-7 12-7 12Z"/><circle cx="12" cy="9" r="2.5"/></svg></div>
+        <p class="kor-fact__label">Location</p>
+        <p class="kor-fact__value">Dubai Land Residence Complex</p>
+        <p class="kor-fact__note">Dubailand, Dubai</p>
+      </div>
+      <div class="kor-fact reveal" data-delay="120">
+        <div class="kor-fact__icon"><svg viewBox="0 0 24 24"><path d="M3 10l9-7 9 7v11H3z"/><path d="M9 21v-6h6v6"/></svg></div>
+        <p class="kor-fact__label">Apartment Types</p>
+        <p class="kor-fact__value">Studio, 1 &amp; 2 Bedrooms</p>
+        <p class="kor-fact__note">Furnished options available</p>
+      </div>
+      <div class="kor-fact reveal" data-delay="180">
+        <div class="kor-fact__icon"><svg viewBox="0 0 24 24"><path d="M3 17 17 3l4 4L7 21z"/><path d="M7 13l2 2M10 10l2 2M13 7l2 2"/></svg></div>
+        <p class="kor-fact__label">Unit Sizes</p>
+        <p class="kor-fact__value">406 &ndash; 1,406 sq. ft.</p>
+        <p class="kor-fact__note">Advertised starting sizes, studio to 2 BR</p>
+      </div>
+      <div class="kor-fact kor-fact--accent reveal">
+        <div class="kor-fact__icon"><svg viewBox="0 0 24 24"><path d="M3 12V3h9l9 9-9 9z"/><circle cx="7.5" cy="7.5" r="1.5"/></svg></div>
+        <p class="kor-fact__label">Starting Price</p>
+        <p class="kor-fact__value">AED 679,000</p>
+        <p class="kor-fact__note">Indicative studio price</p>
+      </div>
+      <div class="kor-fact reveal" data-delay="60">
+        <div class="kor-fact__icon"><svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20M6 15h4"/></svg></div>
+        <p class="kor-fact__label">Payment Plan</p>
+        <p class="kor-fact__value">50/50 or 60/40</p>
+        <p class="kor-fact__note">Includes a 36-month post-handover option</p>
+      </div>
+      <div class="kor-fact reveal" data-delay="120">
+        <div class="kor-fact__icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4"/></svg></div>
+        <p class="kor-fact__label">Expected Handover</p>
+        <p class="kor-fact__value">Q4 2028</p>
+        <p class="kor-fact__note">Subject to developer schedule</p>
+      </div>
+      <div class="kor-fact reveal" data-delay="180">
+        <div class="kor-fact__icon"><svg viewBox="0 0 24 24"><path d="M12 3l7 3v5c0 5-3.5 8-7 10-3.5-2-7-5-7-10V6z"/><path d="m9 12 2 2 4-4"/></svg></div>
+        <p class="kor-fact__label">Ownership</p>
+        <p class="kor-fact__value">Freehold</p>
+        <p class="kor-fact__note">As advertised for Kore apartments</p>
+      </div>
+    </div>
+
+    <p class="kor-facts__foot">All information including prices, availability, payment plans and handover timelines is subject to developer confirmation.</p>
+
+  </div>
+</section>
+
+
+<!-- ================================================================
+     4. OVERVIEW – THE KORE CONCEPT  (compact, no repeated content)
+     ================================================================ -->
+<style>
+  .kor-ov { position: relative; padding-block: 5.5rem; background: #F7F3EB; overflow: hidden; }
+  .kor-ov::before {
+    content: ""; position: absolute; inset: 0;
+    background: radial-gradient(circle at 0% 0%, rgba(201,168,103,.10), transparent 45%);
+    pointer-events: none;
+  }
+
+  .kor-ov__grid {
+    position: relative; z-index: 1;
+    display: grid; gap: 2.25rem; align-items: center;
+    grid-template-columns: 1fr;
+  }
+  @media (min-width: 1024px) { .kor-ov__grid { grid-template-columns: .8fr 1.2fr; gap: 4.5rem; } }
+
+  /* ---- left: heading + intro ---- */
+  .kor-ov .kor-ov__eyebrow {
+    color: var(--primary);
+    font-size: .6875rem; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .32em;
+  }
+  .kor-ov__lead {
+    margin: 1rem 0 0; max-width: 26rem;
+    font-size: .9375rem; line-height: 1.8;
+    color: var(--muted-foreground);
+  }
+  .kor-ov__link {
+    display: inline-flex; align-items: center; gap: .5rem;
+    margin-top: 1.5rem;
+    font-size: .875rem; font-weight: 600; color: var(--primary);
+    text-decoration: underline; text-underline-offset: .25em;
+  }
+  .kor-ov__link svg { width: 1rem; height: 1rem; transition: transform .25s ease; }
+  .kor-ov__link:hover { color: var(--gold); }
+  .kor-ov__link:hover svg { transform: translateX(3px); }
+
+  /* ---- right: three pillars, one row each ---- */
+  .kor-ov__list { list-style: none; margin: 0; padding: 0; }
+
+  .kor-ov__row {
+    position: relative;
+    display: grid; align-items: center;
+    grid-template-columns: 2.75rem minmax(8.5rem, 11rem) 1fr;
+    gap: 1.25rem;
+    padding: 1.5rem 0;
+    border-top: 1px solid rgba(11,21,18,.12);
+  }
+  .kor-ov__row:last-child { border-bottom: 1px solid rgba(11,21,18,.12); }
+  /* short gold accent sitting on the divider */
+  .kor-ov__row::before {
+    content: ""; position: absolute; top: -1px; left: 0;
+    width: 2.75rem; height: 1px; background: var(--gold);
+  }
+
+  .kor-ov__icon {
+    width: 2.75rem; height: 2.75rem; border-radius: 9999px;
+    display: flex; align-items: center; justify-content: center;
+    background: color-mix(in srgb, var(--gold) 14%, transparent);
+    color: var(--gold);
+  }
+  .kor-ov__icon svg {
+    width: 1.25rem; height: 1.25rem;
+    fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round;
+  }
+
+  .kor-ov__word {
+    margin: 0;
+    font-family: var(--font-display); font-weight: 500;
+    font-size: clamp(1.625rem, 2.6vw, 2.125rem);
+    line-height: 1.1;
+    color: var(--primary);
+  }
+  .kor-ov__meaning {
+    display: block; margin-top: .35rem;
+    font-size: .6875rem; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .14em;
+    color: var(--muted-foreground);
+  }
+  .kor-ov__desc {
+    margin: 0; max-width: 34rem;
+    font-size: .9375rem; line-height: 1.7;
+    color: var(--muted-foreground);
+  }
+
+  @media (max-width: 640px) {
+    .kor-ov { padding-block: 3rem; }
+    .kor-ov__row { grid-template-columns: 2.5rem 1fr; gap: .875rem 1rem; padding: 1.25rem 0; }
+    .kor-ov__row::before { width: 2.5rem; }
+    .kor-ov__icon { width: 2.5rem; height: 2.5rem; }
+    .kor-ov__desc { grid-column: 2; }
+  }
+</style>
+
+<section class="kor-ov" id="overview">
+  <div class="container-page kor-ov__grid">
+
+    <div class="reveal">
+      <p class="eyebrow kor-ov__eyebrow">The Kore Concept</p>
+      <h2 class="section-title">Where Wellness Becomes Everyday Living</h2>
+      <p class="kor-ov__lead">
+        Kore brings fitness, nature and recovery together in one development, so a healthier
+        routine is part of daily life in Dubailand.
+      </p>
+      <a href="#enquiry" class="kor-ov__link">
+        Get the brochure
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </a>
+    </div>
+
+    <ul class="kor-ov__list reveal" data-delay="100" aria-label="Kore wellness pillars">
+      <li class="kor-ov__row">
+        <span class="kor-ov__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 7v10M3 9v6M18 7v10M21 9v6M6 12h12"/></svg></span>
+        <div>
+          <h3 class="kor-ov__word">Train</h3>
+          <span class="kor-ov__meaning">Strength &amp; movement</span>
+        </div>
+        <p class="kor-ov__desc">A 3,200 sq. ft signature training area with Technogym equipment, plus an outdoor gym and a social padel court.</p>
+      </li>
+
+      <li class="kor-ov__row">
+        <span class="kor-ov__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22V12"/><path d="M12 12c-3.5 0-6-2.7-6-6a6 6 0 0 1 12 0c0 3.3-2.5 6-6 6Z"/></svg></span>
+        <div>
+          <h3 class="kor-ov__word">Nourish</h3>
+          <span class="kor-ov__meaning">Nature &amp; balance</span>
+        </div>
+        <p class="kor-ov__desc">Landscaped gardens, edible gardens and sensory spaces that connect residents with nature.</p>
+      </li>
+
+      <li class="kor-ov__row">
+        <span class="kor-ov__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 9c2.5-2 4.5-2 7 0s4.5 2 7 0 4-2 6 0M2 15c2.5-2 4.5-2 7 0s4.5 2 7 0 4-2 6 0"/></svg></span>
+        <div>
+          <h3 class="kor-ov__word">Recover</h3>
+          <span class="kor-ov__meaning">Rest &amp; renewal</span>
+        </div>
+        <p class="kor-ov__desc">Wellness pools, outdoor retreats and calm spaces made for rest and renewal.</p>
+      </li>
+    </ul>
+
+  </div>
+</section>
+
+
+<!-- ================================================================
+     5. ARCHITECTURE & INTERIORS  (compact: image + copy + 2x2 specs)
+     ================================================================ -->
+<style>
+  .kor-arch { padding-block: 3.75rem; background: var(--background); }
+
+  .kor-arch__grid {
+    display: grid; gap: 2.5rem; align-items: center;
+    grid-template-columns: 1fr;
+  }
+  @media (min-width: 1024px) { .kor-arch__grid { grid-template-columns: .95fr 1.05fr; gap: 4rem; } }
+
+  /* ---- image ---- */
+  .kor-arch__figure { position: relative; margin: 0; }
+  .kor-arch__figure img {
+    width: 100%; height: 440px; object-fit: cover; display: block;
+    border-radius: .5rem; box-shadow: var(--shadow-elegant); background: var(--secondary);
+  }
+  @media (max-width: 1023px) { .kor-arch__figure img { height: 360px; } }
+  @media (max-width: 640px)  { .kor-arch__figure img { height: 260px; } }
+
+  .kor-arch__tag {
+    position: absolute; left: 1rem; bottom: 1rem;
+    padding: .5rem .95rem;
+    border-radius: 9999px;
+    background: rgba(11,21,18,.55);
+    border: 1px solid rgba(246,242,233,.2);
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    font-size: .625rem; font-weight: 600; text-transform: uppercase; letter-spacing: .16em;
+    color: var(--cream);
+  }
+
+  /* ---- copy ---- */
+  .kor-arch__text { margin: 1rem 0 0; font-size: .9375rem; line-height: 1.8; color: var(--muted-foreground); }
+
+  /* ---- 2x2 spec grid (hairline dividers) ---- */
+  .kor-arch__specs {
+    list-style: none; margin: 1.75rem 0 0; padding: 0;
+    display: grid; gap: 1px;
+    grid-template-columns: 1fr 1fr;
+    background: #ECE7DD;
+    border: 1px solid #ECE7DD;
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .kor-arch__specs li {
+    display: flex; align-items: center; gap: .75rem;
+    padding: 1rem 1.125rem;
+    background: #FAF8F3;
+    font-size: .875rem; font-weight: 500; line-height: 1.35;
+    color: var(--foreground);
+  }
+  .kor-arch__icon { flex-shrink: 0; width: 1.375rem; height: 1.375rem; color: var(--gold); }
+  .kor-arch__icon svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+
+  .kor-arch__foot {
+    margin-top: 1.5rem;
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .75rem 1.5rem;
+  }
+  .kor-arch__note { margin: 0; font-size: .75rem; font-style: italic; line-height: 1.5; color: var(--muted-foreground); max-width: 22rem; }
+  .kor-arch__link {
+    display: inline-flex; align-items: center; gap: .5rem;
+    font-size: .875rem; font-weight: 600; color: var(--primary); white-space: nowrap;
+  }
+  .kor-arch__link svg { width: 1rem; height: 1rem; transition: transform .25s ease; }
+  .kor-arch__link:hover { color: var(--gold); }
+  .kor-arch__link:hover svg { transform: translateX(3px); }
+
+  @media (max-width: 640px) {
+    .kor-arch { padding-block: 3rem; }
+    .kor-arch__tag { left: .625rem; bottom: .625rem; }
+    .kor-arch__specs li { padding: .875rem .75rem; font-size: .8125rem; gap: .5rem; }
+  }
+  @media (max-width: 360px) {
+    .kor-arch__specs { grid-template-columns: 1fr; }
+  }
+</style>
+
+<section class="kor-arch" id="architecture">
+  <div class="container-page kor-arch__grid">
+
+    <figure class="kor-arch__figure reveal">
+      <img src="{% static 'img/kore-design.webp' %}"
+           alt="Contemporary architecture and interiors at Kore by Imtiaz, Dubai Land Residence Complex"
+           width="900" height="900" loading="lazy">
+      <figcaption class="kor-arch__tag">Architecture &amp; Interiors</figcaption>
+    </figure>
+
+    <div class="reveal" data-delay="100">
+      <p class="eyebrow" style="color:var(--primary);font-size: .6875rem;font-weight: 600;text-transform: uppercase;letter-spacing: .32em;">Design</p>
+      <h2 class="section-title">Kore by Imtiaz Dubai &ndash; Contemporary Architecture and Interiors</h2>
+
+      <p class="kor-arch__text">
+        Modern architecture with elegant finishes and balanced proportions, and homes designed to feel
+        comfortable, bright and welcoming. Apartments are planned around modern homeowners, with practical
+        layouts, natural light and quality finishes that put comfort, convenience and style first.
+      </p>
+
+      <ul class="kor-arch__specs">
+        <li>
+          <span class="kor-arch__icon"><svg viewBox="0 0 24 24"><path d="M3 21V9l9-6 9 6v12"/><path d="M3 21h18M9 21v-6h6v6"/></svg></span>
+          Open living &amp; dining
+        </li>
+        <li>
+          <span class="kor-arch__icon"><svg viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M4 9h16M8 6h.01M11 6h.01"/></svg></span>
+          Modern kitchens &amp; fittings
+        </li>
+        <li>
+          <span class="kor-arch__icon"><svg viewBox="0 0 24 24"><path d="M3 18v-6a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v6M3 15h18M3 18v2M21 18v2M6 10V7a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3"/></svg></span>
+          Comfortable bedrooms
+        </li>
+        <li>
+          <span class="kor-arch__icon"><svg viewBox="0 0 24 24"><path d="M4 13V9a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v4"/><path d="M2 13h20v4H2zM5 17v2M19 17v2"/></svg></span>
+          Furnished options
+        </li>
+      </ul>
+
+      <div class="kor-arch__foot">
+        <p class="kor-arch__note">Confirm finishes, furniture and appliances with the developer's latest specifications.</p>
+        <a href="#enquiry" class="kor-arch__link">
+          Request floor plans
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </a>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ================================================================
+     6. AMENITIES & LIFESTYLE FACILITIES  (3 image cards, grouped lists)
+     ================================================================ -->
+<style>
+  .kor-amen { position: relative; padding-block: 4rem; background: #FAF8F3; overflow: hidden; }
+  .kor-amen::before {
+    content: ""; position: absolute; inset: 0;
+    background: radial-gradient(circle at 100% 0%, rgba(201,168,103,.08), transparent 45%);
+    pointer-events: none;
+  }
+
+  .kor-amen__head {
+    position: relative; z-index: 1;
+    display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between;
+    gap: 1rem 3rem;
+    margin-bottom: 2.5rem;
+  }
+  .kor-amen__head > div { max-width: 40rem; }
+  .kor-amen__lead { margin: .875rem 0 0; font-size: .9375rem; line-height: 1.75; color: var(--muted-foreground); }
+  .kor-amen__aside {
+    margin: 0; max-width: 22rem;
+    padding-left: 1rem; border-left: 2px solid var(--gold);
+    font-family: var(--font-display); font-size: 1.0625rem; line-height: 1.5;
+    color: var(--primary);
+    font-weight: 500;
+  }
+
+  .kor-amen__grid {
+    position: relative; z-index: 1;
+    display: grid; gap: 1.25rem;
+    grid-template-columns: 1fr;
+  }
+  @media (min-width: 900px) { .kor-amen__grid { grid-template-columns: repeat(3, 1fr); } }
+
+  /* ---- card ---- */
+  .kor-amen__card {
+    display: flex; flex-direction: column;
+    background: #fff;
+    border: 1px solid #ECE7DD;
+    border-radius: var(--radius);
+    overflow: hidden;
+    transition: transform .3s ease, box-shadow .3s ease, border-color .3s ease;
+  }
+  .kor-amen__card:hover {
+    transform: translateY(-4px);
+    border-color: color-mix(in srgb, var(--gold) 45%, transparent);
+    box-shadow: 0 22px 44px rgba(0,0,0,.08);
+  }
+
+  .kor-amen__media { position: relative; aspect-ratio: 16 / 10; overflow: hidden; background: var(--secondary); }
+  .kor-amen__media img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .6s ease; }
+  .kor-amen__card:hover .kor-amen__media img { transform: scale(1.05); }
+  .kor-amen__media::after {
+    content: ""; position: absolute; inset: 0;
+    background: linear-gradient(180deg, transparent 45%, rgba(11,21,18,.78) 100%);
+  }
+  .kor-amen__title {
+    position: absolute; z-index: 1; left: 1.25rem; right: 1.25rem; bottom: 1rem;
+    display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem;
+  }
+  .kor-amen__title h3 {
+    margin: 0;
+    font-family: var(--font-display); font-size: 1.375rem; font-weight: 500; line-height: 1.2;
+    color: var(--cream);
+  }
+  .kor-amen__count {
+    flex-shrink: 0;
+    font-size: .625rem; font-weight: 600; text-transform: uppercase; letter-spacing: .14em;
+    color: var(--gold);
+  }
+
+  .kor-amen__list { list-style: none; margin: 0; padding: .5rem 1.25rem 1rem; }
+  .kor-amen__list li {
+    display: flex; align-items: center; gap: .75rem;
+    padding: .7rem 0;
+    border-bottom: 1px solid #F0ECE3;
+    font-size: .875rem; line-height: 1.4; color: var(--foreground);
+  }
+  .kor-amen__list li:last-child { border-bottom: 0; }
+  .kor-amen__list li::before {
+    content: ""; flex-shrink: 0;
+    width: .4375rem; height: .4375rem;
+    background: var(--gold);
+    transform: rotate(45deg);
+  }
+
+  .kor-amen__foot {
+    position: relative; z-index: 1;
+    margin-top: 2rem;
+    display: flex; justify-content: center;
+  }
+
+  @media (max-width: 640px) {
+    .kor-amen { padding-block: 3rem; }
+    .kor-amen__head { margin-bottom: 1.75rem; }
+    .kor-amen__aside { font-size: 1rem; }
+    .kor-amen__title h3 { font-size: 1.25rem; }
+    .kor-amen__foot .btn-gold { width: 100%; justify-content: center; }
+  }
+</style>
+
+<section class="kor-amen" id="amenities">
+  <div class="container-page">
+
+    <div class="kor-amen__head reveal">
+      <div>
+        <p class="eyebrow" style="color:var(--primary);font-size: .6875rem;font-weight: 600;text-transform: uppercase;letter-spacing: .32em;">Amenities</p>
+        <h2 class="section-title">Kore by Imtiaz Amenities and Lifestyle Facilities</h2>
+        <p class="kor-amen__lead">Amenities for fitness, relaxation and social life.</p>
+      </div>
+      <p class="kor-amen__aside">
+        Designed to keep residents active, relaxed and connected to nature and community.
+      </p>
+    </div>
+
+    <div class="kor-amen__grid">
+
+      <article class="kor-amen__card reveal">
+        <div class="kor-amen__media">
+          <img src="{% static 'img/kore-gym.webp' %}"
+               alt="Technogym-equipped training facilities at Kore by Imtiaz" width="800" height="500" loading="lazy">
+          <div class="kor-amen__title">
+            <h3>Fitness &amp; Recreation</h3>
+            <span class="kor-amen__count">6 Facilities</span>
+          </div>
+        </div>
+        <ul class="kor-amen__list">
+          <li>Technogym-equipped training facilities</li>
+          <li>Outdoor fitness spaces</li>
+          <li>Social padel court</li>
+          <li>Sports lounge</li>
+          <li>Rooftop adults' and children's pools</li>
+          <li>Wellness pool</li>
+        </ul>
+      </article>
+
+      <article class="kor-amen__card reveal" data-delay="80">
+        <div class="kor-amen__media">
+          <img src="{% static 'img/kore-abt-2.webp' %}"
+               alt="Landscaped gardens and sunset deck at Kore by Imtiaz" width="800" height="500" loading="lazy">
+          <div class="kor-amen__title">
+            <h3>Gardens &amp; Outdoor Living</h3>
+            <span class="kor-amen__count">6 Spaces</span>
+          </div>
+        </div>
+        <ul class="kor-amen__list">
+          <li>Climate comfort garden</li>
+          <li>Interactive sensory garden</li>
+          <li>Edible garden</li>
+          <li>Sunset deck</li>
+          <li>Landscaped family lawn</li>
+          <li>Shallow water feature</li>
+        </ul>
+      </article>
+
+      <article class="kor-amen__card reveal" data-delay="160">
+        <div class="kor-amen__media">
+          <img src="{% static 'img/kore-family.jpg' %}"
+               alt="Family lounge and children's playground at Kore by Imtiaz" width="800" height="500" loading="lazy">
+          <div class="kor-amen__title">
+            <h3>Family &amp; Community</h3>
+            <span class="kor-amen__count">6 Spaces</span>
+          </div>
+        </div>
+        <ul class="kor-amen__list">
+          <li>Children's playground</li>
+          <li>Family lounge</li>
+          <li>Garden co-working pods</li>
+          <li>Harvest table with pavilion</li>
+          <li>Conversation pit</li>
+          <li>Outdoor relaxation areas</li>
+        </ul>
+      </article>
+
+    </div>
+
+    <div class="kor-amen__foot reveal">
+      <a href="#enquiry" class="btn-gold">
+        Get The Amenities Brochure
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </a>
+    </div>
+
+  </div>
+</section>
+
+
+<!-- ================================================================
+     7. GALLERY  (7-image bento grid + lightweight lightbox)
+     Desktop: 4 cols — img 1 is 2x2, img 4 and img 7 span 2 → no empty cells
+     Mobile : 2 cols — img 1 full width, the other 6 in pairs
+     ================================================================ -->
+<style>
+  .kor-gal { padding-block: 4rem; background: var(--background); }
+
+  .kor-gal__head {
+    display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between;
+    gap: 1rem 3rem;
+    margin-bottom: 2.25rem;
+  }
+  .kor-gal__head > div { max-width: 40rem; }
+  .kor-gal__lead { margin: .875rem 0 0; font-size: .9375rem; line-height: 1.75; color: var(--muted-foreground); }
+  .kor-gal__hint {
+    display: inline-flex; align-items: center; gap: .5rem;
+    font-size: .75rem; font-weight: 600; text-transform: uppercase; letter-spacing: .14em;
+    color: var(--muted-foreground);
+  }
+  .kor-gal__hint svg { width: 1rem; height: 1rem; color: var(--gold); }
+
+  /* ---- grid ---- */
+  .kor-gal__grid {
+    display: grid; gap: .75rem;
+    grid-template-columns: repeat(2, 1fr);
+  }
+  @media (min-width: 1024px) {
+    .kor-gal__grid { grid-template-columns: repeat(4, 1fr); grid-auto-rows: 210px; gap: 1rem; }
+  }
+
+  .kor-gal__item {
+    position: relative; display: block; width: 100%;
+    padding: 0; border: 0; cursor: zoom-in;
+    border-radius: var(--radius); overflow: hidden;
+    background: var(--secondary);
+    aspect-ratio: 4 / 3;
+  }
+  .kor-gal__item:first-child { grid-column: span 2; aspect-ratio: 16 / 10; }
+  @media (min-width: 1024px) {
+    .kor-gal__item,
+  .kor-gal__item:first-child { aspect-ratio: auto; }
+    .kor-gal__item:nth-child(1) { grid-column: span 2; grid-row: span 2; }
+    .kor-gal__item:nth-child(4),
+    .kor-gal__item:nth-child(7) { grid-column: span 2; }
+  }
+  .kor-gal__item:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+
+  .kor-gal__item img {
+    width: 100%; height: 100%; object-fit: cover; display: block;
+    transition: transform .6s ease;
+  }
+  .kor-gal__item:hover img { transform: scale(1.05); }
+
+  .kor-gal__item::after {
+    content: ""; position: absolute; inset: 0;
+    background: linear-gradient(180deg, transparent 55%, rgba(11,21,18,.7) 100%);
+    opacity: 0; transition: opacity .3s ease;
+  }
+  .kor-gal__cap {
+    position: absolute; z-index: 1; left: .875rem; right: .875rem; bottom: .75rem;
+    font-size: .75rem; font-weight: 500; text-align: left;
+    color: var(--cream);
+    opacity: 0; transform: translateY(6px);
+    transition: opacity .3s ease, transform .3s ease;
+  }
+  .kor-gal__item:hover::after,
+  .kor-gal__item:focus-visible::after { opacity: 1; }
+  .kor-gal__item:hover .kor-gal__cap,
+  .kor-gal__item:focus-visible .kor-gal__cap { opacity: 1; transform: none; }
+  /* touch screens have no hover: always show captions */
+  @media (hover: none) {
+    .kor-gal__item::after { opacity: 1; }
+    .kor-gal__cap { opacity: 1; transform: none; font-size: .6875rem; }
+  }
+
+  /* ---- lightbox ---- */
+  .kor-lb {
+    position: fixed; inset: 0; z-index: 1000;
+    display: flex; align-items: center; justify-content: center;
+    padding: 4rem 4.5rem;
+    background: rgba(11,21,18,.94);
+  }
+  .kor-lb[hidden] { display: none; }
+  .kor-lb__fig { margin: 0; max-width: 100%; max-height: 100%; display: flex; flex-direction: column; align-items: center; }
+  .kor-lb__img { max-width: 100%; max-height: calc(100vh - 9rem); object-fit: contain; border-radius: .375rem; }
+  .kor-lb__meta {
+    margin-top: .875rem;
+    display: flex; gap: 1rem; align-items: baseline;
+    font-size: .8125rem; color: rgba(246,242,233,.85);
+  }
+  .kor-lb__count { font-size: .6875rem; letter-spacing: .14em; color: var(--gold); }
+
+  .kor-lb__btn {
+    position: absolute;
+    width: 2.75rem; height: 2.75rem; border-radius: 9999px;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(246,242,233,.08);
+    border: 1px solid rgba(246,242,233,.2);
+    color: var(--cream); cursor: pointer;
+    transition: background-color .2s ease, border-color .2s ease;
+  }
+  .kor-lb__btn:hover { background: rgba(246,242,233,.16); border-color: var(--gold); }
+  .kor-lb__btn svg { width: 1.125rem; height: 1.125rem; }
+  .kor-lb__close { top: 1rem; right: 1rem; }
+  .kor-lb__prev  { left: 1rem;  top: 50%; transform: translateY(-50%); }
+  .kor-lb__next  { right: 1rem; top: 50%; transform: translateY(-50%); }
+
+  @media (max-width: 640px) {
+    .kor-gal { padding-block: 3rem; }
+    .kor-gal__head { margin-bottom: 1.5rem; }
+    .kor-gal__hint { display: none; }
+    .kor-lb { padding: 3.5rem .75rem 5rem; }
+    .kor-lb__img { max-height: calc(100vh - 10rem); }
+    .kor-lb__prev, .kor-lb__next { top: auto; bottom: 1rem; transform: none; }
+    .kor-lb__prev { left: calc(50% - 3.25rem); }
+    .kor-lb__next { right: calc(50% - 3.25rem); }
+  }
+</style>
+
+<section class="kor-gal" id="gallery">
+  <div class="container-page">
+
+    <div class="kor-gal__head reveal">
+      <div>
+        <p class="eyebrow" style="color:var(--primary);font-size: .6875rem;font-weight: 600;text-transform: uppercase;letter-spacing: .32em;">Renders &amp; Views</p>
+        <h2 class="section-title">Kore by Imtiaz Gallery</h2>
+        <p class="kor-gal__lead">A closer look at the architecture, wellness amenities and residences.</p>
+      </div>
+      <span class="kor-gal__hint">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5M11 8v6M8 11h6"/></svg>
+        Click to enlarge
+      </span>
+    </div>
+
+    <div class="kor-gal__grid reveal" data-delay="80">
+      <button type="button" class="kor-gal__item" data-index="0">
+        <img src="{% static 'img/kore-gallery-1.webp' %}" alt="Kore by Imtiaz building exterior, Dubai Land Residence Complex" loading="lazy">
+        <span class="kor-gal__cap">Building Exterior</span>
+      </button>
+      <button type="button" class="kor-gal__item" data-index="1">
+        <img src="{% static 'img/kore-gallery-8.webp' %}" alt="Wellness pool at Kore by Imtiaz" loading="lazy">
+        <span class="kor-gal__cap">Yoga & Wellness Studio</span>
+      </button>
+      <button type="button" class="kor-gal__item" data-index="2">
+        <img src="{% static 'img/kore-gallery-3.jpg' %}" alt="Technogym training area at Kore by Imtiaz" loading="lazy">
+        <span class="kor-gal__cap">Technogym Training Area</span>
+      </button>
+      <button type="button" class="kor-gal__item" data-index="3">
+        <img src="{% static 'img/kore-gallery-2.webp' %}" alt="Rooftop pool and sunset deck at Kore by Imtiaz" loading="lazy">
+        <span class="kor-gal__cap">Rooftop Pool &amp; Sunset Deck</span>
+      </button>
+      <button type="button" class="kor-gal__item" data-index="4">
+        <img src="{% static 'img/kore-gallery-9.webp' %}" alt="Landscaped gardens at Kore by Imtiaz" loading="lazy">
+        <span class="kor-gal__cap">Sports Court</span>
+      </button>
+      <button type="button" class="kor-gal__item" data-index="5">
+        <img src="{% static 'img/kore-gallery-6.webp' %}" alt="Living room interior at Kore by Imtiaz apartments" loading="lazy">
+        <span class="kor-gal__cap">Living Room</span>
+      </button>
+      <button type="button" class="kor-gal__item" data-index="6">
+        <img src="{% static 'img/kore-gallery-7.webp' %}" alt="Bedroom interior at Kore by Imtiaz apartments" loading="lazy">
+        <span class="kor-gal__cap">Bedroom</span>
+      </button>
+    </div>
+
+  </div>
+</section>
+
+<!-- lightbox (one per page) -->
+<div class="kor-lb" id="korLightbox" role="dialog" aria-modal="true" aria-label="Gallery viewer" hidden>
+  <button type="button" class="kor-lb__btn kor-lb__close" aria-label="Close">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6 6 18"/></svg>
+  </button>
+  <button type="button" class="kor-lb__btn kor-lb__prev" aria-label="Previous image">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg>
+  </button>
+  <figure class="kor-lb__fig">
+    <img class="kor-lb__img" src="" alt="">
+    <figcaption class="kor-lb__meta">
+      <span class="kor-lb__count"></span>
+      <span class="kor-lb__cap"></span>
+    </figcaption>
+  </figure>
+  <button type="button" class="kor-lb__btn kor-lb__next" aria-label="Next image">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>
+  </button>
+</div>
+
+<script>
+(function () {
+  var items = Array.prototype.slice.call(document.querySelectorAll('.kor-gal__item'));
+  var lb = document.getElementById('korLightbox');
+  if (!items.length || !lb) return;
+
+  var img   = lb.querySelector('.kor-lb__img');
+  var cap   = lb.querySelector('.kor-lb__cap');
+  var count = lb.querySelector('.kor-lb__count');
+  var current = 0, lastFocus = null, startX = null;
+
+  function show(i) {
+    current = (i + items.length) % items.length;
+    var src = items[current].querySelector('img');
+    img.src = src.currentSrc || src.src;
+    img.alt = src.alt;
+    cap.textContent = items[current].querySelector('.kor-gal__cap').textContent;
+    count.textContent = (current + 1) + ' / ' + items.length;
+  }
+  function open(i) {
+    lastFocus = document.activeElement;
+    show(i);
+    lb.hidden = false;
+    document.body.style.overflow = 'hidden';
+    lb.querySelector('.kor-lb__close').focus();
+  }
+  function close() {
+    lb.hidden = true;
+    document.body.style.overflow = '';
+    if (lastFocus) lastFocus.focus();
+  }
+
+  items.forEach(function (el, i) { el.addEventListener('click', function () { open(i); }); });
+  lb.querySelector('.kor-lb__close').addEventListener('click', close);
+  lb.querySelector('.kor-lb__prev').addEventListener('click', function () { show(current - 1); });
+  lb.querySelector('.kor-lb__next').addEventListener('click', function () { show(current + 1); });
+  lb.addEventListener('click', function (e) { if (e.target === lb) close(); });
+
+  document.addEventListener('keydown', function (e) {
+    if (lb.hidden) return;
+    if (e.key === 'Escape') close();
+    if (e.key === 'ArrowLeft') show(current - 1);
+    if (e.key === 'ArrowRight') show(current + 1);
+  });
+
+  lb.addEventListener('touchstart', function (e) { startX = e.touches[0].clientX; }, { passive: true });
+  lb.addEventListener('touchend', function (e) {
+    if (startX === null) return;
+    var dx = e.changedTouches[0].clientX - startX;
+    if (Math.abs(dx) > 50) show(current + (dx < 0 ? 1 : -1));
+    startX = null;
+  });
+})();
+</script>
+
+
+<!-- ================================================================
+     8. LOCATION & CONNECTIVITY  (copy + map, drive times grouped by minutes)
+     ================================================================ -->
+<style>
+  .kor-loc { position: relative; padding-block: 4rem; background: #F7F3EB; overflow: hidden; }
+  .kor-loc::before {
+    content: ""; position: absolute; inset: 0;
+    background: radial-gradient(circle at 0% 100%, rgba(201,168,103,.10), transparent 45%);
+    pointer-events: none;
+  }
+
+  .kor-loc__grid {
+    position: relative; z-index: 1;
+    display: grid; gap: 2.5rem; align-items: center;
+    grid-template-columns: 1fr;
+  }
+  @media (min-width: 1024px) { .kor-loc__grid { grid-template-columns: 1fr 1fr; gap: 4rem; } }
+
+  .kor-loc__text { margin: 1rem 0 0; font-size: .9375rem; line-height: 1.8; color: var(--muted-foreground); }
+
+  /* road access chips */
+  .kor-loc__roads { list-style: none; margin: 1.5rem 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: .625rem; }
+  .kor-loc__roads li {
+    display: inline-flex; align-items: center; gap: .5rem;
+    padding: .55rem .95rem;
+    background: #fff;
+    border: 1px solid #ECE7DD;
+    border-radius: 9999px;
+    font-size: .8125rem; font-weight: 600; color: var(--foreground);
+  }
+  .kor-loc__roads svg { width: 1rem; height: 1rem; color: var(--gold); flex-shrink: 0; }
+
+  /* why DLRC note */
+  .kor-loc__why {
+    margin-top: 1.75rem;
+    padding: 1.25rem 1.375rem;
+    background: #fff;
+    border: 1px solid #ECE7DD;
+    border-left: 3px solid var(--gold);
+    border-radius: var(--radius);
+  }
+  .kor-loc__why h3 {
+    margin: 0;
+    font-family: var(--font-display); font-size: 1.125rem; font-weight: 600;
+    color: var(--foreground);
+  }
+  .kor-loc__why p { margin: .5rem 0 0; font-size: .875rem; line-height: 1.7; color: var(--muted-foreground); }
+
+  /* map */
+  .kor-loc__map {
+    position: relative;
+    border-radius: var(--radius);
+    overflow: hidden;
+    border: 1px solid #ECE7DD;
+    box-shadow: var(--shadow-card);
+    background: var(--secondary);
+    aspect-ratio: 4 / 3;
+  }
+  @media (min-width: 1024px) { .kor-loc__map { aspect-ratio: 1 / 1; } }
+  .kor-loc__map iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+  .kor-loc__pin {
+    position: absolute; left: 1rem; top: 1rem;
+    display: inline-flex; align-items: center; gap: .5rem;
+    padding: .5rem .875rem;
+    background: var(--primary);
+    border-radius: 9999px;
+    box-shadow: var(--shadow-elegant);
+    font-size: .6875rem; font-weight: 600; text-transform: uppercase; letter-spacing: .12em;
+    color: var(--cream);
+    pointer-events: none;
+  }
+  .kor-loc__pin svg { width: .875rem; height: .875rem; color: var(--gold); }
+
+  /* ---- drive times grouped by minutes ---- */
+  .kor-loc__times {
+    position: relative; z-index: 1;
+    margin-top: 3rem;
+    display: grid; gap: 1px;
+    grid-template-columns: 1fr;
+    background: #ECE7DD;
+    border: 1px solid #ECE7DD;
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  @media (min-width: 768px) { .kor-loc__times { grid-template-columns: .8fr .9fr 1.3fr; } }
+
+  .kor-loc__col { background: #fff; padding: 1.5rem 1.5rem 1.375rem; }
+  .kor-loc__min { display: flex; align-items: baseline; gap: .375rem; }
+  .kor-loc__min strong { font-family: var(--font-display); font-size: 2.25rem; font-weight: 500; line-height: 1; color: var(--primary); }
+  .kor-loc__min span { font-size: .6875rem; font-weight: 600; text-transform: uppercase; letter-spacing: .16em; color: var(--gold); }
+
+  .kor-loc__col ul { list-style: none; margin: 1rem 0 0; padding: 0; display: grid; gap: .5rem; }
+  .kor-loc__col li {
+    display: flex; align-items: center; gap: .625rem;
+    font-size: .875rem; line-height: 1.4; color: var(--foreground);
+  }
+  .kor-loc__col li::before {
+    content: ""; flex-shrink: 0;
+    width: .375rem; height: .375rem; border-radius: 50%;
+    background: var(--gold);
+  }
+  /* 20-min column has 5 places: split into 2 columns where there's room */
+  @media (min-width: 1024px) { .kor-loc__col--wide ul { grid-template-columns: 1fr 1fr; column-gap: 1.25rem; } }
+
+  .kor-loc__foot {
+    position: relative; z-index: 1;
+    margin: 1rem 0 0;
+    font-size: .75rem; font-style: italic; color: var(--muted-foreground);
+  }
+
+  @media (max-width: 640px) {
+    .kor-loc { padding-block: 3rem; }
+    .kor-loc__times { margin-top: 2.25rem; }
+    .kor-loc__col { padding: 1.25rem; }
+    .kor-loc__min strong { font-size: 1.875rem; }
+  }
+</style>
+
+<section class="kor-loc" id="location">
+  <div class="container-page">
+
+    <div class="kor-loc__grid">
+      <div class="reveal">
+        <p class="eyebrow" style="color:var(--primary);font-size: .6875rem;font-weight: 600;text-transform: uppercase;letter-spacing: .32em;">Location</p>
+        <h2 class="section-title">Kore by Imtiaz Location &ndash; Living in Dubai Land Residence Complex</h2>
+
+        <p class="kor-loc__text">
+          Kore is located in Dubai Land Residence Complex (DLRC), within Dubailand, where landscaped
+          walkways and cycling routes sit alongside easy road links to communities across Dubai.
+        </p>
+
+        <ul class="kor-loc__roads" aria-label="Main road access">
+          <li>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 21 9 3M20 21 15 3M12 5v2M12 11v2M12 17v2"/></svg>
+            Dubai&ndash;Al Ain Road
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 21 9 3M20 21 15 3M12 5v2M12 11v2M12 17v2"/></svg>
+            Emirates Road
+          </li>
+          <li>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="5.5" cy="17.5" r="3.5"/><circle cx="18.5" cy="17.5" r="3.5"/><path d="M5.5 17.5 9 9h6l3.5 8.5M9 9 7.5 6H5M15 9l-3 8.5"/></svg>
+            Walking &amp; cycling routes
+          </li>
+        </ul>
+
+        <div class="kor-loc__why">
+          <h3>Why Choose Dubai Land Residence Complex?</h3>
+          <p>
+            DLRC offers good connections to major destinations and a growing range of off-plan and
+            completed homes, ideal for residents and investors comparing emerging locations.
+          </p>
+        </div>
+      </div>
+
+      <div class="kor-loc__map reveal" data-delay="100">
+        {# Replace the src with the exact "Embed a map" link for Kore from Google Maps when available #}
+        <iframe
+          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3613.388088658778!2d55.3779827!3d25.088721!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3e5f651a209ef7f1%3A0x2962ebbf2064f4c!2sKore%20by%20IMTIAZ!5e0!3m2!1sen!2sin!4v1793102310649!5m2!1sen!2sin"
+          title="Map showing Kore by Imtiaz in Dubai Land Residence Complex, Dubailand"
+          loading="lazy"
+          referrerpolicy="no-referrer-when-downgrade"
+          allowfullscreen></iframe>
+        <!-- <span class="kor-loc__pin">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-12a7 7 0 0 1 14 0c0 5.8-7 12-7 12Z"/><circle cx="12" cy="9" r="2.5"/></svg>
+          Kore by IMTIAZ
+
+        </span> -->
+      </div>
+    </div>
+
+    <div class="kor-loc__times reveal" aria-label="Nearby landmarks and indicative driving times">
+      <div class="kor-loc__col">
+        <div class="kor-loc__min"><strong>10</strong><span>Minutes</span></div>
+        <ul>
+          <li>Al Habtoor Polo Resort</li>
+        </ul>
+      </div>
+      <div class="kor-loc__col">
+        <div class="kor-loc__min"><strong>15</strong><span>Minutes</span></div>
+        <ul>
+          <li>Meydan Racecourse</li>
+          <li>Ras Al Khor Wildlife Sanctuary</li>
+        </ul>
+      </div>
+      <div class="kor-loc__col kor-loc__col--wide">
+        <div class="kor-loc__min"><strong>20</strong><span>Minutes</span></div>
+        <ul>
+          <li>Downtown Dubai</li>
+          <li>Business Bay</li>
+          <li>Dubai Design District</li>
+          <li>Dubai Creek Harbour</li>
+          <li>Dubai International Airport</li>
+        </ul>
+      </div>
+    </div>
+
+    <p class="kor-loc__foot">Indicative driving times; actual times vary with traffic and route.</p>
+
+  </div>
+</section>
+
+
+<!-- ================================================================
+     9. FLOOR PLANS & PRICES  (luxury price list — no images needed)
+     Desktop: editorial rows (index · type · size · price · action)
+     Mobile : each row becomes a compact card
+     ================================================================ -->
+<style>
+  .kor-fp { position: relative; padding-block: 4rem; background: var(--background); overflow: hidden; }
+  .kor-fp::before {
+    content: ""; position: absolute; inset: 0;
+    background: radial-gradient(circle at 100% 0%, rgba(201,168,103,.08), transparent 40%);
+    pointer-events: none;
+  }
+
+  /* ---- header ---- */
+  .kor-fp__head {
+    position: relative; z-index: 1;
+    display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between;
+    gap: 1.25rem 3rem;
+    margin-bottom: 2.25rem;
+  }
+  .kor-fp__head > div { max-width: 40rem; }
+  .kor-fp__lead { margin: .875rem 0 0; font-size: .9375rem; line-height: 1.75; color: var(--muted-foreground); }
+
+  .kor-fp__from {
+    display: flex; align-items: center; gap: 1rem;
+    padding: .875rem 1.25rem;
+    border: 1px solid color-mix(in srgb, var(--gold) 45%, transparent);
+    border-radius: var(--radius);
+    background: #FAF8F3;
+  }
+  .kor-fp__from span {
+    font-size: .625rem; font-weight: 600; text-transform: uppercase; letter-spacing: .16em;
+    color: var(--muted-foreground); line-height: 1.4;
+  }
+  .kor-fp__from strong {
+    font-family: var(--font-display); font-size: 1.5rem; font-weight: 700; line-height: 1;
+    color: var(--primary); white-space: nowrap;
+  }
+
+  /* ---- list ---- */
+  .kor-fp__list { position: relative; z-index: 1; list-style: none; margin: 0; padding: 0; }
+
+  .kor-fp__row {
+    position: relative;
+    display: grid; align-items: center;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    padding: 1.5rem 1.25rem;
+    border: 1px solid #ECE7DD;
+    border-radius: var(--radius);
+    background: #fff;
+    transition: background-color .3s ease, border-color .3s ease, box-shadow .3s ease;
+  }
+  .kor-fp__row + .kor-fp__row { margin-top: .75rem; }
+
+  /* gold accent line that grows on hover */
+  .kor-fp__row::before {
+    content: ""; position: absolute; left: 0; top: 1.25rem; bottom: 1.25rem;
+    width: 2px; background: var(--gold);
+    transform: scaleY(.35); transform-origin: center;
+    transition: transform .35s ease;
+  }
+  .kor-fp__row:hover {
+    background: #FAF8F3;
+    border-color: color-mix(in srgb, var(--gold) 45%, transparent);
+    box-shadow: 0 18px 40px rgba(0,0,0,.06);
+  }
+  .kor-fp__row:hover::before { transform: scaleY(1); }
+
+  .kor-fp__num {
+    font-family: var(--font-display); font-size: 1rem; line-height: 1;
+    color: var(--gold); font-weight: 500;
+  }
+  .kor-fp__type {
+    margin: 0;
+    font-family: var(--font-display); font-size: 1.75rem; font-weight: 500; line-height: 1.1;
+    color: var(--foreground);
+  }
+  .kor-fp__sub { margin: .375rem 0 0; font-size: .8125rem; line-height: 1.4; color: var(--muted-foreground); }
+  .kor-fp__sub strong { font-weight: 500; }
+
+  .kor-fp__stat dt {
+    font-size: .625rem; font-weight: 600; text-transform: uppercase; letter-spacing: .14em;
+    color: var(--muted-foreground);
+  }
+  .kor-fp__stat dd {
+    margin: .3rem 0 0;
+    font-family: var(--font-display); font-size: 1.3125rem; line-height: 1.2;
+    color: var(--foreground); font-weight: 600;
+  }
+  .kor-fp__stat--price dd { color: var(--primary); font-weight: 600; }
+
+  .kor-fp__act {
+    box-sizing: border-box;
+    display: inline-flex; align-items: center; justify-content: center; gap: .5rem;
+    padding: .75rem 1.125rem;
+    border: 1px solid var(--primary);
+    border-radius: 9999px;
+    font-size: .75rem; font-weight: 600; text-transform: uppercase; letter-spacing: .12em;
+    color: var(--primary);
+    white-space: nowrap;
+    transition: background-color .25s ease, color .25s ease, border-color .25s ease;
+  }
+  .kor-fp__act svg { width: 1rem; height: 1rem; transition: transform .25s ease; }
+  .kor-fp__row:hover .kor-fp__act,
+  .kor-fp__act:hover { background: var(--primary); color: var(--cream); }
+  .kor-fp__act:hover svg { transform: translateX(3px); }
+
+  /* ---- mobile / tablet card layout ---- */
+  @media (max-width: 899px) {
+    .kor-fp__row, .kor-fp__row * { box-sizing: border-box; }
+    .kor-fp__row { grid-template-columns: 1fr 1fr; gap: 1rem 1.25rem; padding: 1.375rem 1.25rem 1.25rem 1.5rem; }
+    .kor-fp__top { grid-column: 1 / -1; display: flex; align-items: flex-start; gap: .875rem; }
+    .kor-fp__num { margin-top: .4rem; }
+    .kor-fp__stats { grid-column: 1 / -1; display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem;
+      padding-top: 1rem; border-top: 1px solid #F0ECE3; }
+    .kor-fp__act { grid-column: 1 / -1; width: 100%; }
+  }
+
+  /* ---- desktop row layout ---- */
+  @media (min-width: 900px) {
+    .kor-fp__row {
+      grid-template-columns: 4rem 1.6fr 1fr 1fr 13rem;
+      gap: 1.5rem;
+      padding: 1.625rem 1.5rem;
+    }
+    .kor-fp__top, .kor-fp__stats { display: contents; }
+    .kor-fp__act { justify-self: end; }
+  }
+
+  .kor-fp__foot {
+    position: relative; z-index: 1;
+    margin-top: 1.5rem;
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .75rem 2rem;
+  }
+  .kor-fp__note { margin: 0; font-size: .75rem; font-style: italic; color: var(--muted-foreground); }
+  .kor-fp__link {
+    display: inline-flex; align-items: center; gap: .5rem;
+    font-size: .875rem; font-weight: 600; color: var(--primary);
+  }
+  .kor-fp__link svg { width: 1rem; height: 1rem; transition: transform .25s ease; }
+  .kor-fp__link:hover { color: var(--gold); }
+  .kor-fp__link:hover svg { transform: translateX(3px); }
+
+  @media (max-width: 640px) {
+    .kor-fp { padding-block: 3rem; }
+    .kor-fp__head { margin-bottom: 1.75rem; }
+    .kor-fp__from { width: 100%; justify-content: space-between; }
+    .kor-fp__type { font-size: 1.5rem; }
+    .kor-fp__stat dd { font-size: 1.125rem; }
+  }
+</style>
+
+<section class="kor-fp" id="floor-plans">
+  <div class="container-page">
+
+    <div class="kor-fp__head reveal">
+      <div>
+        <p class="eyebrow" style="color:var(--primary);font-size: .6875rem;font-weight: 600;text-transform: uppercase;letter-spacing: .32em;">Floor Plans &amp; Prices</p>
+        <h2 class="section-title">Kore by Imtiaz Floor Plans and Apartment Prices</h2>
+        <p class="kor-fp__lead">Studio, one- and two-bedroom apartments for different needs.</p>
+      </div>
+      <div class="kor-fp__from">
+        <span>Prices<br>Starting From</span>
+        <strong>AED 679K</strong>
+      </div>
+    </div>
+
+    <ul class="kor-fp__list">
+
+      <li class="kor-fp__row reveal">
+        <div class="kor-fp__top">
+          <span class="kor-fp__num">01</span>
+          <div>
+            <h3 class="kor-fp__type">Studio</h3>
+            <p class="kor-fp__sub"><strong>Kore by Imtiaz Studio Apartments</strong></p>
+          </div>
+        </div>
+        <dl class="kor-fp__stats">
+          <div class="kor-fp__stat"><dt>Starting Size</dt><dd>406 sq. ft.</dd></div>
+          <div class="kor-fp__stat kor-fp__stat--price"><dt>Starting Price</dt><dd>AED 679,000</dd></div>
+        </dl>
+        <a href="#enquiry" class="kor-fp__act" aria-label="Enquire about Kore by Imtiaz studio apartments">
+          Enquire
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </a>
+      </li>
+
+      <li class="kor-fp__row reveal" data-delay="60">
+        <div class="kor-fp__top">
+          <span class="kor-fp__num">02</span>
+          <div>
+            <h3 class="kor-fp__type">1 Bedroom</h3>
+            <p class="kor-fp__sub"><strong>Kore by Imtiaz 1 Bedroom Apartments</strong></p>
+          </div>
+        </div>
+        <dl class="kor-fp__stats">
+          <div class="kor-fp__stat"><dt>Starting Size</dt><dd>669 sq. ft.</dd></div>
+          <div class="kor-fp__stat kor-fp__stat--price"><dt>Starting Price</dt><dd>AED 1,100,000</dd></div>
+        </dl>
+        <a href="#enquiry" class="kor-fp__act" aria-label="Enquire about Kore by Imtiaz 1 bedroom apartments">
+          Enquire
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </a>
+      </li>
+
+      <li class="kor-fp__row reveal" data-delay="120">
+        <div class="kor-fp__top">
+          <span class="kor-fp__num">03</span>
+          <div>
+            <h3 class="kor-fp__type">2 Bedroom</h3>
+            <p class="kor-fp__sub"><strong>Kore by Imtiaz 2 Bedroom Apartments</strong></p>
+          </div>
+        </div>
+        <dl class="kor-fp__stats">
+          <div class="kor-fp__stat"><dt>Starting Size</dt><dd>1,406 sq. ft.</dd></div>
+          <div class="kor-fp__stat kor-fp__stat--price"><dt>Starting Price</dt><dd>AED 1,550,000</dd></div>
+        </dl>
+        <a href="#enquiry" class="kor-fp__act" aria-label="Enquire about Kore by Imtiaz 2 bedroom apartments">
+          Enquire
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </a>
+      </li>
+
+    </ul>
+
+    <div class="kor-fp__foot reveal">
+      <p class="kor-fp__note">Advertised starting sizes and indicative prices, subject to availability and developer confirmation.</p>
+      <a href="#enquiry" class="kor-fp__link">
+        Request the full price list
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </a>
+    </div>
+
+  </div>
+</section>
+
+
+
+<!-- ================================================================
+     10. PAYMENT PLAN  (light band, 2 cards: labelled bar + stage list)
+     Each card reads top to bottom: plan name → bar → stages → note.
+     ================================================================ -->
+<style>
+  .kor-pay { position: relative; padding-block: 3.5rem; background: #F7F3EB; overflow: hidden; }
+  .kor-pay::before {
+    content: ""; position: absolute; inset: 0;
+    background: radial-gradient(circle at 100% 0%, rgba(201,168,103,.10), transparent 45%);
+    pointer-events: none;
+  }
+
+  .kor-pay__head {
+    position: relative; z-index: 1;
+    display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between;
+    gap: 1.25rem 3rem;
+    margin-bottom: 2rem;
+  }
+  .kor-pay__head > div { max-width: 40rem; }
+  .kor-pay__lead { margin: .875rem 0 0; font-size: .9375rem; line-height: 1.75; color: var(--muted-foreground); }
+
+  .kor-pay__grid {
+    position: relative; z-index: 1;
+    display: grid; gap: 1.25rem;
+    grid-template-columns: 1fr;
+  }
+  @media (min-width: 900px) { .kor-pay__grid { grid-template-columns: 1fr 1fr; } }
+
+  /* stage colours: shared by the bar segments and the list dots */
+  .kor-s1 { background: var(--primary); color: var(--cream); }
+  .kor-s2 { background: color-mix(in srgb, var(--primary) 78%, #fff); color: #fff; }
+  .kor-s3 { background: color-mix(in srgb, var(--primary) 35%, #fff); color: var(--primary); }
+  .kor-s4 { background: var(--gold); color: var(--ink); }
+
+  /* ---- plan card ---- */
+  .kor-plan {
+    display: flex; flex-direction: column;
+    background: #fff;
+    border: 1px solid #ECE7DD;
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .kor-plan__body { flex: 1; padding: 1.5rem 1.5rem 1.25rem; }
+
+  .kor-plan__title {
+    margin: 0;
+    font-family: var(--font-display); font-size: 1.375rem; font-weight: 600; line-height: 1.2;
+    color: var(--primary);
+  }
+
+  /* bar: % printed inside each segment */
+  .kor-plan__bar {
+    display: flex; gap: 3px;
+    height: 2.25rem; margin-top: 1.25rem;
+    border-radius: 9999px; overflow: hidden;
+  }
+  .kor-plan__bar span {
+    display: flex; align-items: center; justify-content: center;
+    font-size: .75rem; font-weight: 700; letter-spacing: .02em;
+  }
+
+  /* stage list */
+  .kor-plan__heads {
+    display: flex; justify-content: space-between;
+    margin-top: 1.5rem; padding-bottom: .625rem;
+    border-bottom: 1px solid #DDD6C7;
+    font-size: .625rem; font-weight: 600; text-transform: uppercase; letter-spacing: .14em;
+    color: var(--muted-foreground);
+  }
+  .kor-plan__list { list-style: none; margin: 0; padding: 0; }
+  .kor-plan__list li {
+    display: flex; align-items: center; gap: .75rem;
+    padding: .75rem 0;
+    border-bottom: 1px solid #F0ECE3;
+    font-size: .9375rem; line-height: 1.4; color: var(--foreground);
+  }
+  .kor-plan__list li:last-child { border-bottom: 0; padding-bottom: 0; }
+  .kor-plan__dot { flex-shrink: 0; width: .75rem; height: .75rem; border-radius: 50%; }
+  .kor-plan__list strong {
+    margin-left: auto;
+    font-family: var(--font-display); font-size: 1.25rem; font-weight: 600;
+    color: var(--primary);
+  }
+
+  /* note strip at the bottom of the card */
+  .kor-plan__desc {
+    margin: 0; padding: 1rem 1.5rem;
+    background: #FAF8F3; border-top: 1px solid #ECE7DD;
+    font-size: .8125rem; line-height: 1.6;
+    color: var(--muted-foreground);
+  }
+
+  .kor-pay__foot {
+    position: relative; z-index: 1;
+    margin: 1.25rem 0 0;
+    font-size: .75rem; font-style: italic;
+    color: var(--muted-foreground);
+  }
+
+  @media (max-width: 640px) {
+    .kor-pay { padding-block: 3rem; }
+    .kor-pay__head { margin-bottom: 1.5rem; }
+    .kor-pay__head .btn-gold { width: 100%; justify-content: center; }
+    .kor-plan__body { padding: 1.25rem 1.125rem 1rem; }
+    .kor-plan__desc { padding: .875rem 1.125rem; }
+    .kor-plan__title { font-size: 1.25rem; }
+  }
+</style>
+
+<section class="kor-pay" id="payment-plan">
+  <div class="container-page">
+
+    <div class="kor-pay__head reveal">
+      <div>
+        <p class="eyebrow" style="color:var(--primary);font-size: .6875rem;font-weight: 600;text-transform: uppercase;letter-spacing: .32em;">Payment Plan</p>
+        <h2 class="section-title">Kore by Imtiaz Payment Plan &ndash; Flexible Apartment Ownership</h2>
+        <p class="kor-pay__lead">Two payment options are advertised to suit different buyers.</p>
+      </div>
+      <a href="#enquiry" class="btn-gold">
+        Get The Latest Payment Plan
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </a>
+    </div>
+
+    <div class="kor-pay__grid">
+
+      <!-- 50/50 -->
+      <article class="kor-plan reveal">
+        <div class="kor-plan__body">
+          <h3 class="kor-plan__title">50/50 Payment Plan</h3>
+
+          <div class="kor-plan__bar" role="img" aria-label="20% on booking, 30% during construction, 50% on handover">
+            <span class="kor-s1" style="flex:20">20%</span>
+            <span class="kor-s2" style="flex:30">30%</span>
+            <span class="kor-s3" style="flex:50">50%</span>
+          </div>
+
+          <div class="kor-plan__heads"><span>Payment Stage</span><span>Percentage</span></div>
+          <ul class="kor-plan__list">
+            <li><span class="kor-plan__dot kor-s1"></span>On Booking<strong>20%</strong></li>
+            <li><span class="kor-plan__dot kor-s2"></span>During Construction<strong>30%</strong></li>
+            <li><span class="kor-plan__dot kor-s3"></span>On Handover<strong>50%</strong></li>
+          </ul>
+        </div>
+        <p class="kor-plan__desc">Pay on booking, follow the construction schedule and settle the balance at handover.</p>
+      </article>
+
+      <!-- 60/40 -->
+      <article class="kor-plan reveal" data-delay="100">
+        <div class="kor-plan__body">
+          <h3 class="kor-plan__title">60/40 Post-Handover Payment Plan</h3>
+
+          <div class="kor-plan__bar" role="img" aria-label="20% on booking, 35% during construction, 5% on handover, 40% over 36 months after handover">
+            <span class="kor-s1" style="flex:20">20%</span>
+            <span class="kor-s2" style="flex:35">35%</span>
+            <span class="kor-s3" style="flex:5"></span>
+            <span class="kor-s4" style="flex:40">40%</span>
+          </div>
+
+          <div class="kor-plan__heads"><span>Payment Stage</span><span>Percentage</span></div>
+          <ul class="kor-plan__list">
+            <li><span class="kor-plan__dot kor-s1"></span>On Booking<strong>20%</strong></li>
+            <li><span class="kor-plan__dot kor-s2"></span>During Construction<strong>35%</strong></li>
+            <li><span class="kor-plan__dot kor-s3"></span>On Handover<strong>5%</strong></li>
+            <li><span class="kor-plan__dot kor-s4"></span>After Handover &ndash; 36 Months<strong>40%</strong></li>
+          </ul>
+        </div>
+        <p class="kor-plan__desc">Part of the price is spread over 36 months after completion, for buyers who prefer to pay beyond handover.</p>
+      </article>
+
+    </div>
+
+    <p class="kor-pay__foot">Plan availability, dates and conditions must be confirmed with the developer before booking.</p>
+
+  </div>
+</section>
+
+
+
+<!-- ================================================================
+     11. INVESTMENT POTENTIAL  (dark band: intro + considerations | 2x2 reasons)
+     ================================================================ -->
+<style>
+  .kor-inv { position: relative; padding-block: 4rem; background: var(--ink); overflow: hidden; }
+  .kor-inv::before {
+    content: ""; position: absolute; top: -25%; left: -12%;
+    width: 520px; height: 520px; border-radius: 50%;
+    background: radial-gradient(circle, color-mix(in srgb, var(--gold) 14%, transparent), transparent 70%);
+    pointer-events: none;
+  }
+
+  .kor-inv__grid {
+    position: relative; z-index: 1;
+    display: grid; gap: 2.5rem; align-items: start;
+    grid-template-columns: 1fr;
+  }
+  @media (min-width: 1024px) { .kor-inv__grid { grid-template-columns: .85fr 1.15fr; gap: 4rem; align-items: center; } }
+
+  /* ---- left ---- */
+  .kor-inv__intro h2 { color: var(--cream); }
+  .kor-inv__lead {
+    margin: 1.25rem 0 0;
+    font-family: var(--font-display); font-size: clamp(1.0625rem, 1.8vw, 1.25rem); line-height: 1.55;
+    color: var(--cream);
+  }
+  .kor-inv__text { margin: 1rem 0 0; font-size: .9375rem; line-height: 1.8; color: rgba(246,242,233,.72); }
+
+  .kor-inv__note { margin: 1rem 0 0; font-size: .75rem; font-style: italic; color: rgba(246,242,233,.5); }
+
+  .kor-inv__cta { margin-top: 2rem; }
+
+  /* ---- right: 4 reasons ---- */
+  .kor-inv__label {
+    margin: 0 0 1rem;
+    font-size: .6875rem; font-weight: 600; text-transform: uppercase; letter-spacing: .2em;
+    color: rgba(246,242,233,.6);
+  }
+  .kor-inv__reasons {
+    list-style: none; margin: 0; padding: 0;
+    display: grid; gap: 1rem;
+    grid-template-columns: 1fr;
+  }
+  @media (min-width: 560px) { .kor-inv__reasons { grid-template-columns: 1fr 1fr; } }
+
+  .kor-inv__card {
+    position: relative;
+    padding: 1.625rem 1.5rem 1.5rem;
+    background: #294139;
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: var(--radius);
+    transition: transform .3s ease, box-shadow .3s ease, border-color .3s ease;
+  }
+  .kor-inv__card:hover {
+    transform: translateY(-3px);
+    border-color: color-mix(in srgb, var(--gold) 40%, transparent);
+    box-shadow: 0 22px 40px rgba(0,0,0,.25);
+  }
+  .kor-inv__head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+  .kor-inv__icon { width: 1.75rem; height: 1.75rem; color: var(--gold); }
+  .kor-inv__icon svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+  .kor-inv__num { font-family: var(--font-display); font-size: 1.5rem; line-height: 1; color: rgba(246,242,233,.18); }
+
+  .kor-inv__card h3 {
+    margin: 1.125rem 0 0;
+    font-family: var(--font-display); font-size: 1.25rem; font-weight: 500; line-height: 1.25;
+    color: var(--cream);
+  }
+  .kor-inv__card p { margin: .5rem 0 0; font-size: .8125rem; line-height: 1.65; color: rgba(246,242,233,.68); }
+
+  @media (max-width: 640px) {
+    .kor-inv { padding-block: 3rem; }
+    .kor-inv__cta .btn-gold { box-sizing: border-box; width: 100%; justify-content: center; }
+    .kor-inv__card { padding: 1.375rem 1.25rem 1.25rem; }
+  }
+</style>
+
+<section class="kor-inv" id="investment">
+  <div class="container-page kor-inv__grid">
+
+    <div class="kor-inv__intro reveal">
+      <p class="eyebrow" style="color:var(--gold);font-size: .6875rem;font-weight: 600;text-transform: uppercase;letter-spacing: .32em;">Investment</p>
+      <h2 class="section-title">Kore by Imtiaz Investment Potential in Dubailand</h2>
+
+      <p class="kor-inv__lead">
+        Kore may suit buyers exploring Dubai's off-plan market who like developments with a clear lifestyle concept.
+      </p>
+      <p class="kor-inv__text">
+        With studios to two-bedroom homes and wellness-led amenities, it appeals to individuals, couples and
+        smaller households, and can be assessed as part of the wider Dubailand residential market.
+      </p>
+
+      <p class="kor-inv__note">Returns are not guaranteed.</p>
+
+      <div class="kor-inv__cta">
+        <a href="#enquiry" class="btn-gold">
+          Speak To An Investment Advisor
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </a>
+      </div>
+    </div>
+
+    <div class="reveal" data-delay="100">
+      <p class="kor-inv__label">Reasons to Consider Kore by Imtiaz</p>
+      <ol class="kor-inv__reasons">
+        <li class="kor-inv__card">
+          <div class="kor-inv__head">
+            <span class="kor-inv__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-6.2-7-12a7 7 0 0 1 14 0c0 5.8-7 12-7 12Z"/><circle cx="12" cy="9" r="2.5"/></svg></span>
+            <span class="kor-inv__num">01</span>
+          </div>
+          <h3>Growing Location</h3>
+          <p>DLRC offers access to major Dubai roads and nearby communities.</p>
+        </li>
+        <li class="kor-inv__card">
+          <div class="kor-inv__head">
+            <span class="kor-inv__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h4l2-5 4 10 2-5h6"/></svg></span>
+            <span class="kor-inv__num">02</span>
+          </div>
+          <h3>Wellness-Focused Design</h3>
+          <p>Training, landscaped and recovery spaces set Kore apart from standard apartment projects.</p>
+        </li>
+        <li class="kor-inv__card">
+          <div class="kor-inv__head">
+            <span class="kor-inv__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 10l9-7 9 7v11H3z"/><path d="M9 21v-6h6v6"/></svg></span>
+            <span class="kor-inv__num">03</span>
+          </div>
+          <h3>Multiple Apartment Types</h3>
+          <p>Studios to two-bedrooms suit different households and strategies.</p>
+        </li>
+        <li class="kor-inv__card">
+          <div class="kor-inv__head">
+            <span class="kor-inv__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20M6 15h4"/></svg></span>
+            <span class="kor-inv__num">04</span>
+          </div>
+          <h3>Structured Payment Plans</h3>
+          <p>Construction-linked and post-handover options make schedules easy to compare.</p>
+        </li>
+      </ol>
+    </div>
+
+  </div>
+</section>
+
+
+
+<!-- ================================================================
+     12. ABOUT IMTIAZ DEVELOPMENTS  (copy + 3 hallmarks + Kore/Technogym strip)
+     ================================================================ -->
+<style>
+  .kor-dev { position: relative; padding-block: 4rem; background: var(--background); overflow: hidden; }
+  .kor-dev::before {
+    content: ""; position: absolute; inset: 0;
+    background: radial-gradient(circle at 100% 100%, rgba(201,168,103,.08), transparent 40%);
+    pointer-events: none;
+  }
+
+  .kor-dev__grid {
+    position: relative; z-index: 1;
+    display: grid; gap: 2.5rem; align-items: center;
+    grid-template-columns: 1fr;
+  }
+  @media (min-width: 1024px) { .kor-dev__grid { grid-template-columns: 1.05fr .95fr; gap: 4.5rem; } }
+
+  .kor-dev__lead {
+    margin: 1.25rem 0 0;
+    font-family: var(--font-display); font-size: clamp(1.0625rem, 1.8vw, 1.25rem); line-height: 1.55;
+    color: var(--foreground);
+  }
+  .kor-dev__text { margin: 1rem 0 0; font-size: .9375rem; line-height: 1.8; color: var(--muted-foreground); }
+
+  /* Kore + Technogym strip */
+  .kor-dev__collab {
+    margin-top: 1.75rem;
+    display: flex; align-items: center; gap: 1rem;
+    padding: 1rem 1.25rem;
+    background: #FAF8F3;
+    border: 1px solid #ECE7DD;
+    border-radius: var(--radius);
+  }
+  .kor-dev__collab-icon {
+    flex-shrink: 0; width: 2.75rem; height: 2.75rem; border-radius: 9999px;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--primary); color: var(--gold);
+  }
+  .kor-dev__collab-icon svg { width: 1.25rem; height: 1.25rem; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+  .kor-dev__collab p { margin: 0; font-size: .875rem; line-height: 1.6; color: var(--foreground); }
+  .kor-dev__collab strong { color: var(--primary); }
+
+  .kor-dev__note { margin: 1.25rem 0 0; font-size: .75rem; font-style: italic; line-height: 1.5; color: var(--muted-foreground); }
+
+  /* ---- right: hallmarks ---- */
+  .kor-dev__panel {
+    padding: 2rem 1.75rem;
+    background: var(--primary);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-elegant);
+  }
+  .kor-dev__panel-label {
+    margin: 0;
+    font-size: .625rem; font-weight: 600; text-transform: uppercase; letter-spacing: .2em;
+    color: var(--gold);
+  }
+  .kor-dev__panel-title {
+    margin: .5rem 0 0;
+    font-family: var(--font-display); font-size: 1.5rem; font-weight: 500; line-height: 1.25;
+    color: var(--cream);
+  }
+  .kor-dev__marks { list-style: none; margin: 1.5rem 0 0; padding: 0; }
+  .kor-dev__marks li {
+    display: grid; grid-template-columns: 2.5rem 1fr; gap: .125rem 1rem; align-items: start;
+    padding: 1.125rem 0;
+    border-top: 1px solid rgba(246,242,233,.12);
+  }
+  .kor-dev__mark-icon {
+    grid-row: span 2;
+    width: 2.5rem; height: 2.5rem; border-radius: 9999px;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(246,242,233,.06);
+    border: 1px solid rgba(246,242,233,.14);
+    color: var(--gold);
+  }
+  .kor-dev__mark-icon svg { width: 1.125rem; height: 1.125rem; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+  .kor-dev__marks h3 {
+    margin: .125rem 0 0;
+    font-family: var(--font-display); font-size: 1.125rem; font-weight: 500;
+    color: var(--cream);
+  }
+  .kor-dev__marks p { margin: 0; font-size: .8125rem; line-height: 1.6; color: rgba(246,242,233,.68); }
+
+  .kor-dev__panel .btn-gold { margin-top: 1.25rem; width: 100%; justify-content: center; box-sizing: border-box; }
+
+  @media (max-width: 640px) {
+    .kor-dev { padding-block: 3rem; }
+    .kor-dev__panel { padding: 1.5rem 1.25rem; }
+    .kor-dev__collab { align-items: flex-start; }
+  }
+
+
+  .kor-dev__link {
+  display: inline-flex; align-items: center; gap: .5rem;
+  margin-top: 1rem;
+  font-size: .875rem; font-weight: 600; color: var(--primary);
+  text-decoration: underline; text-underline-offset: .25em;
+}
+.kor-dev__link svg { width: 1rem; height: 1rem; transition: transform .25s ease; }
+.kor-dev__link:hover { color: var(--gold); }
+.kor-dev__link:hover svg { transform: translateX(3px); }+6+
+</style>
+
+<section class="kor-dev" id="developer">
+  <div class="container-page kor-dev__grid">
+
+    <div class="reveal">
+      <p class="eyebrow" style="color:var(--primary);font-size: .6875rem;font-weight: 600;text-transform: uppercase;letter-spacing: .32em;">Developer</p>
+      <h2 class="section-title">Imtiaz Developments &ndash; Developer of Kore by Imtiaz</h2>
+
+      <p class="kor-dev__lead">
+        Imtiaz Developments is a UAE-based developer known for contemporary architecture, distinctive
+        design and lifestyle-led communities.
+      </p>
+      <p class="kor-dev__text">
+        Its Dubai portfolio features modern interiors, shared facilities and integrated lifestyle
+        experiences. Kore reflects this approach, with a focus on wellness, activity and
+        nature-inspired spaces.
+      </p>
+      <a href="https://spacesmith.ae/properties/developers/imtiaz/" class="kor-dev__link">
+  View all Imtiaz Developments projects in Dubai
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+</a>
+
+      <div class="kor-dev__collab">
+        <span class="kor-dev__collab-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 7v10M3 9v6M18 7v10M21 9v6M6 12h12"/></svg></span>
+        <p><strong>Strengthened by the Technogym collaboration</strong> &ndash; Kore's signature training area is designed with Technogym, the fitness equipment brand.</p>
+      </div>
+
+      <p class="kor-dev__note">Buyers should review specifications, contract terms and construction updates before purchasing.</p>
+    </div>
+
+    <aside class="kor-dev__panel reveal" data-delay="100">
+      <p class="kor-dev__panel-label">The Imtiaz Approach</p>
+      <p class="kor-dev__panel-title">What defines an Imtiaz community</p>
+
+      <ul class="kor-dev__marks">
+        <li>
+          <span class="kor-dev__mark-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 9h1M14 9h1M9 13h1M14 13h1M9 17h1M14 17h1"/></svg></span>
+          <h3>Contemporary Architecture</h3>
+          <p>Modern forms with considered proportions and finishes.</p>
+        </li>
+        <li>
+          <span class="kor-dev__mark-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.6 5.6L20 9.5l-4 4.1.9 5.9L12 16.8 7.1 19.5 8 13.6 4 9.5l5.4-.9z"/></svg></span>
+          <h3>Distinctive Design</h3>
+          <p>Modern interiors that give each project its own identity.</p>
+        </li>
+        <li>
+          <span class="kor-dev__mark-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6"/><circle cx="17" cy="9" r="2.5"/><path d="M16 14.1A5 5 0 0 1 21 19"/></svg></span>
+          <h3>Lifestyle-Led Communities</h3>
+          <p>Shared facilities and integrated lifestyle experiences.</p>
+        </li>
+      </ul>
+
+      <a href="#enquiry" class="btn-gold">
+        Enquire About Kore
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </a>
+    </aside>
+
+  </div>
+</section>
+
+
+
+<!-- ================================================================
+     13. WHY CHOOSE SPACESMITH REAL ESTATE  (intro row + 6 service tiles + contact bar)
+     ================================================================ -->
+<style>
+  .kor-why { position: relative; padding-block: 4rem; background: #F7F3EB; overflow: hidden; }
+  .kor-why::before {
+    content: ""; position: absolute; inset: 0;
+    background: radial-gradient(circle at 0% 0%, rgba(201,168,103,.10), transparent 45%);
+    pointer-events: none;
+  }
+
+  /* ---- intro row ---- */
+  .kor-why__head {
+    position: relative; z-index: 1;
+    display: grid; gap: 1rem 4rem; align-items: end;
+    grid-template-columns: 1fr;
+    margin-bottom: 2.25rem;
+  }
+  @media (min-width: 1024px) { .kor-why__head { grid-template-columns: 1fr 1fr; } }
+  .kor-why__text { margin: 0; font-size: .9375rem; line-height: 1.8; color: var(--muted-foreground); }
+  .kor-why__text + .kor-why__text { margin-top: .75rem; }
+
+  /* ---- service tiles ---- */
+  .kor-why__label {
+    position: relative; z-index: 1;
+    margin: 0 0 1rem;
+    font-size: .6875rem; font-weight: 600; text-transform: uppercase; letter-spacing: .2em;
+    color: var(--primary);
+  }
+  .kor-why__grid {
+    position: relative; z-index: 1;
+    list-style: none; margin: 0; padding: 0;
+    display: grid; gap: .875rem;
+    grid-template-columns: 1fr 1fr;
+  }
+  @media (min-width: 1024px) { .kor-why__grid { grid-template-columns: repeat(3, 1fr); gap: 1rem; } }
+
+  .kor-why__item {
+    display: flex; align-items: center; gap: .875rem;
+    padding: 1.125rem 1.25rem;
+    background: #fff;
+    border: 1px solid #ECE7DD;
+    border-radius: var(--radius);
+    font-size: .9375rem; font-weight: 500; line-height: 1.35;
+    color: var(--foreground);
+    transition: transform .25s ease, border-color .25s ease, box-shadow .25s ease;
+  }
+  .kor-why__item:hover {
+    transform: translateY(-3px);
+    border-color: color-mix(in srgb, var(--gold) 55%, transparent);
+    box-shadow: 0 16px 34px rgba(0,0,0,.07);
+  }
+  .kor-why__icon {
+    flex-shrink: 0; width: 2.5rem; height: 2.5rem; border-radius: 9999px;
+    display: flex; align-items: center; justify-content: center;
+    background: color-mix(in srgb, var(--gold) 14%, transparent);
+    color: var(--gold);
+  }
+  .kor-why__icon svg { width: 1.125rem; height: 1.125rem; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+
+  /* ---- contact bar ---- */
+  .kor-why__bar {
+    position: relative; z-index: 1;
+    margin-top: 2rem;
+    display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between;
+    gap: 1.25rem 2rem;
+    padding: 1.5rem 1.75rem;
+    background: var(--primary);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-elegant);
+  }
+  .kor-why__bar p {
+    margin: 0; max-width: 30rem;
+    font-family: var(--font-display); font-size: 1.1875rem; line-height: 1.45;
+    color: var(--cream);
+  }
+  .kor-why__actions { display: flex; flex-wrap: wrap; gap: .75rem; }
+  .kor-why__btn {
+    box-sizing: border-box;
+    display: inline-flex; align-items: center; justify-content: center; gap: .5rem;
+    padding: .8rem 1.25rem;
+    border-radius: 9999px;
+    font-size: .8125rem; font-weight: 600;
+    transition: background-color .25s ease, color .25s ease, border-color .25s ease;
+  }
+  .kor-why__btn svg { width: 1.0625rem; height: 1.0625rem; }
+  .kor-why__btn--call { background: var(--gold); color: var(--ink); }
+  .kor-why__btn--call:hover { background: var(--cream); }
+  .kor-why__btn--wa { border: 1px solid rgba(246,242,233,.35); color: var(--cream); }
+  .kor-why__btn--wa:hover { border-color: var(--gold); color: var(--gold); }
+
+  @media (max-width: 640px) {
+    .kor-why { padding-block: 3rem; }
+    .kor-why__head { margin-bottom: 1.75rem; }
+    .kor-why__item { flex-direction: column; align-items: flex-start; gap: .625rem; padding: 1rem; font-size: .875rem; }
+    .kor-why__bar { padding: 1.375rem 1.25rem; }
+    .kor-why__bar p { font-size: 1.0625rem; }
+    .kor-why__actions { width: 100%; }
+    .kor-why__btn { flex: 1; }
+  }
+</style>
+
+<section class="kor-why" id="why-spacesmith">
+  <div class="container-page">
+
+    <div class="kor-why__head reveal">
+      <div>
+        <p class="eyebrow" style="color:var(--primary);font-size: .6875rem;font-weight: 600;text-transform: uppercase;letter-spacing: .32em;">Spacesmith Real Estate</p>
+        <h2 class="section-title">Why Buy Kore by Imtiaz Apartments with Spacesmith Real Estate?</h2>
+      </div>
+      <div>
+        <p class="kor-why__text">
+          Choosing an off-plan home means understanding specifications, payment schedules and location.
+          Spacesmith Real Estate gives personal guidance and the project information you need.
+        </p>
+        <p class="kor-why__text">
+          Whether you want a studio, a one-bedroom or a family home at Kore, our team will help you compare the options.
+        </p>
+      </div>
+    </div>
+
+    <p class="kor-why__label reveal">With Spacesmith, you can enquire about</p>
+    <ul class="kor-why__grid">
+      <li class="kor-why__item reveal">
+        <span class="kor-why__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12V3h9l9 9-9 9z"/><circle cx="7.5" cy="7.5" r="1.5"/></svg></span>
+        Latest apartment prices
+      </li>
+      <li class="kor-why__item reveal" data-delay="50">
+        <span class="kor-why__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M3 9h18M8 2v4M16 2v4M8 14l2 2 4-4"/></svg></span>
+        Current availability
+      </li>
+      <li class="kor-why__item reveal" data-delay="100">
+        <span class="kor-why__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="1"/><path d="M3 12h8V3M11 12v9M15 12h6"/></svg></span>
+        Studio, 1BR &amp; 2BR floor plans
+      </li>
+      <li class="kor-why__item reveal">
+        <span class="kor-why__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20M6 15h4"/></svg></span>
+        Payment plan information
+      </li>
+      <li class="kor-why__item reveal" data-delay="50">
+        <span class="kor-why__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z"/><path d="M14 3v6h6M8 13h8M8 17h5"/></svg></span>
+        Brochures &amp; specifications
+      </li>
+      <li class="kor-why__item reveal" data-delay="100">
+        <span class="kor-why__icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 11l3 3 8-8"/><path d="M20 12v7a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9"/></svg></span>
+        Booking requirements
+      </li>
+    </ul>
+
+    <div class="kor-why__bar reveal">
+      <p>We help buyers make informed decisions based on their own requirements.</p>
+      <div class="kor-why__actions">
+        <a href="tel:+{{ phone_number|default:'971556399212' }}" class="kor-why__btn kor-why__btn--call">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg>
+          Call Us
+        </a>
+        <a href="https://wa.me/{{ phone_number|default:'971556399212' }}?text={{ 'Hi, I am interested in Kore by Imtiaz at DLRC.'|urlencode }}"
+           class="kor-why__btn kor-why__btn--wa" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21l1.7-5A8.5 8.5 0 1 1 8 19.3z"/><path d="M9 10c0 3 2 5 5 5l1-1.5-2-1-1 1c-1-.5-1.5-1-2-2l1-1-1-2z"/></svg>
+          WhatsApp
+        </a>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+
+
+<!-- ================================================================
+     14. FAQ  (sticky intro + native <details> accordion, no JS)
+     Answers match the FAQPage JSON-LD in the schema block word for word.
+     ================================================================ -->
+<style>
+  .kor-faq { padding-block: 4rem; background: var(--background); }
+
+  .kor-faq__grid {
+    display: grid; gap: 2.25rem; align-items: start;
+    grid-template-columns: 1fr;
+  }
+  @media (min-width: 1024px) { .kor-faq__grid { grid-template-columns: .8fr 1.2fr; gap: 4.5rem; } }
+
+  @media (min-width: 1024px) {
+    .kor-faq__intro { position: sticky; top: calc(var(--nav-height, 80px) + 1.5rem); }
+  }
+  .kor-faq__lead { margin: 1rem 0 0; font-size: .9375rem; line-height: 1.75; color: var(--muted-foreground); }
+
+  .kor-faq__help {
+    margin-top: 1.75rem;
+    padding: 1.25rem 1.375rem;
+    background: #FAF8F3;
+    border: 1px solid #ECE7DD;
+    border-left: 3px solid var(--gold);
+    border-radius: var(--radius);
+  }
+  .kor-faq__help p {
+    margin: 0;
+    font-family: var(--font-display); font-size: 1.125rem; line-height: 1.4;
+    color: var(--foreground);
+  }
+  .kor-faq__help a {
+    display: inline-flex; align-items: center; gap: .5rem;
+    margin-top: .625rem;
+    font-size: .875rem; font-weight: 600; color: var(--primary);
+  }
+  .kor-faq__help a svg { width: 1rem; height: 1rem; transition: transform .25s ease; }
+  .kor-faq__help a:hover { color: var(--gold); }
+  .kor-faq__help a:hover svg { transform: translateX(3px); }
+
+  /* ---- accordion ---- */
+  .kor-faq__list { border-top: 1px solid #ECE7DD; }
+  .kor-faq__item { border-bottom: 1px solid #ECE7DD; }
+
+  .kor-faq__q {
+    list-style: none;
+    display: flex; align-items: center; gap: 1rem;
+    padding: 1.25rem 0;
+    cursor: pointer; font-weight: 600;
+    font-family: var(--font-display); font-size: 1.1875rem; font-weight: 500; line-height: 1.35;
+    color: var(--foreground);
+    transition: color .2s ease;
+  }
+  .kor-faq__q::-webkit-details-marker { display: none; }
+  .kor-faq__q:hover { color: var(--primary); }
+  .kor-faq__q:focus-visible { outline: 2px solid var(--gold); outline-offset: 4px; border-radius: 4px; }
+
+  .kor-faq__num { flex-shrink: 0; width: 1.75rem; font-size: .9375rem; color: var(--gold-dark); }
+  .kor-faq__q span:nth-child(2) { flex: 1; }
+
+  .kor-faq__icon {
+    position: relative; flex-shrink: 0;
+    width: 2rem; height: 2rem; border-radius: 9999px;
+    border: 1px solid #DDD6C7;
+    transition: background-color .25s ease, border-color .25s ease;
+  }
+  .kor-faq__icon::before,
+  .kor-faq__icon::after {
+    content: ""; position: absolute; left: 50%; top: 50%;
+    width: .75rem; height: 1.5px; margin: -.75px 0 0 -.375rem;
+    background: var(--primary);
+    transition: transform .3s ease, background-color .25s ease;
+  }
+  .kor-faq__icon::after { transform: rotate(90deg); }
+  .kor-faq__item[open] .kor-faq__icon { background: var(--primary); border-color: var(--primary); }
+  .kor-faq__item[open] .kor-faq__icon::before,
+  .kor-faq__item[open] .kor-faq__icon::after { background: var(--gold); }
+  .kor-faq__item[open] .kor-faq__icon::after { transform: rotate(0deg); }
+  .kor-faq__item[open] .kor-faq__q { color: var(--primary); }
+
+  .kor-faq__a {
+    margin: 0;
+    padding: 0 3rem 1.375rem 2.75rem;
+    font-size: .9375rem; line-height: 1.75;
+    color: var(--muted-foreground);
+  }
+  .kor-faq__item[open] .kor-faq__a { animation: korFaqIn .3s ease; }
+  @keyframes korFaqIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+
+  @media (max-width: 640px) {
+    .kor-faq { padding-block: 3rem; }
+    .kor-faq__q { font-size: 1.0625rem; gap: .75rem; padding: 1.125rem 0; }
+    .kor-faq__num { width: 1.5rem; font-size: .875rem; }
+    .kor-faq__icon { width: 1.75rem; height: 1.75rem; }
+    .kor-faq__a { padding: 0 0 1.25rem 2.25rem; font-size: .875rem; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .kor-faq__item[open] .kor-faq__a { animation: none; }
+  }
+</style>
+
+<section class="kor-faq" id="faq">
+  <div class="container-page kor-faq__grid">
+
+    <div class="kor-faq__intro reveal">
+      <p class="eyebrow" style="color:var(--primary);font-size: .6875rem;font-weight: 600;text-transform: uppercase;letter-spacing: .32em;">FAQ</p>
+      <h2 class="section-title">Frequently Asked Questions About Kore by Imtiaz at DLRC</h2>
+      <p class="kor-faq__lead">Quick answers on location, prices, apartment types, payment plans and handover.</p>
+
+      <div class="kor-faq__help">
+        <p>Have a question that isn&rsquo;t listed?</p>
+        <a href="#enquiry">
+          Ask our property advisor
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </a>
+      </div>
+    </div>
+
+    <div class="kor-faq__list reveal" data-delay="100">
+
+      <details class="kor-faq__item" name="kor-faq" open>
+        <summary class="kor-faq__q">
+          <span class="kor-faq__num">01</span>
+          <span>Where is Kore by Imtiaz located?</span>
+          <span class="kor-faq__icon" aria-hidden="true"></span>
+        </summary>
+        <p class="kor-faq__a">Kore by Imtiaz is located in Dubai Land Residence Complex (DLRC) within Dubailand, with access to Dubai&ndash;Al Ain Road and Emirates Road.</p>
+      </details>
+
+      <details class="kor-faq__item" name="kor-faq">
+        <summary class="kor-faq__q">
+          <span class="kor-faq__num">02</span>
+          <span>What is the starting price of Kore by Imtiaz?</span>
+          <span class="kor-faq__icon" aria-hidden="true"></span>
+        </summary>
+        <p class="kor-faq__a">Studio apartments at Kore by Imtiaz start from an indicative AED 679,000, subject to developer confirmation and availability.</p>
+      </details>
+
+      <details class="kor-faq__item" name="kor-faq">
+        <summary class="kor-faq__q">
+          <span class="kor-faq__num">03</span>
+          <span>What apartment types are available at Kore by Imtiaz?</span>
+          <span class="kor-faq__icon" aria-hidden="true"></span>
+        </summary>
+        <p class="kor-faq__a">Kore by Imtiaz offers studio, one-bedroom and two-bedroom apartments, with advertised starting sizes of 406 sq. ft., 669 sq. ft. and 1,406 sq. ft. respectively.</p>
+      </details>
+
+      <details class="kor-faq__item" name="kor-faq">
+        <summary class="kor-faq__q">
+          <span class="kor-faq__num">04</span>
+          <span>What is the payment plan for Kore by Imtiaz?</span>
+          <span class="kor-faq__icon" aria-hidden="true"></span>
+        </summary>
+        <p class="kor-faq__a">Two plans are advertised: a 50/50 plan (20% on booking, 30% during construction, 50% on handover) and a 60/40 post-handover plan (20% on booking, 35% during construction, 5% on handover and 40% over 36 months after handover).</p>
+      </details>
+
+      <details class="kor-faq__item" name="kor-faq">
+        <summary class="kor-faq__q">
+          <span class="kor-faq__num">05</span>
+          <span>When is the handover of Kore by Imtiaz expected?</span>
+          <span class="kor-faq__icon" aria-hidden="true"></span>
+        </summary>
+        <p class="kor-faq__a">Handover of Kore by Imtiaz is expected in Q4 2028, subject to the developer's construction schedule.</p>
+      </details>
+
+      <details class="kor-faq__item" name="kor-faq">
+        <summary class="kor-faq__q">
+          <span class="kor-faq__num">06</span>
+          <span>How can I enquire about Kore by Imtiaz?</span>
+          <span class="kor-faq__icon" aria-hidden="true"></span>
+        </summary>
+        <p class="kor-faq__a">You can contact Spacesmith Real Estate by phone, WhatsApp or the enquiry form on this page to receive the latest prices, floor plans, payment plan and availability.</p>
+      </details>
+
+    </div>
+
+  </div>
+</section>
+
+
+
+<!-- ================================================================
+     15. REGISTER YOUR INTEREST  (dark band: contact details + lead form)
+     Posts the same fields as the Ellington form → _handle_landing_enquiry
+     ================================================================ -->
+<style>
+  .kor-enq { position: relative; padding-block: 4.5rem; background: var(--ink); overflow: hidden; }
+  .kor-enq::before {
+    content: ""; position: absolute; top: -20%; right: -10%;
+    width: 560px; height: 560px; border-radius: 50%;
+    background: radial-gradient(circle, color-mix(in srgb, var(--gold) 14%, transparent), transparent 70%);
+    pointer-events: none;
+  }
+
+  .kor-enq__grid {
+    position: relative; z-index: 1;
+    display: grid; gap: 2.5rem; align-items: center;
+    grid-template-columns: 1fr;
+  }
+  @media (min-width: 1024px) { .kor-enq__grid { grid-template-columns: .9fr 1.1fr; gap: 4.5rem; } }
+
+  /* ---- left ---- */
+  .kor-enq__copy h2 { color: var(--cream); }
+  .kor-enq__text { margin: 1.125rem 0 0; font-size: .9375rem; line-height: 1.8; color: rgba(246,242,233,.75); max-width: 32rem; }
+
+  .kor-enq__contacts { list-style: none; margin: 2rem 0 0; padding: 0; display: grid; gap: .75rem; max-width: 26rem; }
+  .kor-enq__contact {
+    display: flex; align-items: center; gap: .875rem;
+    padding: .875rem 1rem;
+    border: 1px solid rgba(246,242,233,.12);
+    border-radius: var(--radius);
+    background: rgba(246,242,233,.03);
+    color: var(--cream);
+    transition: border-color .25s ease, background-color .25s ease;
+  }
+  .kor-enq__contact:hover { border-color: color-mix(in srgb, var(--gold) 55%, transparent); background: rgba(246,242,233,.06); }
+  .kor-enq__contact-icon {
+    flex-shrink: 0; width: 2.5rem; height: 2.5rem; border-radius: 9999px;
+    display: flex; align-items: center; justify-content: center;
+    background: color-mix(in srgb, var(--gold) 16%, transparent);
+    color: var(--gold);
+  }
+  .kor-enq__contact-icon svg { width: 1.125rem; height: 1.125rem; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .kor-enq__contact small {
+    display: block;
+    font-size: .625rem; font-weight: 600; text-transform: uppercase; letter-spacing: .16em;
+    color: rgba(246,242,233,.55);
+  }
+  .kor-enq__contact span:last-child > span { display: block; margin-top: .125rem; font-size: .9375rem; font-weight: 500; word-break: break-word; }
+  .kor-enq__arrow { margin-left: auto; width: 1rem; height: 1rem; color: rgba(246,242,233,.4); transition: transform .25s ease, color .25s ease; }
+  .kor-enq__contact:hover .kor-enq__arrow { transform: translateX(3px); color: var(--gold); }
+
+  /* ---- form card ---- */
+  .kor-enq__form {
+    position: relative;
+    padding: 2.25rem;
+    background: #fff;
+    border-radius: var(--radius);
+    box-shadow: 0 30px 70px rgba(0,0,0,.35);
+  }
+  .kor-enq__form::before {
+    content: ""; position: absolute; left: 2.25rem; right: 2.25rem; top: 0;
+    height: 3px; background: var(--gold); border-radius: 0 0 3px 3px;
+  }
+  .kor-enq__form h3 {
+    margin: 0;
+    font-family: var(--font-display); font-size: 1.625rem; font-weight: 500; line-height: 1.2;
+    color: var(--foreground);
+  }
+  .kor-enq__sub { margin: .5rem 0 1.5rem; font-size: .875rem; line-height: 1.65; color: var(--muted-foreground); }
+
+  .kor-enq__honeypot { position: absolute; left: -9999px; top: -9999px; }
+
+  .kor-enq__row { display: grid; gap: 0 1rem; grid-template-columns: 1fr; }
+  @media (min-width: 560px) { .kor-enq__row { grid-template-columns: 1fr 1fr; } }
+
+  .kor-field { display: flex; flex-direction: column; gap: .4rem; margin-bottom: 1rem; min-width: 0; }
+  .kor-field[hidden] { display: none; }   /* class display:flex would otherwise override the hidden attribute */
+  .kor-field label {
+    font-size: .6875rem; font-weight: 600; text-transform: uppercase; letter-spacing: .12em;
+    color: var(--foreground);
+  }
+  .kor-field input,
+  .kor-field select,
+  .kor-field textarea {
+    box-sizing: border-box; width: 100%;
+    padding: .8rem .95rem;
+    border: 1px solid #E3DDD0;
+    border-radius: .5rem;
+    background: #FDFCF9;
+    font: inherit; font-size: .9375rem;
+    color: var(--foreground);
+    transition: border-color .2s ease, box-shadow .2s ease, background-color .2s ease;
+  }
+  .kor-field textarea { resize: vertical; min-height: 96px; }
+  .kor-field input:focus,
+  .kor-field select:focus,
+  .kor-field textarea:focus {
+    outline: none; background: #fff;
+    border-color: var(--gold);
+    box-shadow: 0 0 0 3px rgba(201,168,103,.18);
+  }
+  .kor-field .has-error { border-color: #b3261e; }
+
+  .kor-tel { display: flex; gap: .5rem; min-width: 0; }
+  .kor-tel select { flex: 0 0 5.75rem; width: 5.75rem; padding-inline: .5rem; }
+  .kor-tel input { flex: 1 1 auto; min-width: 0; }
+
+  .kor-check {
+    display: flex; align-items: center; gap: .625rem;
+    margin: -.25rem 0 1rem;
+    font-size: .8125rem; color: var(--muted-foreground); cursor: pointer;
+  }
+  .kor-check input { width: 1rem; height: 1rem; accent-color: var(--primary); }
+
+  .kor-err { margin: .25rem 0 0; font-size: .75rem; color: #b3261e; }
+  .kor-formerr {
+    margin: 0 0 1.25rem; padding: .8rem 1rem;
+    border: 1px solid #f2c2bd; border-radius: .5rem;
+    background: #fdf3f2; color: #b3261e; font-size: .8125rem;
+  }
+
+  .kor-enq__submit { box-sizing: border-box; width: 100%; height: 3.25rem; margin-top: .25rem; justify-content: center; font-weight: 600; letter-spacing: .03em; }
+  .kor-enq__note {
+    display: flex; align-items: center; justify-content: center; gap: .4rem;
+    margin: .875rem 0 0;
+    font-size: .75rem; text-align: center; color: var(--muted-foreground);
+  }
+  .kor-enq__note svg { flex-shrink: 0; width: .875rem; height: .875rem; color: var(--primary); }
+
+  /* ---- disclaimer ---- */
+  .kor-enq__disc {
+    position: relative; z-index: 1;
+    margin: 3rem 0 0; padding-top: 1.5rem;
+    border-top: 1px solid rgba(246,242,233,.1);
+    font-size: .75rem; line-height: 1.6;
+    color: rgba(246,242,233,.5);
+  }
+  .kor-enq__disc strong { color: rgba(246,242,233,.75); font-weight: 600; }
+
+  @media (max-width: 640px) {
+    .kor-enq { padding-block: 3rem; }
+    .kor-enq__form { padding: 1.625rem 1.25rem 1.5rem; }
+    .kor-enq__form::before { left: 1.25rem; right: 1.25rem; }
+    .kor-enq__form h3 { font-size: 1.375rem; }
+    .kor-enq__contacts { max-width: none; }
+    .kor-enq__disc { margin-top: 2.25rem; }
+  }
+</style>
+
+<section class="kor-enq" id="enquiry">
+  <div class="container-page">
+    <div class="kor-enq__grid">
+
+      <!-- left: copy + direct contact -->
+      <div class="kor-enq__copy reveal">
+        <p class="eyebrow" style="color:var(--gold);font-size: .6875rem;font-weight: 600;text-transform: uppercase;letter-spacing: .32em;">Register Your Interest</p>
+        <h2 class="section-title">Enquire About Kore by Imtiaz at DLRC with Spacesmith Real Estate</h2>
+        <p class="kor-enq__text">
+          Discover modern architecture, wellness-focused living and contemporary comfort.
+          Contact us to learn about availability and the buying process.
+        </p>
+
+        <ul class="kor-enq__contacts">
+          <li>
+            <a class="kor-enq__contact" href="tel:+{{ phone_number|default:'971556399212' }}">
+              <span class="kor-enq__contact-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg></span>
+              <span><small>Call Us</small><span>{{ contact_phone|default:'+971 55 639 9212' }}</span></span>
+              <svg class="kor-enq__arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </a>
+          </li>
+          <li>
+            <a class="kor-enq__contact" href="https://wa.me/{{ whatsapp_number|default:'971556399212' }}?text=Hi%2C%20I%27m%20interested%20in%20Kore%20by%20Imtiaz%20at%20DLRC"
+               target="_blank" rel="noopener noreferrer">
+              <span class="kor-enq__contact-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21l1.7-5A8.5 8.5 0 1 1 8 19.3z"/><path d="M9 10c0 3 2 5 5 5l1-1.5-2-1-1 1c-1-.5-1.5-1-2-2l1-1-1-2z"/></svg></span>
+              <span><small>WhatsApp</small><span>Chat with an advisor</span></span>
+              <svg class="kor-enq__arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </a>
+          </li>
+          <li>
+            <a class="kor-enq__contact" href="mailto:{{ contact_email|default:'hello@spacesmithrealestate.com' }}?subject=Kore%20by%20Imtiaz%20Enquiry">
+              <span class="kor-enq__contact-icon"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg></span>
+              <span><small>Email</small><span>{{ contact_email|default:'hello@spacesmithrealestate.com' }}</span></span>
+              <svg class="kor-enq__arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <!-- right: lead form (same field names as the Ellington form) -->
+      <form class="kor-enq__form reveal" data-delay="100"
+            id="korForm"
+            method="post"
+            action="{% url 'properties:kure' %}#enquiry">
+        {% csrf_token %}
+
+        <h3>Register Your Interest</h3>
+        <p class="kor-enq__sub">Get the latest prices, floor plans and payment plan for Kore by Imtiaz at DLRC.</p>
+
+        {% if enquiry_form.non_field_errors %}
+          <div class="kor-formerr">
+            {% for e in enquiry_form.non_field_errors %}<p style="margin:0;">{{ e }}</p>{% endfor %}
+          </div>
+        {% endif %}
+
+        <div class="kor-enq__honeypot" aria-hidden="true">
+          <label for="id_website">Website</label>
+          <input type="text" id="id_website" name="website" tabindex="-1" autocomplete="off">
+        </div>
+
+        <div class="kor-enq__row">
+          <div class="kor-field">
+            <label for="id_name">Full Name</label>
+            <input type="text" id="id_name" name="name"
+                   class="{% if enquiry_form.name.errors %}has-error{% endif %}"
+                   value="{{ enquiry_form.name.value|default:'' }}"
+                   placeholder="Your name" autocomplete="name" required>
+            {% for e in enquiry_form.name.errors %}<p class="kor-err">{{ e }}</p>{% endfor %}
+          </div>
+
+          <div class="kor-field">
+            <label for="id_email">Email</label>
+            <input type="email" id="id_email" name="email"
+                   class="{% if enquiry_form.email.errors %}has-error{% endif %}"
+                   value="{{ enquiry_form.email.value|default:'' }}"
+                   placeholder="you@email.com" autocomplete="email" required>
+            {% for e in enquiry_form.email.errors %}<p class="kor-err">{{ e }}</p>{% endfor %}
+          </div>
+        </div>
+
+        <div class="kor-field">
+          <label for="korPhoneLocal">Phone</label>
+          <div class="kor-tel">
+            <select id="korPhoneCode" aria-label="Country dialling code">
+              <option value="971" selected>+971</option>
+              <option value="91">+91</option>
+              <option value="44">+44</option>
+              <option value="1">+1</option>
+              <option value="966">+966</option>
+              <option value="974">+974</option>
+              <option value="965">+965</option>
+              <option value="92">+92</option>
+              <option value="880">+880</option>
+              <option value="94">+94</option>
+              <option value="20">+20</option>
+              <option value="7">+7</option>
+              <option value="86">+86</option>
+              <option value="49">+49</option>
+              <option value="61">+61</option>
+            </select>
+            <input type="tel" id="korPhoneLocal" inputmode="tel"
+                   class="{% if enquiry_form.phone.errors %}has-error{% endif %}"
+                   placeholder="50 123 4567" autocomplete="tel-national" required>
+          </div>
+          <input type="hidden" name="phone" id="id_phone" value="{{ enquiry_form.phone.value|default:'' }}">
+          {% for e in enquiry_form.phone.errors %}<p class="kor-err">{{ e }}</p>{% endfor %}
+        </div>
+
+        <label class="kor-check">
+          <input type="checkbox" id="korWaSame" checked>
+          WhatsApp number is the same
+        </label>
+
+        <div class="kor-field" id="korWaWrap" hidden>
+          <label for="korWaLocal">WhatsApp</label>
+          <div class="kor-tel">
+            <select id="korWaCode" aria-label="WhatsApp dialling code">
+              <option value="971" selected>+971</option>
+              <option value="91">+91</option>
+              <option value="44">+44</option>
+              <option value="1">+1</option>
+              <option value="966">+966</option>
+              <option value="92">+92</option>
+            </select>
+            <input type="tel" id="korWaLocal" inputmode="tel" placeholder="50 123 4567">
+          </div>
+        </div>
+        <input type="hidden" name="whatsapp" id="id_whatsapp" value="{{ enquiry_form.whatsapp.value|default:'' }}">
+        {% for e in enquiry_form.whatsapp.errors %}<p class="kor-err">{{ e }}</p>{% endfor %}
+
+        <div class="kor-field">
+          <label for="id_message">Message (Optional)</label>
+          <textarea id="id_message" name="message"
+                    placeholder="E.g. interested in a 1 bedroom, please share the price list">{{ enquiry_form.message.value|default:'' }}</textarea>
+        </div>
+
+        <button type="submit" class="btn-gold kor-enq__submit">Register Your Interest</button>
+
+        <p class="kor-enq__note">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+          No spam. Your details stay with Spacesmith Real Estate.
+        </p>
+      </form>
+
+    </div>
+
+    <p class="kor-enq__disc">
+      <strong>Disclaimer:</strong> All advertised prices, sizes, payment plans, amenities and completion details
+      are subject to developer confirmation. Please review official documentation before buying.
+    </p>
+  </div>
+</section>
+
+<script>
+(function () {
+  var form = document.getElementById('korForm');
+  if (!form) return;
+
+  var code  = document.getElementById('korPhoneCode');
+  var local = document.getElementById('korPhoneLocal');
+  var out   = document.getElementById('id_phone');
+  var same  = document.getElementById('korWaSame');
+  var wrap  = document.getElementById('korWaWrap');
+  var wCode = document.getElementById('korWaCode');
+  var wLoc  = document.getElementById('korWaLocal');
+  var wOut  = document.getElementById('id_whatsapp');
+
+  function digits(v) { return (v || '').replace(/\D/g, '').replace(/^0+/, ''); }
+
+  function syncPhone() {
+    var n = digits(local.value);
+    out.value = n ? '+' + code.value + n : '';
+    if (same.checked) wOut.value = out.value;
+  }
+  function syncWa() {
+    if (same.checked) { wOut.value = out.value; return; }
+    var n = digits(wLoc.value);
+    wOut.value = n ? '+' + wCode.value + n : '';
+  }
+  // after a failed POST, split "+971501234567" back into code + local number
+  function restore(hidden, sel, box) {
+    var v = (hidden.value || '').replace(/\D/g, '');
+    if (!v) return;
+    var opts = Array.prototype.slice.call(sel.options)
+      .map(function (o) { return o.value; })
+      .sort(function (a, b) { return b.length - a.length; });
+    for (var i = 0; i < opts.length; i++) {
+      if (v.indexOf(opts[i]) === 0) { sel.value = opts[i]; box.value = v.slice(opts[i].length); return; }
+    }
+    box.value = v;
+  }
+
+  restore(out, code, local);
+  restore(wOut, wCode, wLoc);
+  if (wOut.value && wOut.value !== out.value) { same.checked = false; wrap.hidden = false; }
+
+  ['input', 'change'].forEach(function (ev) {
+    local.addEventListener(ev, syncPhone);
+    code.addEventListener(ev, syncPhone);
+    wLoc.addEventListener(ev, syncWa);
+    wCode.addEventListener(ev, syncWa);
+  });
+  same.addEventListener('change', function () { wrap.hidden = same.checked; syncWa(); });
+  form.addEventListener('submit', function () { syncPhone(); syncWa(); });
+
+  syncPhone();
+
+  if (form.querySelector('.kor-err, .kor-formerr')) {
+    document.getElementById('enquiry').scrollIntoView({ behavior: 'smooth' });
+  }
+})();
+</script>
+
+
+{% endblock %}
