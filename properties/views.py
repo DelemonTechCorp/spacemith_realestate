@@ -3864,3 +3864,122 @@ def kure(request):
             seo_report if settings.DEBUG else None
         ),
     })
+
+
+
+
+
+# Confirm this matches the slug in your Property table.
+GREENWOODS_PROPERTY_SLUG = (
+    'dubai-silicon-oasis/dubai/greenwoods-by-aldar'
+)
+ 
+ 
+def greenwoods(request):
+    """
+    Greenwoods by Aldar — Dubai Silicon Oasis.
+ 
+    Dedicated SEO landing page with:
+    - Static project content from greenwoods.html
+    - Existing Property database association
+    - Django enquiry form
+    - Existing CRM and email notification integrations
+    - SEO metadata and canonical URL
+    """
+ 
+    # --------------------------------------------------------
+    # 1. FIND PROPERTY IN DATABASE
+    # --------------------------------------------------------
+    property_obj = (
+        Property.objects
+        .filter(
+            slug=GREENWOODS_PROPERTY_SLUG,
+            is_active=True
+        )
+        .first()
+    )
+ 
+    # --------------------------------------------------------
+    # 2. INITIALISE ENQUIRY FORM
+    # --------------------------------------------------------
+    enquiry_form = PropertyEnquiryForm()
+ 
+    # --------------------------------------------------------
+    # 3. HANDLE FORM SUBMISSION
+    # --------------------------------------------------------
+    if request.method == 'POST':
+ 
+        enquiry_form, response = _handle_landing_enquiry(
+            request,
+            property_obj=property_obj,
+            source='Greenwoods by Aldar Landing Page',
+            page_title='Greenwoods by Aldar',
+            redirect_url=(
+                f"{reverse('properties:greenwoods')}#enquiry"
+            ),
+        )
+ 
+        if response is not None:
+            return response
+ 
+    # --------------------------------------------------------
+    # 4. CANONICAL URL
+    # --------------------------------------------------------
+    canonical = (
+        f'{SITE_URL.rstrip("/")}/properties/greenwoods-by-aldar/'
+    )
+ 
+    # --------------------------------------------------------
+    # 5. SEO META TITLE AND DESCRIPTION
+    # --------------------------------------------------------
+    meta_title, meta_description, seo_report = _audit_seo(
+        property_obj if property_obj else Property(
+            pk=0,
+            title='Greenwoods by Aldar'
+        ),
+        'Greenwoods by Aldar DSO | Villas & Townhouses from AED 2.5M',
+        (
+            'Greenwoods by Aldar in Dubai Silicon Oasis: villas and '
+            'townhouses from AED 2.5M, 55/45 payment plan, near the '
+            'Metro Blue Line. Get the price list.'
+        ),
+    )
+ 
+    # --------------------------------------------------------
+    # 6. OPEN GRAPH IMAGE
+    # --------------------------------------------------------
+    og_image = (
+        _absolute(property_obj.cover_image)
+        if property_obj and property_obj.cover_image
+        else f'{SITE_URL.rstrip("/")}/static/img/greenwoods-hero.webp'
+    )
+ 
+    # --------------------------------------------------------
+    # 7. RENDER LANDING PAGE
+    # --------------------------------------------------------
+    return render(request, 'greenwoods.html', {
+ 
+        # Property database
+        'property': property_obj,
+ 
+        # Enquiry form
+        'enquiry_form': enquiry_form,
+ 
+        # SEO metadata
+        'meta_title': meta_title,
+        'meta_description': meta_description,
+        'canonical': canonical,
+        'robots': (
+            'index, follow, '
+            'max-image-preview:large, max-snippet:-1'
+        ),
+ 
+        # Open Graph
+        'og_type': 'website',
+        'og_image': og_image,
+ 
+        # SEO diagnostics (development only)
+        'seo_report': (
+            seo_report if settings.DEBUG else None
+        ),
+    })

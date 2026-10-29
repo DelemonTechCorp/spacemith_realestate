@@ -488,7 +488,10 @@
             class="dropdown-link {% if request.resolver_match.view_name == 'properties:kure' %}is-active{% endif %}">
             Kore by Imtiaz
           </a>
-
+          <a href="{% url 'properties:greenwoods' %}"
+            class="dropdown-link {% if request.resolver_match.view_name == 'properties:greenwoods' %}is-active{% endif %}">
+            Greenwoods by Aldar
+          </a>
 
             
               
@@ -657,6 +660,10 @@
         <a href="{% url 'properties:kure' %}"
            class="mobile-dropdown-link {% if request.resolver_match.view_name == 'properties:kure' %}is-active{% endif %}">
           Kore by Imtiaz
+        </a>
+        <a href="{% url 'properties:greenwoods' %}"
+           class="mobile-dropdown-link {% if request.resolver_match.view_name == 'properties:greenwoods' %}is-active{% endif %}">
+          Greenwoods by Aldar
         </a>
       </div>
 
