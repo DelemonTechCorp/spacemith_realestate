@@ -4,10 +4,19 @@
 {% block body_class %}has-hero{% endblock %}
 
 {% block preload %}
-<link rel="preload" as="image"
+<!-- <link rel="preload" as="image"
       href="{% static 'img/hero-still.webp' %}"
       type="image/webp"
-      fetchpriority="high">
+      fetchpriority="high"> -->
+      <link
+  rel="preload"
+  as="image"
+  type="image/webp"
+  imagesrcset="{% static 'img/hero-still-800.webp' %} 800w,
+               {% static 'img/hero-still-1400.webp' %} 1400w,
+               {% static 'img/hero-still-1920.webp' %} 1920w"
+  imagesizes="100vw"
+  fetchpriority="high">
 {% endblock %}
 
 {% block extra_css %}
@@ -923,7 +932,7 @@
     </div>
 
     <div class="trust__logo reveal" data-delay="120">
-      <img src="{% static 'img/logo-ss.webp' %}" alt="Spacesmith Real Estate"
+      <img src="{% static 'img/logo-ss-800.webp' %}" alt="Spacesmith Real Estate"
            width="520" height="520" loading="lazy">
     </div>
 
