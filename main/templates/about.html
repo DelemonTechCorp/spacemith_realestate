@@ -6,6 +6,13 @@
 {% block canonical %}https://spacesmith.ae/about/{% endblock %}
 {% block body_class %}has-hero{% endblock %}
 
+{% block preload %}
+<link rel="preload"
+      as="image"
+      href="{% static 'img/home-about-img.webp' %}"
+      type="image/webp"
+      fetchpriority="high">
+{% endblock %}
 
 {% block content %}
 
@@ -61,7 +68,18 @@
 
 <!-- ================= HERO ================= -->
 <section class="hero">
-  <img class="hero__img" src="{% static 'img/home-about-img.webp' %}" alt="Spacesmith Real Estate">
+  <!-- <img class="hero__img" src="{% static 'img/home-about-img.webp' %}" alt="Spacesmith Real Estate"> -->
+  
+<img
+  class="hero__img"
+  src="{% static 'img/home-about-img.webp' %}"
+  alt="Spacesmith Real Estate"
+  width="735"
+  height="467"
+  loading="eager"
+  fetchpriority="high"
+  decoding="async">
+
   <div class="hero__scrim"></div>
 
   <div class="container-page hero__inner">
