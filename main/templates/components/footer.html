@@ -151,6 +151,21 @@
   @media (min-width: 768px) {
     .footer__bottom-inner { flex-direction: row; text-align: left; }
   }
+
+
+  .footer__company-name {
+    margin-top: 1.25rem;
+    font-family: var(--font-body);
+    font-size: 0.875rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    line-height: 1.5;
+    color: var(--gold);
+}
+
+.footer__company-name + .footer__desc {
+    margin-top: 0.75rem;
+}
 </style>
 
 <footer class="footer">
@@ -160,17 +175,26 @@
   <div class="container-page footer__grid">
 
     <!-- Brand -->
-    <div>
-      <a href="{% url 'home' %}" class="footer__brand-row">
-        <img src="{% static 'img/logo-2-700.webp' %}" alt="Spacesmith Real Estate" class="footer__brand-logo">
-        
-      </a>
-      <p class="footer__desc">
-        Spacesmith Real Estate LLC is a Dubai-based consultancy for residential and commercial
-        property sales, leasing, portfolio management and investment advisory across the UAE.
-      </p>
-      <p class="footer__tagline">We Find Your Space</p>
-    </div>
+    <!-- Brand -->
+<div>
+  <a href="{% url 'home' %}" class="footer__brand-row">
+    <img src="{% static 'img/logo-2-700.webp' %}"
+         alt="Spacesmith Real Estate"
+         class="footer__brand-logo">
+  </a>
+
+  <p class="footer__company-name">
+    SPACESMITH REAL ESTATE L.L.C
+  </p>
+
+  <p class="footer__desc">
+    Spacesmith Real Estate is a Dubai-based consultancy for
+    residential and commercial property sales, leasing,
+    portfolio management and investment advisory across the UAE.
+  </p>
+
+  <p class="footer__tagline">We Find Your Space</p>
+</div>
 
     <!-- Explore -->
     <div>
@@ -260,7 +284,7 @@
 
   <div class="footer__bottom">
     <div class="container-page footer__bottom-inner">
-      <p id="footerCopy">&copy; Spacesmith Real Estate LLC. All rights reserved.</p>
+      <p id="footerCopy">&copy; {% now "Y" %} SPACESMITH REAL ESTATE L.L.C. All rights reserved.</p>
       <div class="footer__legal">
         <a href="{% url 'privacy-policy' %}">Privacy Policy</a>
         <a href="{% url 'faq' %}">FAQ</a>
@@ -272,10 +296,10 @@
 <script>
 (function () {
   var copy = document.getElementById('footerCopy');
-  if (copy) {
-    copy.textContent = '\u00A9 ' + new Date().getFullYear() +
-      ' Spacesmith Real Estate LLC. All rights reserved.';
-  }
+if (copy) {
+  copy.textContent = '\u00A9 ' + new Date().getFullYear() +
+    ' SPACESMITH REAL ESTATE L.L.C. All rights reserved.';
+}
 
   var form = document.getElementById('newsletterForm');
   var msg  = document.getElementById('newsletterMsg');
