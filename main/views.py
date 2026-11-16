@@ -572,48 +572,32 @@ def quick_enquiry(request):
     if not phone or not 8 <= len(digits) <= 15:
         return JsonResponse({'status': 'error', 'message': 'Please enter a valid phone number.'}, status=400)
 
-    # ── Build subject + message with page context ──
-    # subject = QUICK_ENQUIRY_SOURCES[source]
-    # message = ''
-    # if source == 'Blog Detail' and page_title:
-    #     subject = f"Blog Enquiry — {page_title}"[:255]
-    #     message = f"Enquired while reading: {page_title}"
-    #     if page_url:
-    #         message += f"\n{page_url}"
 
-        # ── Build subject + message with page context ──
+        # Fallback: if JS didn't send the URL, use the browser's Referer header
+    if not page_url:
+        page_url = (request.META.get('HTTP_REFERER') or '')[:500]
 
+    # ── Subject ──
     subject = QUICK_ENQUIRY_SOURCES[source]
-    message = ''
-
-    if source == 'Website Popup':
-        message = (
-            f"Lead Source: Website Popup\n"
-            f"Page Title: {page_title or 'Not Available'}\n"
-            f"Page URL: {page_url or 'Not Available'}"
-        )
-
-    elif source == 'Blog Detail':
-        if page_title:
-            subject = f"Blog Enquiry — {page_title}"[:255]
-
-        message = (
-            f"Lead Source: Blog Detail\n"
-            f"Page Title: {page_title or 'Not Available'}\n"
-            f"Page URL: {page_url or 'Not Available'}"
-        )
-
+    if source == 'Blog Detail' and page_title:
+        subject = f"Blog Enquiry — {page_title}"[:255]
 
     # ── Save ──
     try:
         enquiry = GeneralEnquiry.objects.create(
             name=name, email=email, phone=phone,
-            subject=subject, message=message, source=source,
+            subject=subject,
+            message='',                 # page info now lives in its own fields
+            source=source,
+            page_title=page_title,
+            page_url=page_url,
         )
     except Exception:
         logger.exception("Failed to save quick enquiry")
         return JsonResponse({'status': 'error', 'message': 'Server error. Please try again.'}, status=500)
 
+
+    
     # ── CRM (never blocks the user) ──
     try:
         if not send_lead_to_crm(enquiry):

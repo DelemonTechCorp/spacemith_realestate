@@ -28,6 +28,11 @@ class GeneralEnquiry(TimeStampedModel):
         blank=True, null=True,
         help_text="Where the enquiry came from (Contact Page, Property Detail, Team Page, etc.)"
     )
+    
+    # ── NEW: exact page the enquiry was submitted from ──
+    page_title = models.CharField(max_length=255, blank=True, default='')
+    page_url   = models.CharField(max_length=500, blank=True, default='')
+    
     is_read       = models.BooleanField(default=False, db_index=True)
     responded_at  = models.DateTimeField(null=True, blank=True)
 

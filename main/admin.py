@@ -1,7 +1,25 @@
+from django.utils.html import format_html
 from django.contrib import admin
 from .models import GeneralEnquiry, Newsletter, Testimonial, InstagramHighlight, CareerApplication
 
-admin.site.register(GeneralEnquiry)
+
+
+
+
+@admin.register(GeneralEnquiry)
+class GeneralEnquiryAdmin(admin.ModelAdmin):
+    list_display    = ['name', 'phone', 'email', 'source', 'page_title', 'page_link', 'is_read', 'created_at']
+    list_filter     = ['source', 'is_read', 'created_at']
+    search_fields   = ['name', 'email', 'phone', 'page_title', 'page_url']
+    readonly_fields = ['created_at', 'updated_at']
+    ordering        = ['-created_at']
+
+    @admin.display(description='Submitted from')
+    def page_link(self, obj):
+        if not obj.page_url:
+            return '—'
+        return format_html('<a href="{}" target="_blank" rel="noopener">{}</a>',
+                           obj.page_url, obj.page_url[:60])
 
 
 
