@@ -54,6 +54,8 @@ class StaticPagesSitemap(Sitemap):
             {'path': '/properties/shahrukhz-residences/', 'priority': 0.9, 'changefreq': 'weekly'},
             {'path': '/properties/kore-by-imtiaz/', 'priority': 0.9, 'changefreq': 'weekly'},
             {'path': '/properties/greenwoods-by-aldar/', 'priority': 0.9, 'changefreq': 'weekly'},
+            {'path': '/properties/palm-springs-by-nakheel/', 'priority': 0.9, 'changefreq': 'weekly'},
+
              
         ]
     

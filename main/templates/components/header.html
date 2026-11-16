@@ -492,6 +492,10 @@
             class="dropdown-link {% if request.resolver_match.view_name == 'properties:greenwoods' %}is-active{% endif %}">
             Greenwoods by Aldar
           </a>
+          <a href="{% url 'properties:palmsprings' %}"
+            class="dropdown-link {% if request.resolver_match.view_name == 'properties:palmsprings' %}is-active{% endif %}">
+            Palm Springs by Nakheel
+          </a>
 
             
               
@@ -664,6 +668,11 @@
         <a href="{% url 'properties:greenwoods' %}"
            class="mobile-dropdown-link {% if request.resolver_match.view_name == 'properties:greenwoods' %}is-active{% endif %}">
           Greenwoods by Aldar
+        </a>
+
+        <a href="{% url 'properties:palmsprings' %}"
+           class="mobile-dropdown-link {% if request.resolver_match.view_name == 'properties:palmsprings' %}is-active{% endif %}">
+          Palm Springs by Nakheel
         </a>
       </div>
 

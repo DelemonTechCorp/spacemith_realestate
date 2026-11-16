@@ -3983,3 +3983,137 @@ def greenwoods(request):
             seo_report if settings.DEBUG else None
         ),
     })
+    
+    
+    
+    
+# ============================================================
+# PALM SPRINGS BY NAKHEEL — SEO LANDING PAGE
+# ============================================================
+#
+# 1) Paste this block into properties/views.py (next to kure / greenwoods).
+#
+# 2) Add this line to properties/urls.py under "LANDING PAGES",
+#    ABOVE the property_detail catch-all (it must stay last):
+#
+#       path('palm-springs-by-nakheel/', views.palmsprings, name='palmsprings'),
+#
+# ------------------------------------------------------------
+
+# Confirm this matches the slug in your Property table
+# (same format as the others: '<area>/dubai/<project>').
+# If it doesn't match, the page still renders; it just won't be
+# linked to a Property record.
+PALMSPRINGS_PROPERTY_SLUG = (
+    'jebel-ali/dubai/palm-springs-by-nakheel'
+)
+
+
+def palmsprings(request):
+    """
+    Palm Springs by Nakheel.
+
+    Dedicated SEO landing page with:
+    - Static project content from palmsprings.html
+    - Existing Property database association
+    - Django enquiry form
+    - Existing CRM and email notification integrations
+    - SEO metadata and canonical URL
+    """
+
+    # --------------------------------------------------------
+    # 1. FIND PROPERTY IN DATABASE
+    # --------------------------------------------------------
+    property_obj = (
+        Property.objects
+        .filter(
+            slug=PALMSPRINGS_PROPERTY_SLUG,
+            is_active=True
+        )
+        .first()
+    )
+
+    # --------------------------------------------------------
+    # 2. INITIALISE ENQUIRY FORM
+    # --------------------------------------------------------
+    enquiry_form = PropertyEnquiryForm()
+
+    # --------------------------------------------------------
+    # 3. HANDLE FORM SUBMISSION
+    # --------------------------------------------------------
+    if request.method == 'POST':
+
+        enquiry_form, response = _handle_landing_enquiry(
+            request,
+            property_obj=property_obj,
+            source='Palm Springs by Nakheel Landing Page',
+            page_title='Palm Springs by Nakheel',
+            redirect_url=(
+                f"{reverse('properties:palmsprings')}#enquiry"
+            ),
+        )
+
+        if response is not None:
+            return response
+
+    # --------------------------------------------------------
+    # 4. CANONICAL URL
+    # --------------------------------------------------------
+    canonical = (
+        f'{SITE_URL.rstrip("/")}/properties/palm-springs-by-nakheel/'
+    )
+
+    # --------------------------------------------------------
+    # 5. SEO META TITLE AND DESCRIPTION
+    # --------------------------------------------------------
+    meta_title, meta_description, seo_report = _audit_seo(
+        property_obj if property_obj else Property(
+            pk=0,
+            title='Palm Springs by Nakheel'
+        ),
+        'Palm Springs by Nakheel | Villas & Townhouses in Jebel Ali',
+        (
+            'Palm Springs by Nakheel in Jebel Ali: 3 and 4-bedroom '
+            'townhouses and 4 and 5-bedroom villas near Palm Jebel Ali. '
+            '60/40 payment plan. Get floor plans.'
+        ),
+    )
+
+    # --------------------------------------------------------
+    # 6. OPEN GRAPH IMAGE
+    # --------------------------------------------------------
+    og_image = (
+        _absolute(property_obj.cover_image)
+        if property_obj and property_obj.cover_image
+        else f'{SITE_URL.rstrip("/")}/static/img/palmsprings-hero.webp'
+    )
+
+    # --------------------------------------------------------
+    # 7. RENDER LANDING PAGE
+    # --------------------------------------------------------
+    return render(request, 'palm_springs.html', {
+
+        # Property database
+        'property': property_obj,
+
+        # Enquiry form
+        'enquiry_form': enquiry_form,
+
+        # SEO metadata
+        'meta_title': meta_title,
+        'meta_description': meta_description,
+        'canonical': canonical,
+        'robots': (
+            'index, follow, '
+            'max-image-preview:large, max-snippet:-1'
+        ),
+
+        # Open Graph
+        'og_type': 'website',
+        'og_image': og_image,
+
+        # SEO diagnostics (development only)
+        'seo_report': (
+            seo_report if settings.DEBUG else None
+        ),
+    })

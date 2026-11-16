@@ -25,6 +25,10 @@
     <form id="enquiryForm" class="enquiry-form" method="POST" action="{% url 'quick_enquiry' %}">
       {% csrf_token %}
 
+      <input type="hidden" name="source" value="Website Popup">
+      <input type="hidden" name="page_title" id="popupPageTitle">
+      <input type="hidden" name="page_url" id="popupPageUrl">
+
       <!-- Name -->
       <div class="field">
         <label for="enquiryName">Your Name *</label>
@@ -479,6 +483,13 @@
       // Disable submit button
       submitBtn.disabled = true;
       submitBtn.textContent = 'Sending...';
+
+
+      document.getElementById('popupPageTitle').value =
+        document.title;
+
+      document.getElementById('popupPageUrl').value =
+        window.location.href;
 
       // Create FormData and send via fetch
       var formData = new FormData(form);

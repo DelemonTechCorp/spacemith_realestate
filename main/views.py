@@ -573,13 +573,36 @@ def quick_enquiry(request):
         return JsonResponse({'status': 'error', 'message': 'Please enter a valid phone number.'}, status=400)
 
     # ── Build subject + message with page context ──
+    # subject = QUICK_ENQUIRY_SOURCES[source]
+    # message = ''
+    # if source == 'Blog Detail' and page_title:
+    #     subject = f"Blog Enquiry — {page_title}"[:255]
+    #     message = f"Enquired while reading: {page_title}"
+    #     if page_url:
+    #         message += f"\n{page_url}"
+
+        # ── Build subject + message with page context ──
+
     subject = QUICK_ENQUIRY_SOURCES[source]
     message = ''
-    if source == 'Blog Detail' and page_title:
-        subject = f"Blog Enquiry — {page_title}"[:255]
-        message = f"Enquired while reading: {page_title}"
-        if page_url:
-            message += f"\n{page_url}"
+
+    if source == 'Website Popup':
+        message = (
+            f"Lead Source: Website Popup\n"
+            f"Page Title: {page_title or 'Not Available'}\n"
+            f"Page URL: {page_url or 'Not Available'}"
+        )
+
+    elif source == 'Blog Detail':
+        if page_title:
+            subject = f"Blog Enquiry — {page_title}"[:255]
+
+        message = (
+            f"Lead Source: Blog Detail\n"
+            f"Page Title: {page_title or 'Not Available'}\n"
+            f"Page URL: {page_url or 'Not Available'}"
+        )
+
 
     # ── Save ──
     try:
