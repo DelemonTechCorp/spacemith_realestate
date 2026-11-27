@@ -53,6 +53,7 @@ urlpatterns = [
     path("kore-by-imtiaz/", views.kure, name="kure"),
     path('greenwoods-by-aldar/', views.greenwoods, name='greenwoods'),
     path('palm-springs-by-nakheel/', views.palmsprings, name='palmsprings'),
+    path('the-arts-district-by-binghatti/', views.artsdistrict, name='artsdistrict'), 
 
     
 

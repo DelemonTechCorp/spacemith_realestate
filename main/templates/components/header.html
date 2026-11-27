@@ -496,6 +496,10 @@
             class="dropdown-link {% if request.resolver_match.view_name == 'properties:palmsprings' %}is-active{% endif %}">
             Palm Springs by Nakheel
           </a>
+          <a href="{% url 'properties:artsdistrict' %}"
+            class="dropdown-link {% if request.resolver_match.view_name == 'properties:artsdistrict' %}is-active{% endif %}">
+            The Arts District by Binghatti
+          </a>
 
             
               
@@ -673,6 +677,10 @@
         <a href="{% url 'properties:palmsprings' %}"
            class="mobile-dropdown-link {% if request.resolver_match.view_name == 'properties:palmsprings' %}is-active{% endif %}">
           Palm Springs by Nakheel
+        </a>
+        <a href="{% url 'properties:artsdistrict' %}"
+           class="mobile-dropdown-link {% if request.resolver_match.view_name == 'properties:artsdistrict' %}is-active{% endif %}">
+          The Arts District by Binghatti
         </a>
       </div>
 

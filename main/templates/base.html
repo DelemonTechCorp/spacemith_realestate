@@ -12,8 +12,7 @@
   {% block preload %}{% endblock %}
 
   <!-- ================= SEO ================= -->
-  <title>{% block title %}{{ meta_title|default:"Spacesmith Real Estate | We Find Your Space" }}{% endblock %}</title>
-
+<title>{% block title %}{{ seo_title|default:meta_title|default:"Spacesmith Real Estate | We Find Your Space" }}{% endblock %}</title>
   <meta name="description"
     content="{% block meta_description %}{{ meta_description|default:'Spacesmith Real Estate is a Dubai-based consultancy for residential and commercial property sales, leasing, portfolio management and investment advisory across the UAE.' }}{% endblock %}">
   <meta name="keywords"

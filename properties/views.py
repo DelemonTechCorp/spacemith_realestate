@@ -4117,3 +4117,157 @@ def palmsprings(request):
             seo_report if settings.DEBUG else None
         ),
     })
+
+
+
+
+
+# ============================================================
+# THE ARTS DISTRICT BY BINGHATTI — SEO LANDING PAGE
+# ============================================================
+#
+# 1) Paste this block into properties/views.py (next to greenwoods / palmsprings).
+#
+# 2) Add this line to properties/urls.py under "LANDING PAGES",
+#    ABOVE the property_detail catch-all (it must stay last):
+#
+#       path('the-arts-district-by-binghatti/', views.artsdistrict, name='artsdistrict'),
+#
+# 3) Save the template as templates/artsdistrict.html
+#
+# ------------------------------------------------------------
+
+# Confirm this matches the slug in your Property table
+# (same format as the others: '<area>/dubai/<project>').
+# If it doesn't match, the page still renders; it just won't be
+# linked to a Property record.
+ARTSDISTRICT_PROPERTY_SLUG = (
+    'al-rowaiyah-first/dubai/the-arts-district-by-binghatti'
+)
+
+
+def artsdistrict(request):
+    """
+    The Arts District by Binghatti — Al Rowaiyah First.
+
+    Dedicated SEO landing page with:
+    - Static project content from artsdistrict.html
+    - Existing Property database association
+    - Django enquiry form
+    - Existing CRM and email notification integrations
+    - SEO metadata and canonical URL
+    """
+
+    # --------------------------------------------------------
+    # 1. FIND PROPERTY IN DATABASE
+    # --------------------------------------------------------
+    property_obj = (
+        Property.objects
+        .filter(
+            slug=ARTSDISTRICT_PROPERTY_SLUG,
+            is_active=True
+        )
+        .first()
+    )
+
+    # --------------------------------------------------------
+    # 2. INITIALISE ENQUIRY FORM
+    # --------------------------------------------------------
+    enquiry_form = PropertyEnquiryForm()
+
+    # --------------------------------------------------------
+    # 3. HANDLE FORM SUBMISSION
+    # --------------------------------------------------------
+    if request.method == 'POST':
+
+        enquiry_form, response = _handle_landing_enquiry(
+            request,
+            property_obj=property_obj,
+            source='The Arts District by Binghatti Landing Page',
+            page_title='The Arts District by Binghatti',
+            redirect_url=(
+                f"{reverse('properties:artsdistrict')}#enquiry"
+            ),
+        )
+
+        if response is not None:
+            return response
+
+    # --------------------------------------------------------
+    # 4. CANONICAL URL
+    # --------------------------------------------------------
+    canonical = (
+        f'{SITE_URL.rstrip("/")}/properties/the-arts-district-by-binghatti/'
+    )
+
+    # --------------------------------------------------------
+    # 5. SEO META TITLE AND DESCRIPTION
+    # --------------------------------------------------------
+    meta_title, meta_description, seo_report = _audit_seo(
+        property_obj if property_obj else Property(
+            pk=0,
+            title='The Arts District by Binghatti'
+        ),
+        'The Arts District by Binghatti – Apartments Dubai',
+        (
+            'Explore The Arts District by Binghatti in Dubai. Discover '
+            'studio, 1 and 2-bedroom apartments, floor plans, payment '
+            'plans and investment opportunities.'
+        ),
+    )
+    # SEO Title
+    seo_title = (
+        'The Arts District by Binghatti Dubai – Prices & Floor Plans'
+    )
+
+# Excerpt
+    excerpt = (
+       'The Arts District by Binghatti introduces an art-inspired '
+       'residential concept in Dubai, combining contemporary apartments, '
+       'creative architecture, landscaped surroundings and convenient '
+       'connectivity to Academic City and Dubai Silicon Oasis. Explore '
+       'apartment configurations, payment options and investment '
+       'opportunities with Spacesmith.'
+    )
+
+    # --------------------------------------------------------
+    # 6. OPEN GRAPH IMAGE
+    # --------------------------------------------------------
+    og_image = (
+        _absolute(property_obj.cover_image)
+        if property_obj and property_obj.cover_image
+        else f'{SITE_URL.rstrip("/")}/static/img/artsdistrict-hero.webp'
+    )
+
+    # --------------------------------------------------------
+    # 7. RENDER LANDING PAGE
+    # --------------------------------------------------------
+    return render(request, 'artsdistrict.html', {
+
+        # Property database
+        'property': property_obj,
+
+        # Enquiry form
+        'enquiry_form': enquiry_form,
+
+        # SEO metadata
+        # SEO metadata
+       'seo_title': seo_title,
+       'meta_title': meta_title,
+       'meta_description': meta_description,
+       'excerpt': excerpt,
+       'canonical': canonical,
+        'robots': (
+            'index, follow, '
+            'max-image-preview:large, max-snippet:-1'
+        ),
+
+        # Open Graph
+        'og_type': 'website',
+        'og_image': og_image,
+
+        # SEO diagnostics (development only)
+        'seo_report': (
+            seo_report if settings.DEBUG else None
+        ),
+    })

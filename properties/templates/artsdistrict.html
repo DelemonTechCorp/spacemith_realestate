@@ -1,0 +1,1259 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{# meta_title / meta_description / canonical / robots / og_image come from the
+   `artsdistrict` view context (same pattern as Palm Springs, Kore, Greenwoods).
+
+   SEO Title:        The Arts District by Binghatti Dubai – Prices, Floor Plans & Payment Plan
+   Meta Title:       The Arts District by Binghatti – Apartments Dubai
+   Meta Description: Explore The Arts District by Binghatti in Dubai. Discover studio, 1 and 2-bedroom
+                     apartments, floor plans, payment plans and investment opportunities.
+   URL slug:         the-arts-district-by-binghatti
+
+   Images needed in /static/img/:  artsdistrict-hero.webp (1920 x 1080)
+   Every other section is image-free. #}
+
+{% block body_class %}has-hero{% endblock %}
+
+{% block schema %}
+{{ block.super }}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Residence",
+  "name": "The Arts District by Binghatti",
+  "description": "The Arts District by Binghatti is an art-inspired residential development in Al Rowaiyah First, Dubai, offering studio, 1 and 2-bedroom apartments near Dubai International Academic City and Dubai Silicon Oasis.",
+  "url": "{{ canonical }}",
+  "address": { "@type": "PostalAddress", "addressLocality": "Al Rowaiyah First", "addressRegion": "Dubai", "addressCountry": "AE" },
+  "developer": { "@type": "Organization", "name": "Binghatti Developers" }
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    { "@type": "Question", "name": "Where is The Arts District by Binghatti located?",
+      "acceptedAnswer": { "@type": "Answer", "text": "The development is located in Al Rowaiyah First, Dubai, near Dubai International Academic City, Dubai Silicon Oasis and Tilal Binghatti." } },
+    { "@type": "Question", "name": "What is the starting price at The Arts District?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Indicative payment-plan prices start from AED 525,000 for studios, AED 850,000 for one-bedroom apartments and AED 1.3 million for two-bedroom apartments." } },
+    { "@type": "Question", "name": "What is The Arts District by Binghatti payment plan?",
+      "acceptedAnswer": { "@type": "Answer", "text": "The reported payment plan follows a 60/40 structure, with 60% payable before completion and the remaining 40% at handover." } },
+    { "@type": "Question", "name": "When is The Arts District by Binghatti launching?",
+      "acceptedAnswer": { "@type": "Answer", "text": "The official unveiling is scheduled for 20 January 2027, subject to any subsequent developer announcements." } },
+    { "@type": "Question", "name": "Is The Arts District by Binghatti a good investment?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Its location, apartment configurations and payment structure offer potential investment appeal. Actual returns depend on market conditions, ownership expenses and future rental demand." } },
+    { "@type": "Question", "name": "How can I get The Arts District by Binghatti brochure?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Contact Spacesmith to request the latest developer brochure, floor plans, payment schedules and available apartment configurations." } },
+    { "@type": "Question", "name": "How can I buy an apartment in The Arts District Dubai?",
+      "acceptedAnswer": { "@type": "Answer", "text": "Spacesmith can assist with property selection, registration requirements, reservation procedures and developer documentation." } }
+  ]
+}
+</script>
+{% endblock %}
+
+{% block preload %}
+<link rel="preload" as="image" href="{% static 'img/artsdistrictbingatti.webp' %}" type="image/webp" fetchpriority="high">
+{% endblock %}
+
+{% block content %}
+
+<!-- ================================================================
+     SHARED STYLES
+     ================================================================ -->
+<style>
+  .ad-sec { position: relative; padding-block: 4.5rem; overflow: hidden; }
+  .ad-sec > .container-page { position: relative; z-index: 1; }
+  .ad-sec--light { background: #FAF8F3; }
+  .ad-sec--sand  { background: #F7F3EB; }
+  .ad-sec--white { background: #fff; }
+  .ad-sec--sage  { background: #EFF4EC; }
+  .ad-sec--dark  { background: var(--primary); color: var(--cream); }
+  .ad-sec--deep  { background: var(--primary-dark); color: var(--cream); }
+  @media (max-width: 640px) { .ad-sec { padding-block: 3rem; } }
+
+  .ad-sec .section-title { margin-top: 0; max-width: 40rem; overflow-wrap: break-word; }
+  .ad-sec--dark .section-title, .ad-sec--deep .section-title { color: var(--cream); }
+
+  .ad-p { margin: 1rem 0 0; max-width: 38rem; font-size: 1rem; line-height: 1.8; color: var(--muted-foreground); }
+  .ad-p--lead { font-size: 1.0625rem; color: var(--foreground); }
+  .ad-sec--dark .ad-p, .ad-sec--deep .ad-p { color: rgba(246,242,233,.86); }
+
+  .ad-note { margin: 1rem 0 0; font-size: .8125rem; font-style: italic; line-height: 1.6; color: var(--muted-foreground); }
+  .ad-sec--dark .ad-note, .ad-sec--deep .ad-note { color: rgba(246,242,233,.68); }
+
+  .ad-cols { display: grid; gap: 2.5rem 4rem; align-items: start; grid-template-columns: minmax(0, 1fr); }
+  @media (min-width: 1024px) { .ad-cols { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); } }
+
+  .ad-cta-row { margin-top: 2rem; }
+  .ad-sec .btn-gold { white-space: normal; text-align: center; line-height: 1.3; }
+  @media (max-width: 640px) { .ad-cta-row .btn-gold { width: 100%; box-sizing: border-box; } }
+
+  .ad-ico { width: 1.25rem; height: 1.25rem; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+
+  .ad-ticks { list-style: none; margin: 1.25rem 0 0; padding: 0; display: grid; gap: .75rem; }
+  .ad-ticks li { display: flex; align-items: flex-start; gap: .75rem; font-size: 1rem; line-height: 1.5; color: var(--foreground); }
+  .ad-ticks svg {
+    flex-shrink: 0; margin-top: .1rem; width: 1.375rem; height: 1.375rem; padding: .25rem; border-radius: 9999px;
+    background: #fff; color: var(--primary-light); box-shadow: inset 0 0 0 1px #D5E2D1;
+    fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round;
+  }
+
+  .ad-chips { list-style: none; margin: 1.25rem 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: .5rem; }
+  .ad-chips li {
+    display: inline-flex; align-items: center; padding: .45rem .95rem; border-radius: 9999px;
+    font-size: .875rem; font-weight: 500; line-height: 1.3; color: var(--primary);
+    background: #fff; border: 1px solid #D5E2D1;
+  }
+
+  /* data table used for highlights / comparison / payment */
+  .ad-table-wrap { margin-top: 1.5rem; overflow-x: auto; border: 1px solid #E6E0D2; border-radius: .75rem; background: #fff; }
+  .ad-table { width: 100%; border-collapse: collapse; font-size: .9375rem; }
+  .ad-table th, .ad-table td { padding: .9rem 1.25rem; text-align: left; border-bottom: 1px solid #ECE6D9; line-height: 1.5; }
+  .ad-table thead th { background: var(--primary); color: var(--cream); font-size: .8125rem; font-weight: 600; letter-spacing: .04em; border-bottom: 0; }
+  .ad-table tbody tr:last-child th, .ad-table tbody tr:last-child td { border-bottom: 0; }
+  .ad-table tbody th { font-weight: 600; color: var(--primary); width: 40%; }
+  .ad-table td { color: var(--muted-foreground); }
+</style>
+
+
+<!-- ================================================================
+     1. HERO
+     ================================================================ -->
+<style>
+  .ad-hero {
+    position: relative; display: flex; align-items: center; overflow: hidden;
+    background: var(--primary);
+    min-height: 82vh; min-height: 82svh;
+    padding-top: calc(var(--nav-height) + 4.5rem); padding-bottom: 3.5rem;
+  }
+  .ad-hero::after {
+    content: ""; position: absolute; left: 0; right: 0; bottom: 0; z-index: 3; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(212,175,55,.65), transparent);
+  }
+  .ad-hero__bg { position: absolute; inset: 0; z-index: 0; }
+  .ad-hero__bg img { width: 100%; height: 100%; object-fit: cover; object-position: center; }
+  .ad-hero__scrim {
+    position: absolute; inset: 0; z-index: 1;
+    background:
+      linear-gradient(90deg, rgba(10,42,32,.90) 0%, rgba(10,42,32,.68) 48%, rgba(10,42,32,.30) 100%),
+      linear-gradient(180deg, rgba(10,42,32,.25) 0%, rgba(10,42,32,0) 30%, rgba(10,42,32,.55) 100%);
+  }
+  .ad-hero__glow {
+    position: absolute; inset: -10%; z-index: 1; pointer-events: none;
+    background:
+      radial-gradient(50% 55% at 92% 4%, rgba(255,214,130,.26), transparent 70%),
+      radial-gradient(60% 40% at 12% 108%, rgba(212,175,55,.16), transparent 70%);
+    mix-blend-mode: screen; animation: adGlow 14s ease-in-out infinite alternate;
+  }
+  @keyframes adGlow { 0% { transform: translate3d(0,0,0); opacity: .8; } 100% { transform: translate3d(-2%,1.5%,0); opacity: 1; } }
+
+  .ad-hero__inner { position: relative; z-index: 2; width: 100%; display: grid; grid-template-columns: minmax(0, 1fr); gap: 2.5rem; align-items: center; }
+  @media (min-width: 1024px) { .ad-hero__inner { grid-template-columns: minmax(0, 1.15fr) minmax(0, .85fr); gap: 3rem; } }
+
+  .ad-hero__eyebrow-row { display: flex; flex-wrap: wrap; align-items: center; gap: .9rem; margin-bottom: 1.5rem; }
+  .ad-hero__developer { font-size: .875rem; letter-spacing: .04em; color: rgba(246,242,233,.8); }
+
+  .ad-hero__title { max-width: 40rem; margin: 0; }
+  .ad-hero__title-main { display: block; font-family: var(--font-display); font-weight: 500; font-size: clamp(2.5rem, 6vw, 4.25rem); line-height: 1.04; letter-spacing: -.01em; color: var(--cream); }
+  .ad-hero__title-sub { display: block; margin-top: .875rem; font-family: var(--font-display); font-weight: 500; font-size: clamp(1.25rem, 2.4vw, 1.625rem); line-height: 1.3; color: var(--gold-light); }
+
+  .ad-hero__lead { margin-top: 1.5rem; max-width: 35rem; font-size: clamp(.9375rem, 1.8vw, 1.0625rem); line-height: 1.8; color: rgba(246,242,233,.9); }
+
+  .ad-hero__facts { margin: 1.75rem 0 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: .5rem; }
+  .ad-hero__facts li {
+    display: inline-flex; align-items: center; gap: .5rem; font-size: .875rem; font-weight: 500; line-height: 1.25; color: var(--cream);
+    border: 1px solid rgba(212,175,55,.45); border-radius: 9999px; padding: .5rem 1rem; background: rgba(10,42,32,.45);
+  }
+  .ad-hero__facts svg { width: 1rem; height: 1rem; flex-shrink: 0; color: var(--gold); }
+
+  .ad-hero__cta { margin-top: 2rem; display: flex; flex-wrap: wrap; gap: .875rem; }
+
+  .ad-hero__card {
+    width: 100%; max-width: 25rem; margin-inline: auto; padding: 1.75rem;
+    background: rgba(10,42,32,.55); border: 1px solid rgba(246,242,233,.18); border-radius: .75rem;
+    backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); box-shadow: var(--shadow-elegant);
+  }
+  @media (min-width: 1024px) { .ad-hero__card { margin-inline: auto 0; } }
+  .ad-hero__card-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+  .ad-hero__card-head p { margin: 0; font-size: .9375rem; font-weight: 600; letter-spacing: .02em; color: var(--gold); }
+  .ad-hero__card-head span { font-size: .75rem; color: rgba(246,242,233,.8); border: 1px solid rgba(246,242,233,.3); border-radius: 9999px; padding: .25rem .75rem; }
+
+  .ad-hero__card-list { list-style: none; margin: 1.125rem 0 0; padding: 0; display: grid; gap: .75rem; }
+  .ad-hero__card-list li { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; padding-bottom: .75rem; border-bottom: 1px solid rgba(246,242,233,.14); }
+  .ad-hero__card-list li span:first-child { font-size: .875rem; color: rgba(246,242,233,.72); flex-shrink: 0; }
+  .ad-hero__card-list li span:last-child { font-family: var(--font-display); font-size: 1.1875rem; font-weight: 500; color: var(--cream); text-align: right; }
+
+  /* payment split: 10 / 10 / 40 / 40, drawn to scale */
+  .ad-split { margin-top: 1.25rem; }
+  .ad-split__head { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; margin-bottom: .75rem; }
+  .ad-split__head span:first-child { font-size: .875rem; color: rgba(246,242,233,.72); }
+  .ad-split__head span:last-child { font-family: var(--font-display); font-size: 2.25rem; font-weight: 600; line-height: 1; color: var(--gold); }
+  .ad-split__bar { display: grid; grid-template-columns: minmax(2.25rem, 10fr) minmax(2.25rem, 10fr) 40fr 40fr; gap: 3px; height: 2.75rem; border-radius: 9999px; overflow: hidden; }
+  .ad-split__seg { display: flex; align-items: center; justify-content: center; min-width: 0; font-family: var(--font-display); font-size: 1.0625rem; font-weight: 600; line-height: 1; white-space: nowrap; }
+  .ad-split__seg--s1 { background: var(--gold); color: var(--ink); font-size: .9375rem; }
+  .ad-split__seg--s2 { background: #D9C27A; color: var(--ink); font-size: .9375rem; }
+  .ad-split__seg--s3 { background: #A9C7A4; color: var(--primary); }
+  .ad-split__seg--s4 { background: var(--cream); color: var(--primary); }
+  .ad-split__keys { list-style: none; margin: .75rem 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: .25rem 1rem; font-size: .8125rem; line-height: 1.4; color: rgba(246,242,233,.8); }
+  .ad-split__keys li { display: inline-flex; align-items: center; gap: .4rem; }
+  .ad-split__keys li::before { content: ""; width: .625rem; height: .625rem; border-radius: 9999px; flex-shrink: 0; }
+  .ad-split__keys li:nth-child(1)::before { background: var(--gold); }
+  .ad-split__keys li:nth-child(2)::before { background: #D9C27A; }
+  .ad-split__keys li:nth-child(3)::before { background: #A9C7A4; }
+  .ad-split__keys li:nth-child(4)::before { background: var(--cream); }
+
+  .ad-hero__card-cta { margin-top: 1.5rem; width: 100%; }
+  .ad-hero__note { margin: .875rem 0 0; font-size: .75rem; line-height: 1.5; color: rgba(246,242,233,.68); text-align: center; }
+
+  @media (max-width: 640px) {
+    .ad-hero { min-height: auto; padding-top: calc(var(--nav-height) + 2.5rem); padding-bottom: 2.5rem; }
+    .ad-hero__scrim { background: linear-gradient(180deg, rgba(10,42,32,.74) 0%, rgba(10,42,32,.86) 55%, rgba(10,42,32,.92) 100%); }
+    .ad-hero__eyebrow-row { margin-bottom: 1rem; }
+    .ad-hero__cta { flex-direction: column; }
+    .ad-hero__cta .btn-gold, .ad-hero__cta .btn-line { width: 100%; }
+    .ad-hero__facts li { font-size: .8125rem; padding: .45rem .875rem; }
+  }
+  @media (max-width: 420px) { .ad-hero__card { padding: 1.25rem; } .ad-split__head span:last-child { font-size: 1.875rem; } .ad-split__seg { font-size: .9375rem; } }
+  @media (prefers-reduced-motion: reduce) { .ad-hero__glow { animation: none; } }
+</style>
+
+<section class="ad-hero" aria-labelledby="ad-hero-title">
+
+  <div class="ad-hero__bg">
+    <img src="{% static 'img/artsdistrictbingatti.webp' %}"
+         alt="The Arts District by Binghatti art-inspired apartments in Al Rowaiyah First, Dubai"
+         width="1920" height="1080" fetchpriority="high" decoding="async">
+  </div>
+  <div class="ad-hero__scrim"></div>
+  <div class="ad-hero__glow" aria-hidden="true"></div>
+
+  <div class="container-page ad-hero__inner">
+
+    <div>
+      <div class="ad-hero__eyebrow-row">
+        <span class="badge">Pre-Launch</span>
+        <span class="ad-hero__developer">By Binghatti Developers</span>
+      </div>
+
+      <h1 class="ad-hero__title" id="ad-hero-title">
+        <span class="ad-hero__title-main">The Arts District by Binghatti</span>
+        <span class="ad-hero__title-sub">Art-Inspired Apartments in Dubai</span>
+      </h1>
+
+      <p class="ad-hero__lead">
+        A new perspective on contemporary residential living in Al Rowaiyah First, Dubai, combining expressive
+        architecture, thoughtfully designed apartments, cultural spaces and modern community infrastructure.
+      </p>
+
+      <ul class="ad-hero__facts" aria-label="The Arts District by Binghatti key facts">
+        <li>
+          <svg class="ad-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 9h1M14 9h1M9 13h1M14 13h1M9 17h1M14 17h1"/></svg>
+          Studio, 1 &amp; 2 bedroom apartments
+        </li>
+        <li>
+          <svg class="ad-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-6.2-7-12a7 7 0 0 1 14 0c0 5.8-7 12-7 12Z"/><circle cx="12" cy="9" r="2.5"/></svg>
+          Al Rowaiyah First, Dubai
+        </li>
+        <li>
+          <svg class="ad-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v18M16.5 7.5C16 6 14.3 5 12 5S8 6.2 8 8c0 4.5 8 2.5 8 7 0 1.8-1.8 3-4 3s-4-1-4.5-2.5"/></svg>
+          From AED 525,000
+        </li>
+      </ul>
+
+      <div class="ad-hero__cta">
+        <a href="#enquiry" class="btn-gold">
+          Register Your Interest
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </a>
+        <a href="tel:+{{ phone_number|default:'971556399212' }}" class="btn-line">Call an advisor</a>
+      </div>
+    </div>
+
+    <div class="ad-hero__card reveal" data-delay="120">
+      <div class="ad-hero__card-head">
+        <p>Project snapshot</p>
+        <span>Pre-Launch</span>
+      </div>
+
+      <ul class="ad-hero__card-list">
+        <li><span>Developer</span><span>Binghatti</span></li>
+        <li><span>Location</span><span>Al Rowaiyah First</span></li>
+        <li><span>Starting price</span><span>AED 525,000</span></li>
+        <li><span>Unveiling</span><span>20 Jan 2027</span></li>
+        <li><span>Handover</span><span>Q2 2029*</span></li>
+      </ul>
+
+      <div class="ad-split">
+        <div class="ad-split__head"><span>Payment plan</span><span>60/40</span></div>
+        <div class="ad-split__bar" role="img"
+             aria-label="Payment split: 10% initial booking contribution, 10% subsequent initial payment, 40% construction instalments, 40% on handover">
+          <span class="ad-split__seg ad-split__seg--s1">10%</span>
+          <span class="ad-split__seg ad-split__seg--s2">10%</span>
+          <span class="ad-split__seg ad-split__seg--s3">40%</span>
+          <span class="ad-split__seg ad-split__seg--s4">40%</span>
+        </div>
+        <ul class="ad-split__keys" aria-hidden="true">
+          <li>Booking</li><li>Initial</li><li>Construction</li><li>Handover</li>
+        </ul>
+      </div>
+
+      <a href="#enquiry" class="btn-gold ad-hero__card-cta">Download Brochure</a>
+      <p class="ad-hero__note">*Subject to final developer confirmation.</p>
+    </div>
+
+  </div>
+</section>
+
+
+<!-- ================================================================
+     2. INTRO + OVERVIEW + KEY HIGHLIGHTS TABLE
+     ================================================================ -->
+<style>
+  .ad-toc { margin-top: 2rem; }
+  .ad-toc__title { margin: 0; font-size: .8125rem; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--primary-light); }
+  .ad-toc .ad-chips { margin-top: .75rem; }
+  .ad-toc .ad-chips a { color: inherit; text-decoration: none; }
+  .ad-toc .ad-chips li:hover { border-color: var(--primary-light); }
+  .ad-about .ad-cols { align-items: start; }
+  .ad-about .ad-table-wrap { margin-top: 0; box-shadow: 0 24px 50px -36px rgba(10,42,32,.35); }
+  .ad-about__tbl-title { margin: 0 0 1rem; font-family: var(--font-display); font-size: 1.5rem; font-weight: 600; color: var(--primary); }
+</style>
+
+<section class="ad-sec ad-sec--light ad-about" id="about" aria-labelledby="ad-about-title">
+  <div class="container-page">
+    <div class="ad-cols">
+
+      <div>
+        <h2 class="section-title" id="ad-about-title">The Arts District by Binghatti – Art-Inspired Apartments in Dubai</h2>
+
+        <p class="ad-p ad-p--lead">
+          The Arts District by Binghatti introduces a new perspective on contemporary residential living in
+          Al Rowaiyah First, Dubai. Developed by Binghatti Developers, this upcoming residential destination
+          combines expressive architecture, thoughtfully designed apartments, cultural spaces and modern
+          community infrastructure.
+        </p>
+        <p class="ad-p">
+          Offering studios, one-bedroom and two-bedroom apartments, the development appeals to investors, young
+          professionals, couples and families seeking well-connected residential properties. Its position near
+          Dubai International Academic City and Dubai Silicon Oasis further strengthens its appeal as an emerging
+          residential and investment destination.
+        </p>
+        <p class="ad-p">
+          Whether you are purchasing your first home or expanding your property portfolio, Spacesmith provides
+          personalised guidance on apartment selection, availability, payment options and early registration.
+        </p>
+        <p class="ad-p">
+          The Arts District represents an art-inspired residential concept within Binghatti's wider development
+          vision in Al Rowaiyah First. The project aims to establish a distinctive neighbourhood where
+          contemporary architecture meets creativity, convenience and community-focused living.
+        </p>
+
+        <nav class="ad-toc" aria-label="On this page">
+          <p class="ad-toc__title">On this page</p>
+          <ul class="ad-chips">
+            <li><a href="#location">Location</a></li>
+            <li><a href="#floor-plans">Floor Plans</a></li>
+            <li><a href="#payment-plan">Prices &amp; Payment Plan</a></li>
+            <li><a href="#amenities">Amenities</a></li>
+            <li><a href="#investment">Investment</a></li>
+            <li><a href="#developer">Binghatti</a></li>
+            <li><a href="#handover">Handover</a></li>
+            <li><a href="#faq">FAQ</a></li>
+          </ul>
+        </nav>
+      </div>
+
+      <div>
+        <h3 class="ad-about__tbl-title">Key Project Highlights</h3>
+        <div class="ad-table-wrap">
+          <table class="ad-table">
+            <thead><tr><th scope="col">Project Details</th><th scope="col">Specifications</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">Project Name</th><td>The Arts District by Binghatti</td></tr>
+              <tr><th scope="row">Developer</th><td>Binghatti Developers</td></tr>
+              <tr><th scope="row">Location</th><td>Al Rowaiyah First, Dubai</td></tr>
+              <tr><th scope="row">Property Type</th><td>Residential apartments</td></tr>
+              <tr><th scope="row">Unit Types</th><td>Studio, 1 and 2-bedroom apartments</td></tr>
+              <tr><th scope="row">Ownership</th><td>Freehold, as reported</td></tr>
+              <tr><th scope="row">Project Status</th><td>Pre-launch</td></tr>
+              <tr><th scope="row">Starting Price</th><td>AED 525,000</td></tr>
+              <tr><th scope="row">Payment Plan</th><td>60/40</td></tr>
+              <tr><th scope="row">Monthly Instalments</th><td>From AED 2,500</td></tr>
+              <tr><th scope="row">Scheduled Unveiling</th><td>20 January 2027</td></tr>
+              <tr><th scope="row">Anticipated Handover</th><td>Q2 2029, subject to confirmation</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ================================================================
+     3. LOCATION & CONNECTIVITY
+     ================================================================ -->
+<style>
+  .ad-loc::before {
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background:
+      radial-gradient(50% 60% at 100% 0%, rgba(143,176,138,.18), transparent 65%),
+      radial-gradient(40% 50% at 0% 100%, rgba(212,175,55,.07), transparent 65%);
+  }
+  .ad-loc .ad-cols { align-items: stretch; }
+  .ad-loc__copy { display: flex; flex-direction: column; justify-content: center; }
+  .ad-loc__map { position: relative; min-height: 20rem; overflow: hidden; border: 1px solid rgba(246,242,233,.14); border-radius: .75rem; background: rgba(246,242,233,.04); }
+  .ad-loc__map iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; display: block; }
+  .ad-loc__maplink {
+    position: absolute; left: .75rem; bottom: .75rem; z-index: 1; display: inline-flex; align-items: center; gap: .4rem; padding: .45rem .85rem; border-radius: 9999px;
+    background: var(--primary); color: var(--cream); border: 1px solid rgba(212,175,55,.5); font-size: .8125rem; font-weight: 500; line-height: 1.2; text-decoration: none;
+  }
+  .ad-loc__maplink:hover { color: var(--gold-light); }
+  .ad-loc__maplink svg { width: .875rem; height: .875rem; color: var(--gold); }
+
+  .ad-near { margin-top: 2.5rem; display: grid; gap: 2rem; grid-template-columns: minmax(0, 1fr); }
+  @media (min-width: 768px) { .ad-near { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  .ad-near__title { margin: 0 0 1rem; font-family: var(--font-display); font-size: 1.5rem; font-weight: 500; color: var(--cream); }
+  .ad-near__list { list-style: none; margin: 0; padding: 0; display: grid; gap: .625rem; }
+  .ad-near__list li {
+    padding: .8rem 1.1rem; font-size: .9375rem; line-height: 1.4; color: var(--cream);
+    border: 1px solid rgba(246,242,233,.14); border-left: 3px solid var(--gold); border-radius: var(--radius); background: rgba(246,242,233,.04);
+  }
+  .ad-near__list code { font-family: var(--font-display); font-weight: 600; color: var(--gold); margin-right: .5rem; }
+  .ad-loc__rel { margin: 2rem 0 0; max-width: 46rem; font-size: 1rem; line-height: 1.75; color: rgba(246,242,233,.86); }
+  @media (max-width: 640px) { .ad-loc__map { min-height: 16rem; } .ad-loc .btn-gold { width: 100%; box-sizing: border-box; } }
+</style>
+
+<section class="ad-sec ad-sec--dark ad-loc" id="location" aria-labelledby="ad-loc-title">
+  <div class="container-page">
+    <div class="ad-cols">
+
+      <div class="ad-loc__copy">
+        <h2 class="section-title" id="ad-loc-title">The Arts District by Binghatti Location and Connectivity</h2>
+        <p class="ad-p">
+          Located in Al Rowaiyah First, the development benefits from its proximity to emerging residential
+          neighbourhoods, educational institutions and commercial districts.
+        </p>
+        <p class="ad-p">
+          Buyers exploring properties in Al Rowaiyah First Dubai can benefit from the area's connectivity and
+          long-term development potential. The project's proximity to the Tilal Binghatti master community adds
+          another dimension to its residential appeal.
+        </p>
+        <p class="ad-p">
+          Buyers can request the latest Tilal Binghatti location map through Spacesmith to understand surrounding
+          developments and transport connections.
+        </p>
+        <div class="ad-cta-row">
+          <a href="#enquiry" class="btn-gold">
+            Request the location map
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+          </a>
+        </div>
+      </div>
+          
+      <div class="ad-loc__map">
+        <iframe
+          src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3612.148984558701!2d55.4354838753798!3d25.130653477753906!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3e5f630f21cf3437%3A0xaa20dacb8fe3dc5d!2sThe%20Arts%20District%20by%20Binghatti!5e0!3m2!1sen!2sin!4v1795771334850!5m2!1sen!2sin"
+          title="Map showing the location of The Arts District by Binghatti in Al Rowaiyah First, Dubai"
+          loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe>
+        <a class="ad-loc__maplink" href="https://www.google.com/maps/search/?api=1&amp;query=Al+Rowaiyah+First+Dubai" target="_blank" rel="noopener noreferrer">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-12a7 7 0 0 1 14 0c0 5.8-7 12-7 12Z"/><circle cx="12" cy="9" r="2.5"/></svg>
+          Open in Google Maps
+        </a>
+      </div>
+
+    </div>
+
+    <div class="ad-near">
+      <div>
+        <h3 class="ad-near__title">Nearby Destinations</h3>
+        <ul class="ad-near__list">
+          <li>Dubai International Academic City</li>
+          <li>Dubai Silicon Oasis</li>
+          <li>Dubai Outlet Mall</li>
+          <li>Global Village</li>
+          <li>Fakeeh University Hospital</li>
+        </ul>
+      </div>
+      <div>
+        <h3 class="ad-near__title">Road Networks</h3>
+        <ul class="ad-near__list">
+          <li><code>E611</code>Emirates Road</li>
+          <li><code>E311</code>Sheikh Mohammed Bin Zayed Road</li>
+          <li><code>E66</code>Dubai–Al Ain Road</li>
+        </ul>
+      </div>
+    </div>
+
+    <p class="ad-loc__rel">
+      The development is particularly relevant for buyers searching for apartments near Dubai Academic City,
+      properties near Dubai Silicon Oasis and apartments near Emirates Road E611.
+    </p>
+  </div>
+</section>
+
+
+<!-- ================================================================
+     4. FLOOR PLANS & APARTMENT TYPES
+     ================================================================ -->
+<style>
+  .ad-res__grid { display: grid; gap: 1.5rem; grid-template-columns: minmax(0, 1fr); margin-top: 2.5rem; }
+  @media (min-width: 900px) { .ad-res__grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.5rem; } }
+  .ad-coll { display: flex; flex-direction: column; overflow: hidden; background: #fff; border: 1px solid #E6E0D2; border-radius: .75rem; box-shadow: 0 24px 50px -38px rgba(10,42,32,.4); }
+  .ad-coll__top { display: flex; align-items: flex-end; justify-content: space-between; gap: 1rem; padding: 1.5rem 1.75rem; background: var(--primary); color: var(--cream); }
+  .ad-coll:nth-child(2) .ad-coll__top { background: var(--primary-light); }
+  .ad-coll__beds { font-family: var(--font-display); font-size: clamp(2.25rem, 4vw, 3rem); font-weight: 500; line-height: 1; color: var(--gold-light); }
+  .ad-coll__beds small { display: block; margin-top: .375rem; font-family: var(--font-body); font-size: .8125rem; font-weight: 500; color: rgba(246,242,233,.92); }
+  .ad-coll__price { text-align: right; font-size: .75rem; color: rgba(246,242,233,.8); }
+  .ad-coll__price strong { display: block; font-family: var(--font-display); font-size: 1.25rem; font-weight: 500; color: var(--cream); }
+  .ad-coll__body { display: flex; flex-direction: column; flex: 1; padding: 1.75rem; }
+  .ad-coll__title { margin: 0; font-family: var(--font-display); font-size: 1.5rem; font-weight: 600; line-height: 1.2; color: var(--primary); }
+  .ad-coll__body .ad-p { max-width: none; }
+  .ad-coll__body .ad-chips { margin-top: auto; padding-top: 1.5rem; }
+  .ad-coll__body .ad-chips li { background: #EEF3EC; }
+
+  .ad-cmp__title { margin: 3rem 0 0; font-family: var(--font-display); font-size: 1.75rem; font-weight: 500; color: var(--primary); }
+  .ad-res__foot { margin-top: 2rem; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem 2rem; }
+  .ad-res__foot .ad-p { margin: 0; max-width: 40rem; }
+  @media (max-width: 640px) {
+    .ad-coll__top, .ad-coll__body { padding: 1.25rem; }
+    .ad-res__foot .btn-gold { width: 100%; box-sizing: border-box; }
+  }
+</style>
+
+<section class="ad-sec ad-sec--sand" id="floor-plans" aria-labelledby="ad-res-title">
+  <div class="container-page">
+
+    <h2 class="section-title" id="ad-res-title">The Arts District by Binghatti Floor Plans and Apartment Types</h2>
+    <p class="ad-p ad-p--lead">
+      The residential collection caters to different household requirements, investment objectives and lifestyle
+      preferences. Contemporary layouts are intended to balance functionality, comfort and modern residential aesthetics.
+    </p>
+
+    <div class="ad-res__grid">
+      <article class="ad-coll">
+        <div class="ad-coll__top">
+          <div class="ad-coll__beds">Studio<small>apartments</small></div>
+          <div class="ad-coll__price">from<strong>AED 525,000</strong></div>
+        </div>
+        <div class="ad-coll__body">
+          <h3 class="ad-coll__title">Studio Apartments</h3>
+          <p class="ad-p">Studios for sale in The Arts District Dubai offer an accessible entry point into the development.</p>
+          <p class="ad-p">Compact layouts appeal to individual residents, young professionals and investors targeting smaller residential units.</p>
+          <ul class="ad-chips" aria-label="Studio suitability"><li>Individual residents</li><li>Investors</li></ul>
+        </div>
+      </article>
+
+      <article class="ad-coll">
+        <div class="ad-coll__top">
+          <div class="ad-coll__beds">1<small>bedroom</small></div>
+          <div class="ad-coll__price">from<strong>AED 850,000</strong></div>
+        </div>
+        <div class="ad-coll__body">
+          <h3 class="ad-coll__title">One-Bedroom Apartments</h3>
+          <p class="ad-p">A 1 bedroom apartment in The Arts District by Binghatti provides separate living and sleeping spaces.</p>
+          <p class="ad-p">This offers greater flexibility for couples, professionals and long-term tenants.</p>
+          <ul class="ad-chips" aria-label="One-bedroom suitability"><li>Couples</li><li>Professionals</li></ul>
+        </div>
+      </article>
+
+      <article class="ad-coll">
+        <div class="ad-coll__top">
+          <div class="ad-coll__beds">2<small>bedrooms</small></div>
+          <div class="ad-coll__price">from<strong>AED 1,300,000</strong></div>
+        </div>
+        <div class="ad-coll__body">
+          <h3 class="ad-coll__title">Two-Bedroom Apartments</h3>
+          <p class="ad-p">A 2 bedroom apartment in The Arts District by Binghatti is suitable for families and residents who require additional living space, privacy and functional interiors.</p>
+          <ul class="ad-chips" aria-label="Two-bedroom suitability"><li>Families</li><li>Long-term residents</li></ul>
+        </div>
+      </article>
+    </div>
+
+    <h3 class="ad-cmp__title">Apartment Comparison Table</h3>
+    <div class="ad-table-wrap">
+      <table class="ad-table">
+        <thead><tr><th scope="col">Apartment Type</th><th scope="col">Indicative Starting Price</th><th scope="col">Suitable For</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">Studio</th><td>AED 525,000</td><td>Individual residents and investors</td></tr>
+          <tr><th scope="row">1 Bedroom</th><td>AED 850,000</td><td>Couples and professionals</td></tr>
+          <tr><th scope="row">2 Bedrooms</th><td>AED 1,300,000</td><td>Families and long-term residents</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="ad-res__foot">
+      <p class="ad-p">
+        Request the latest The Arts District by Binghatti floor plans to compare apartment dimensions,
+        orientations, layouts and availability before making a reservation.
+      </p>
+      <a href="#enquiry" class="btn-gold">
+        Request floor plans
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </a>
+    </div>
+
+  </div>
+</section>
+
+
+<!-- ================================================================
+     5. PRICES & PAYMENT PLAN
+     ================================================================ -->
+<style>
+  .ad-pay::before { content: ""; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(55% 70% at 100% 100%, rgba(143,176,138,.16), transparent 60%); }
+  .ad-pay__panel { padding: 2rem; background: #fff; border: 1px solid #E6E0D2; border-radius: .75rem; box-shadow: 0 24px 50px -36px rgba(10,42,32,.35); }
+  .ad-pay__label { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: .25rem 1rem; margin: 0 0 1rem; font-size: .9375rem; color: var(--muted-foreground); }
+  .ad-pay__label strong { font-family: var(--font-display); font-size: 2.25rem; font-weight: 600; line-height: 1; color: var(--primary); }
+  .ad-pay__tag { font-size: .8125rem; font-weight: 500; color: #8A6D1E; background: #FBF4DF; border: 1px solid #F0E2B6; border-radius: 9999px; padding: .25rem .75rem; }
+
+  .ad-pay__bar { display: grid; grid-template-columns: minmax(2.5rem, 10fr) minmax(2.5rem, 10fr) 40fr 40fr; gap: 3px; height: 3rem; border-radius: 9999px; overflow: hidden; }
+  .ad-pay__seg { display: flex; align-items: center; justify-content: center; min-width: 0; font-family: var(--font-display); font-size: 1.25rem; font-weight: 600; line-height: 1; white-space: nowrap; }
+  .ad-pay__seg--s1 { background: var(--gold); color: var(--ink); font-size: 1rem; }
+  .ad-pay__seg--s2 { background: #D9C27A; color: var(--ink); font-size: 1rem; }
+  .ad-pay__seg--s3 { background: #A9C7A4; color: var(--primary); }
+  .ad-pay__seg--s4 { background: var(--primary); color: var(--cream); }
+
+  .ad-pay__ms { margin: 1.5rem 0 0; padding: 0; display: grid; }
+  .ad-pay__ms > div { display: grid; grid-template-columns: 4.5rem minmax(0, 1fr); gap: 1rem; align-items: baseline; padding-block: .875rem; border-top: 1px solid #ECE6D9; }
+  .ad-pay__ms dt { font-family: var(--font-display); font-size: 1.625rem; font-weight: 600; line-height: 1; color: var(--primary); }
+  .ad-pay__ms dd { margin: 0; font-size: 1rem; line-height: 1.5; color: var(--muted-foreground); }
+  .ad-pay__ms > div:nth-child(1) dt { color: #9A7B1B; }
+  .ad-pay__ms > div:nth-child(2) dt { color: #B08F25; }
+  .ad-pay__ms > div:nth-child(3) dt { color: #4F7F55; }
+
+  .ad-pay__cta { margin-top: 1.5rem; width: 100%; box-sizing: border-box; }
+  .ad-pay__panel .ad-note { text-align: center; }
+  @media (max-width: 640px) { .ad-pay__panel { padding: 1.5rem 1.25rem; } .ad-pay__ms > div { grid-template-columns: 3.75rem minmax(0, 1fr); } }
+</style>
+
+<section class="ad-sec ad-sec--white ad-pay" id="payment-plan" aria-labelledby="ad-pay-title">
+  <div class="container-page">
+    <div class="ad-cols">
+
+      <div>
+        <h2 class="section-title" id="ad-pay-title">The Arts District by Binghatti Prices and Payment Plan</h2>
+        <p class="ad-p ad-p--lead">
+          The Arts District by Binghatti prices provide several entry points for buyers considering affordable
+          apartments near Tilal Binghatti and other emerging residential communities.
+        </p>
+        <p class="ad-p">
+          The reported 60/40 payment structure distributes payments across the construction period and completion,
+          making it relevant to buyers exploring Dubai off-plan apartments with monthly payment plans.
+        </p>
+        <p class="ad-p">
+          Monthly instalments reportedly start from AED 2,500 for selected studios, with additional milestone
+          payments and applicable registration charges.
+        </p>
+        <p class="ad-p">
+          Buyers should obtain the current unit-specific payment schedule and written reservation conditions
+          before committing funds.
+        </p>
+      </div>
+
+      <div class="ad-pay__panel">
+        <p class="ad-pay__label"><span><strong>60/40</strong>&nbsp; indicative structure</span><span class="ad-pay__tag">Subject to developer confirmation</span></p>
+
+        <div class="ad-pay__bar" role="img" aria-label="Payment split: 10% initial booking contribution, 10% subsequent initial payment, 40% construction instalments and milestones, 40% on handover">
+          <div class="ad-pay__seg ad-pay__seg--s1">10%</div>
+          <div class="ad-pay__seg ad-pay__seg--s2">10%</div>
+          <div class="ad-pay__seg ad-pay__seg--s3">40%</div>
+          <div class="ad-pay__seg ad-pay__seg--s4">40%</div>
+        </div>
+
+        <dl class="ad-pay__ms">
+          <div><dt>10%</dt><dd>Initial booking contribution</dd></div>
+          <div><dt>10%</dt><dd>Subsequent initial payment</dd></div>
+          <div><dt>40%</dt><dd>Construction instalments and milestones</dd></div>
+          <div><dt>40%</dt><dd>On handover</dd></div>
+          <div><dt>AED 2,500</dt><dd>Reported monthly instalments from, for selected studios</dd></div>
+        </dl>
+
+        <a href="#enquiry" class="btn-gold ad-pay__cta">
+          Request the payment schedule
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </a>
+        <p class="ad-note">Payment terms are subject to final developer confirmation.</p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ================================================================
+     6. AMENITIES & LIFESTYLE
+     ================================================================ -->
+<style>
+  .ad-am__sub { margin: 2.5rem 0 0; font-family: var(--font-display); font-size: 1.75rem; font-weight: 500; color: var(--primary); }
+  .ad-am__grid { list-style: none; margin: 1.25rem 0 0; padding: 0; display: grid; gap: .75rem; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  @media (min-width: 640px)  { .ad-am__grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+  @media (min-width: 1024px) { .ad-am__grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+  .ad-am__item { display: flex; flex-direction: column; align-items: flex-start; gap: .75rem; padding: 1.125rem; background: #fff; border: 1px solid #E6E0D2; border-radius: var(--radius); font-size: .9375rem; font-weight: 500; line-height: 1.4; color: var(--primary); }
+  .ad-am__item svg { width: 1.625rem; height: 1.625rem; color: var(--primary-light); stroke-width: 1.5; }
+  .ad-am__close { margin: 2rem 0 0; max-width: 44rem; font-size: 1rem; line-height: 1.8; color: var(--muted-foreground); }
+</style>
+
+<section class="ad-sec ad-sec--light" id="amenities" aria-labelledby="ad-am-title">
+  <div class="container-page">
+
+    <h2 class="section-title" id="ad-am-title">The Arts District by Binghatti Amenities and Lifestyle</h2>
+    <p class="ad-p ad-p--lead">
+      The development's concept extends beyond individual apartments, incorporating creative architecture and
+      community-oriented spaces. Its proposed residential environment combines everyday convenience with artistic
+      expression and contemporary urban living.
+    </p>
+
+    <h3 class="ad-am__sub">Planned Community Features</h3>
+    <ul class="ad-am__grid">
+      <li class="ad-am__item"><svg class="ad-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21h18M5 21V7l7-4 7 4v14M9 9h1M14 9h1M9 13h1M14 13h1"/></svg>Art-inspired architectural designs</li>
+      <li class="ad-am__item"><svg class="ad-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22v-6"/><path d="M12 16c-4 0-6-2.6-6-5.5 0-2 1.2-3.5 3-4.2C9.4 4 10.5 2.5 12 2.5s2.6 1.5 3 3.8c1.8.7 3 2.2 3 4.2 0 2.9-2 5.5-6 5.5Z"/></svg>Landscaped gardens and outdoor spaces</li>
+      <li class="ad-am__item"><svg class="ad-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l2.7 5.5 6 .9-4.4 4.2 1 6-5.3-2.8-5.3 2.8 1-6L3.3 9.4l6-.9z"/></svg>Cultural and artistic installations</li>
+      <li class="ad-am__item"><svg class="ad-ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="19" r="2"/><circle cx="18" cy="5" r="2"/><path d="M8 19h7a3 3 0 0 0 0-6H9a3 3 0 0 1 0-6h7"/></svg>Pedestrian-friendly community areas</li>
+      <li class="ad-am__item"><svg class="ad-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 7h12l-1 13H7z"/><path d="M9 7a3 3 0 0 1 6 0"/></svg>Retail and dining destinations</li>
+      <li class="ad-am__item"><svg class="ad-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c3 2 9 2 12 0v-5"/></svg>Educational infrastructure</li>
+      <li class="ad-am__item"><svg class="ad-ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>Leisure and recreational spaces</li>
+      <li class="ad-am__item"><svg class="ad-ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Contemporary residential interiors</li>
+    </ul>
+
+    <p class="ad-am__close">
+      The Arts District by Binghatti amenities are intended to complement modern urban living while establishing a
+      distinctive cultural identity. Final facilities remain subject to the developer's approved specifications.
+    </p>
+
+  </div>
+</section>
+
+
+<!-- ================================================================
+     7. INVESTMENT
+     ================================================================ -->
+<style>
+  .ad-inv__panel { padding: 2rem; background: #FAF8F3; border: 1px solid #E6E0D2; border-radius: .75rem; }
+  .ad-inv__panel h3 { margin: 0; font-family: var(--font-display); font-size: 1.625rem; font-weight: 600; line-height: 1.25; color: var(--primary); }
+  .ad-inv__panel .ad-ticks li { font-size: 1.0625rem; font-weight: 500; color: var(--primary); }
+  .ad-inv__panel .ad-note { margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid #E6E0D2; }
+  @media (max-width: 640px) { .ad-inv__panel { padding: 1.5rem 1.25rem; } }
+</style>
+
+<section class="ad-sec ad-sec--sand" id="investment" aria-labelledby="ad-inv-title">
+  <div class="container-page">
+    <div class="ad-cols">
+
+      <div>
+        <h2 class="section-title" id="ad-inv-title">Why Invest in The Arts District by Binghatti?</h2>
+        <p class="ad-p ad-p--lead">
+          The development offers an opportunity to participate in the growth of an emerging residential district
+          supported by nearby educational and technology-focused communities.
+        </p>
+        <p class="ad-p">
+          For investors comparing high ROI off-plan properties in Dubai or seeking the best off-plan investment in
+          Dubailand, several factors deserve consideration.
+        </p>
+        <p class="ad-p">
+          Buyers considering off-plan apartments in Al Rowaiyah Dubai should evaluate these factors alongside
+          comparable residential developments to make informed investment decisions.
+        </p>
+      </div>
+
+      <div class="ad-inv__panel">
+        <h3>Key Investment Considerations</h3>
+        <ul class="ad-ticks">
+          <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Proximity to established education and employment districts</li>
+          <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Accessible apartment configurations</li>
+          <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Structured construction-stage payment options</li>
+          <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Potential residential demand from professionals and students</li>
+          <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Long-term development of surrounding communities</li>
+          <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Recognisable developer identity and architectural positioning</li>
+        </ul>
+        <p class="ad-note">Investment performance will depend on purchase value, future rental demand, service charges, construction progress and prevailing market conditions.</p>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ================================================================
+     8. ABOUT BINGHATTI
+     ================================================================ -->
+<section class="ad-sec ad-sec--deep" id="developer" aria-labelledby="ad-dev-title">
+  <div class="container-page">
+    <div class="ad-cols">
+      <div>
+        <h2 class="section-title" id="ad-dev-title">About Binghatti Developers</h2>
+        <p class="ad-p ad-p--lead" style="color:var(--cream)">
+          Binghatti is a Dubai-based property developer recognised for distinctive architectural designs,
+          contemporary residential buildings and a diverse development portfolio.
+        </p>
+      </div>
+      <div>
+        <p class="ad-p" style="margin-top:0">
+          The Binghatti Developers Dubai portfolio includes residential projects across established and emerging
+          communities, with developments targeting different residential and investment segments.
+        </p>
+        <p class="ad-p">
+          Binghatti off-plan projects in Dubai appeal to buyers seeking distinctive architecture, modern amenities
+          and flexible property purchase opportunities.
+        </p>
+        <p class="ad-p">
+          With its scheduled January unveiling, The Arts District is also relevant to buyers researching
+          Binghatti new launches for 2027.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ================================================================
+     9. HANDOVER & BOOKING
+     ================================================================ -->
+<style>
+  .ad-ho__panel { padding: 2rem; background: #FAF8F3; border: 1px solid #E6E0D2; border-radius: .75rem; }
+  .ad-ho__panel h3 { margin: 0; font-family: var(--font-display); font-size: 1.625rem; font-weight: 600; color: var(--primary); }
+  .ad-ho__panel .ad-ticks li { font-size: 1.0625rem; font-weight: 500; color: var(--primary); }
+  .ad-ho__date { display: inline-block; margin-top: 1.5rem; padding: .75rem 1.25rem; border-radius: var(--radius); background: var(--primary); color: var(--cream); font-family: var(--font-display); font-size: 1.25rem; font-weight: 500; }
+  .ad-ho__date small { display: block; font-family: var(--font-body); font-size: .75rem; color: rgba(246,242,233,.75); }
+  @media (max-width: 640px) { .ad-ho__panel { padding: 1.5rem 1.25rem; } }
+</style>
+
+<section class="ad-sec ad-sec--white" id="handover" aria-labelledby="ad-ho-title">
+  <div class="container-page">
+    <div class="ad-cols">
+
+      <div>
+        <h2 class="section-title" id="ad-ho-title">The Arts District by Binghatti Handover Date and Booking</h2>
+        <p class="ad-p ad-p--lead">
+          The anticipated handover is currently reported for Q2 2029, subject to final developer confirmation and
+          contractual terms.
+        </p>
+        <p class="ad-p">
+          Buyers interested in The Arts District by Binghatti for sale can register their interest, request updated
+          availability and review reservation requirements through Spacesmith.
+        </p>
+        <span class="ad-ho__date"><small>Anticipated handover</small>Q2 2029</span>
+        <div class="ad-cta-row">
+          <a href="#enquiry" class="btn-gold">Register Your Interest</a>
+        </div>
+      </div>
+
+      <div class="ad-ho__panel">
+        <h3>Before booking, verify</h3>
+        <ul class="ad-ticks">
+          <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Project registration</li>
+          <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Applicable fees</li>
+          <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Escrow details</li>
+          <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>EOI refund conditions</li>
+          <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Contractual completion schedule</li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ================================================================
+     10. FAQ  (text matches the FAQPage schema at the top)
+     ================================================================ -->
+<style>
+  .ad-faq .ad-cols { grid-template-columns: minmax(0, 1fr); }
+  @media (min-width: 1024px) { .ad-faq .ad-cols { grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); } }
+  .ad-faq__list { display: grid; gap: .75rem; }
+  .ad-faq details { background: #fff; border: 1px solid #E6E0D2; border-radius: var(--radius); transition: border-color .2s ease; }
+  .ad-faq details[open] { border-color: var(--primary-light); }
+  .ad-faq summary { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 1.125rem 1.25rem; cursor: pointer; list-style: none; font-family: var(--font-display); font-size: 1.3125rem; font-weight: 600; line-height: 1.3; color: var(--primary); }
+  .ad-faq summary::-webkit-details-marker { display: none; }
+  .ad-faq summary::after { content: ""; flex-shrink: 0; width: .6rem; height: .6rem; margin-top: -.25rem; border-right: 2px solid var(--primary-light); border-bottom: 2px solid var(--primary-light); transform: rotate(45deg); transition: transform .2s ease; }
+  .ad-faq details[open] summary::after { transform: rotate(-135deg); margin-top: .25rem; }
+  .ad-faq summary:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; border-radius: var(--radius); }
+  .ad-faq__a { margin: 0; padding: 0 1.25rem 1.25rem; font-size: 1rem; line-height: 1.8; color: var(--muted-foreground); }
+  @media (max-width: 640px) { .ad-faq summary { font-size: 1.1875rem; padding: 1rem; } .ad-faq__a { padding: 0 1rem 1rem; } .ad-faq .btn-gold { width: 100%; box-sizing: border-box; } }
+  @media (prefers-reduced-motion: reduce) { .ad-faq summary::after, .ad-faq details { transition: none; } }
+  .ad-faq .ad-cols { align-items: stretch; }
+.ad-faq__side { display: flex; flex-direction: column; }
+
+.ad-faq__img {
+  margin: 2rem 0 0; overflow: hidden; border-radius: .75rem;
+  aspect-ratio: 16 / 9; background: var(--primary);
+  box-shadow: 0 24px 50px -36px rgba(10,42,32,.45);
+}
+.ad-faq__img img { display: block; width: 100%; height: 100%; object-fit: cover; }
+
+@media (min-width: 1024px) {
+  .ad-faq__img { flex: 1; aspect-ratio: auto; min-height: 31rem; position: relative; }
+  .ad-faq__img img { position: absolute; inset: 0; }
+}
+</style>
+
+<section class="ad-sec ad-sec--light ad-faq" id="faq" aria-labelledby="ad-faq-title">
+  <div class="container-page">
+    <div class="ad-cols">
+
+      <div>
+        <h2 class="section-title" id="ad-faq-title">Frequently Asked Questions</h2>
+        <div class="ad-cta-row"><a href="#enquiry" class="btn-gold">Ask a consultant</a></div>
+        <figure class="ad-faq__img">
+          <img src="{% static 'img/faqimage.webp' %}"
+            alt="The Arts District by Binghatti apartments in Al Rowaiyah First, Dubai"
+            width="800" height="1000" loading="lazy" decoding="async">
+        </figure>
+      </div>
+
+      <div class="ad-faq__list">
+        <details name="ad-faq" open>
+          <summary>Where is The Arts District by Binghatti located?</summary>
+          <p class="ad-faq__a">The development is located in Al Rowaiyah First, Dubai, near Dubai International Academic City, Dubai Silicon Oasis and Tilal Binghatti.</p>
+        </details>
+        <details name="ad-faq">
+          <summary>What is the starting price at The Arts District?</summary>
+          <p class="ad-faq__a">Indicative payment-plan prices start from AED 525,000 for studios, AED 850,000 for one-bedroom apartments and AED 1.3 million for two-bedroom apartments.</p>
+        </details>
+        <details name="ad-faq">
+          <summary>What is The Arts District by Binghatti payment plan?</summary>
+          <p class="ad-faq__a">The reported payment plan follows a 60/40 structure, with 60% payable before completion and the remaining 40% at handover.</p>
+        </details>
+        <details name="ad-faq">
+          <summary>When is The Arts District by Binghatti launching?</summary>
+          <p class="ad-faq__a">The official unveiling is scheduled for 20 January 2027, subject to any subsequent developer announcements.</p>
+        </details>
+        <details name="ad-faq">
+          <summary>Is The Arts District by Binghatti a good investment?</summary>
+          <p class="ad-faq__a">Its location, apartment configurations and payment structure offer potential investment appeal. Actual returns depend on market conditions, ownership expenses and future rental demand.</p>
+        </details>
+        <details name="ad-faq">
+          <summary>How can I get The Arts District by Binghatti brochure?</summary>
+          <p class="ad-faq__a">Contact Spacesmith to request the latest developer brochure, floor plans, payment schedules and available apartment configurations.</p>
+        </details>
+        <details name="ad-faq">
+          <summary>How can I buy an apartment in The Arts District Dubai?</summary>
+          <p class="ad-faq__a">Spacesmith can assist with property selection, registration requirements, reservation procedures and developer documentation.</p>
+        </details>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ================================================================
+     11. DISCOVER YOUR FUTURE HOME WITH SPACESMITH + CTA
+     ================================================================ -->
+<style>
+  .ad-ss::before { content: ""; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(45% 70% at 100% 0%, rgba(143,176,138,.16), transparent 60%); }
+  .ad-ss__logo { display: block; height: 2.75rem; width: auto; max-width: 11rem; object-fit: contain; margin-bottom: 1.5rem; }
+  .ad-ss__copy .ad-p:first-child { margin-top: 0; }
+  @media (min-width: 1024px) { .ad-ss__copy { padding-left: 2.5rem; border-left: 1px solid #E1DACB; } }
+  .ad-ss__strip { margin-top: 2.5rem; padding: 1.5rem; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1.25rem 2rem; background: #fff; border: 1px solid #E6E0D2; border-radius: var(--radius); }
+  .ad-ss__strip h3 { margin: 0; font-family: var(--font-display); font-size: clamp(1.375rem, 2.4vw, 1.75rem); font-weight: 600; line-height: 1.25; color: var(--primary); }
+  .ad-ss__strip p { margin: .375rem 0 0; max-width: 36rem; font-size: .9375rem; line-height: 1.6; color: var(--muted-foreground); }
+  .ad-ss__btns { display: flex; flex-wrap: wrap; gap: .75rem; }
+  @media (max-width: 640px) { .ad-ss__logo { height: 2.25rem; } .ad-ss__btns { width: 100%; flex-direction: column; } .ad-ss__btns .btn-gold, .ad-ss__btns .btn-line { width: 100%; box-sizing: border-box; } }
+</style>
+
+<section class="ad-sec ad-sec--sand ad-ss" id="why-spacesmith" aria-labelledby="ad-ss-title">
+  <div class="container-page">
+    <div class="ad-cols">
+
+      <div>
+        <img class="ad-ss__logo" src="{% static 'img/logo-ss-800.webp' %}" alt="Spacesmith Real Estate" width="176" height="44" loading="lazy" decoding="async">
+        <h2 class="section-title" id="ad-ss-title">Discover Your Future Home at The Arts District by Binghatti</h2>
+      </div>
+
+      <div class="ad-ss__copy">
+        <p class="ad-p ad-p--lead">
+          The Arts District by Binghatti brings contemporary residences, creative architecture and emerging community
+          infrastructure together in one residential destination. Its strategic location, diverse apartment
+          configurations and distinctive lifestyle concept make it an appealing option for prospective homeowners
+          and investors.
+        </p>
+        <p class="ad-p">
+          Whether you are searching for a future home or a long-term investment opportunity, Spacesmith helps you
+          explore suitable apartments and make informed property decisions.
+        </p>
+      </div>
+
+    </div>
+
+    <div class="ad-ss__strip">
+      <div>
+        <h3>Secure Your Place at The Arts District by Binghatti</h3>
+        <p>Discover premium apartments, launch updates, flexible payment plans and personalised property guidance with Spacesmith.</p>
+      </div>
+      <div class="ad-ss__btns">
+        <a href="#enquiry" class="btn-gold">Register Your Interest</a>
+        <a href="#enquiry" class="btn-line" style="color:var(--primary);border-color:var(--primary)">Download Brochure</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ================================================================
+     12. ENQUIRY FORM  (same field names and JS as the Palm Springs form)
+     Posts to the `artsdistrict` view, which hands it to _handle_landing_enquiry.
+     ================================================================ -->
+<style>
+  .ad-enq { scroll-margin-top: var(--nav-height); }
+  .ad-enq::before { content: ""; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(50% 60% at 0% 0%, rgba(255,255,255,.7), transparent 65%), radial-gradient(40% 50% at 100% 100%, rgba(212,175,55,.08), transparent 65%); }
+  .ad-enq .ad-cols { align-items: center; }
+  .ad-enq__label { margin: 1.5rem 0 0; font-size: .9375rem; font-weight: 600; color: var(--primary); }
+  .ad-enq .ad-ticks { margin-top: .75rem; }
+
+  .ad-enq__contacts { list-style: none; margin: 1.75rem 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: .625rem; }
+  .ad-enq__contact { display: inline-flex; align-items: center; gap: .6rem; padding: .65rem 1.1rem; border-radius: 9999px; border: 1px solid #CFDCCB; background: rgba(255,255,255,.75); color: var(--primary); font-size: .9375rem; font-weight: 500; line-height: 1.2; transition: background-color .2s ease, border-color .2s ease; }
+  .ad-enq__contact:hover { background: #fff; border-color: var(--primary-light); color: var(--primary); }
+  .ad-enq__contact svg { width: 1rem; height: 1rem; color: var(--primary-light); }
+
+  .ad-enq__form { position: relative; padding: 2rem; background: #fff; color: var(--foreground); border: 1px solid #E1E8DD; border-radius: .75rem; box-shadow: 0 30px 60px -40px rgba(10,42,32,.45); }
+  .ad-enq__form::before { content: ""; position: absolute; left: 2rem; right: 2rem; top: 0; height: 3px; border-radius: 0 0 3px 3px; background: var(--gold); }
+  .ad-enq__form-title { margin: 0; font-family: var(--font-display); font-size: 1.75rem; font-weight: 600; line-height: 1.2; color: var(--primary); }
+  .ad-enq__form-sub { margin: .375rem 0 1.5rem; font-size: .9375rem; line-height: 1.6; color: var(--muted-foreground); }
+
+  .ad-enq__row { display: grid; gap: 1rem; grid-template-columns: minmax(0, 1fr); margin-bottom: 1rem; }
+  @media (min-width: 560px) { .ad-enq__row { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+  .ad-f { display: flex; flex-direction: column; gap: .375rem; min-width: 0; margin-bottom: 1rem; }
+  .ad-enq__row .ad-f { margin-bottom: 0; }
+  .ad-f[hidden] { display: none; }
+  .ad-f label { font-size: .8125rem; font-weight: 600; color: var(--primary); }
+  .ad-f input, .ad-f select, .ad-f textarea { width: 100%; height: 3rem; padding: 0 .9rem; border-radius: .5rem; border: 1px solid #DDD5C5; background: #FCFBF8; color: var(--foreground); font: inherit; font-size: .9375rem; transition: border-color .2s ease, box-shadow .2s ease, background-color .2s ease; }
+  .ad-f textarea { height: auto; min-height: 6rem; padding: .75rem .9rem; resize: vertical; line-height: 1.5; }
+  .ad-f input::placeholder, .ad-f textarea::placeholder { color: #6F7A73; }
+  .ad-f input:focus, .ad-f select:focus, .ad-f textarea:focus { outline: none; background: #fff; border-color: var(--primary-light); box-shadow: 0 0 0 3px rgba(42,107,75,.15); }
+  .ad-f .has-error { border-color: #b3261e; }
+  .ad-err { margin: 0; font-size: .8125rem; color: #b3261e; }
+  .ad-formerr { margin: 0 0 1rem; padding: .75rem 1rem; border-radius: .5rem; background: #FCEDEC; border: 1px solid #F1C7C4; font-size: .875rem; color: #8C1D18; }
+
+  .ad-tel { display: grid; grid-template-columns: 5.75rem minmax(0, 1fr); gap: .5rem; }
+  .ad-tel select { padding: 0 .5rem; cursor: pointer; }
+  .ad-wa { display: inline-flex; align-items: center; gap: .5rem; margin: -.25rem 0 1rem; font-size: .875rem; color: var(--muted-foreground); cursor: pointer; }
+  .ad-wa input { width: 1rem; height: 1rem; accent-color: var(--primary-light); }
+  .ad-hp { position: absolute !important; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+
+  .ad-enq__submit { width: 100%; justify-content: center; padding-block: 1rem; font-size: .9375rem; }
+  .ad-enq__privacy { display: flex; align-items: center; justify-content: center; gap: .4rem; margin: .875rem 0 0; font-size: .8125rem; color: var(--muted-foreground); text-align: center; }
+  .ad-enq__privacy svg { width: .875rem; height: .875rem; flex-shrink: 0; color: var(--primary-light); }
+
+  .ad-enq__disc { margin: 2.5rem 0 0; padding-top: 1.25rem; border-top: 1px solid #D5E2D1; font-size: .8125rem; line-height: 1.7; color: var(--muted-foreground); }
+  .ad-enq__disc strong { color: var(--primary); font-weight: 600; }
+
+  @media (max-width: 767px) {
+    .ad-enq__form { padding: 1.5rem 1.25rem; }
+    .ad-enq__form::before { left: 1.25rem; right: 1.25rem; }
+    .ad-enq__contacts { flex-direction: column; }
+    .ad-enq__contact { justify-content: center; }
+    .ad-enq__disc { margin-top: 2rem; }
+  }
+</style>
+
+<section class="ad-sec ad-sec--sage ad-enq" id="enquiry" aria-labelledby="ad-enq-title">
+  <div class="container-page">
+    <div class="ad-cols">
+
+      <div>
+        <h2 class="section-title" id="ad-enq-title">Register Your Interest in The Arts District by Binghatti</h2>
+        <p class="ad-p ad-p--lead">
+          Contact Spacesmith to request the latest developer brochure, floor plans, payment schedules and available
+          apartment configurations.
+        </p>
+
+        <p class="ad-enq__label">Request</p>
+        <ul class="ad-ticks">
+          <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Latest developer brochure</li>
+          <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Floor plans and available apartment configurations</li>
+          <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Payment schedules</li>
+          <li><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>Launch updates and early registration</li>
+        </ul>
+
+        <ul class="ad-enq__contacts">
+          <li>
+            <a class="ad-enq__contact" href="tel:+{{ phone_number|default:'971556399212' }}">
+              <svg class="ad-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.5c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg>
+              {{ contact_phone|default:'+971 55 639 9212' }}
+            </a>
+          </li>
+          <li>
+            <a class="ad-enq__contact" href="https://wa.me/{{ whatsapp_number|default:'971556399212' }}?text=Hi%2C%20I%27m%20interested%20in%20The%20Arts%20District%20by%20Binghatti" target="_blank" rel="noopener noreferrer">
+              <svg class="ad-ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21l1.7-5A8.5 8.5 0 1 1 8 19.3z"/><path d="M9 10c0 3 2 5 5 5l1-1.5-2-1-1 1c-1-.5-1.5-1-2-2l1-1-1-2z"/></svg>
+              WhatsApp an advisor
+            </a>
+          </li>
+        </ul>
+      </div>
+
+      <form class="ad-enq__form" id="adForm" method="post" action="{% url 'properties:artsdistrict' %}#enquiry">
+        {% csrf_token %}
+
+        <h3 class="ad-enq__form-title">Register Your Interest</h3>
+        <p class="ad-enq__form-sub">Share your details and a consultant will come back with the latest brochure, floor plans, payment schedules and availability.</p>
+
+        {% if enquiry_form.non_field_errors %}
+          <div class="ad-formerr">
+            {% for e in enquiry_form.non_field_errors %}<p style="margin:0;">{{ e }}</p>{% endfor %}
+          </div>
+        {% endif %}
+
+        <div class="ad-hp" aria-hidden="true">
+          <label for="id_website">Website</label>
+          <input type="text" id="id_website" name="website" tabindex="-1" autocomplete="off">
+        </div>
+
+        <div class="ad-enq__row">
+          <div class="ad-f">
+            <label for="id_name">Full Name</label>
+            <input type="text" id="id_name" name="name"
+                   class="{% if enquiry_form.name.errors %}has-error{% endif %}"
+                   value="{{ enquiry_form.name.value|default:'' }}"
+                   placeholder="Your name" autocomplete="name" required>
+            {% for e in enquiry_form.name.errors %}<p class="ad-err">{{ e }}</p>{% endfor %}
+          </div>
+
+          <div class="ad-f">
+            <label for="id_email">Email</label>
+            <input type="email" id="id_email" name="email"
+                   class="{% if enquiry_form.email.errors %}has-error{% endif %}"
+                   value="{{ enquiry_form.email.value|default:'' }}"
+                   placeholder="you@email.com" autocomplete="email" required>
+            {% for e in enquiry_form.email.errors %}<p class="ad-err">{{ e }}</p>{% endfor %}
+          </div>
+        </div>
+
+        <div class="ad-f">
+          <label for="adPhoneLocal">Phone</label>
+          <div class="ad-tel">
+            <select id="adPhoneCode" aria-label="Country dialling code">
+              <option value="971" selected>+971</option>
+              <option value="91">+91</option>
+              <option value="44">+44</option>
+              <option value="1">+1</option>
+              <option value="966">+966</option>
+              <option value="974">+974</option>
+              <option value="965">+965</option>
+              <option value="92">+92</option>
+              <option value="880">+880</option>
+              <option value="94">+94</option>
+              <option value="20">+20</option>
+              <option value="7">+7</option>
+              <option value="86">+86</option>
+              <option value="49">+49</option>
+              <option value="61">+61</option>
+            </select>
+            <input type="tel" id="adPhoneLocal" inputmode="tel"
+                   class="{% if enquiry_form.phone.errors %}has-error{% endif %}"
+                   placeholder="50 123 4567" autocomplete="tel-national" required>
+          </div>
+          <input type="hidden" name="phone" id="id_phone" value="{{ enquiry_form.phone.value|default:'' }}">
+          {% for e in enquiry_form.phone.errors %}<p class="ad-err">{{ e }}</p>{% endfor %}
+        </div>
+
+        <label class="ad-wa">
+          <input type="checkbox" id="adWaSame" checked>
+          WhatsApp number is the same
+        </label>
+
+        <div class="ad-f" id="adWaWrap" hidden>
+          <label for="adWaLocal">WhatsApp</label>
+          <div class="ad-tel">
+            <select id="adWaCode" aria-label="WhatsApp dialling code">
+              <option value="971" selected>+971</option>
+              <option value="91">+91</option>
+              <option value="44">+44</option>
+              <option value="1">+1</option>
+              <option value="966">+966</option>
+              <option value="92">+92</option>
+            </select>
+            <input type="tel" id="adWaLocal" inputmode="tel" placeholder="50 123 4567">
+          </div>
+        </div>
+        <input type="hidden" name="whatsapp" id="id_whatsapp" value="{{ enquiry_form.whatsapp.value|default:'' }}">
+        {% for e in enquiry_form.whatsapp.errors %}<p class="ad-err">{{ e }}</p>{% endfor %}
+
+        <div class="ad-f">
+          <label for="id_message">Message (Optional)</label>
+          <textarea id="id_message" name="message"
+                    placeholder="E.g. interested in a 1-bedroom apartment, please share floor plans and the payment schedule">{{ enquiry_form.message.value|default:'' }}</textarea>
+        </div>
+
+        <button type="submit" class="btn-gold ad-enq__submit">Register Your Interest</button>
+
+        <p class="ad-enq__privacy">
+          <svg class="ad-ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+          No spam. Your details stay with Spacesmith Real Estate.
+        </p>
+      </form>
+
+    </div>
+
+    <p class="ad-enq__disc">
+      <strong>Disclaimer:</strong> All project details, prices, payment plans, unit types, amenities, launch and
+      handover dates, ownership information and availability are as reported and are subject to official developer
+      confirmation and may change without notice. Future rental income and capital appreciation cannot be guaranteed.
+    </p>
+  </div>
+</section>
+
+<script>
+(function () {
+  var form = document.getElementById('adForm');
+  if (!form) return;
+
+  var code  = document.getElementById('adPhoneCode');
+  var local = document.getElementById('adPhoneLocal');
+  var out   = document.getElementById('id_phone');
+  var same  = document.getElementById('adWaSame');
+  var wrap  = document.getElementById('adWaWrap');
+  var wCode = document.getElementById('adWaCode');
+  var wLoc  = document.getElementById('adWaLocal');
+  var wOut  = document.getElementById('id_whatsapp');
+
+  function digits(v) { return (v || '').replace(/\D/g, '').replace(/^0+/, ''); }
+
+  function syncPhone() {
+    var n = digits(local.value);
+    out.value = n ? '+' + code.value + n : '';
+    if (same.checked) wOut.value = out.value;
+  }
+  function syncWa() {
+    if (same.checked) { wOut.value = out.value; return; }
+    var n = digits(wLoc.value);
+    wOut.value = n ? '+' + wCode.value + n : '';
+  }
+  /* after a failed POST, split "+971501234567" back into code + local number */
+  function restore(hidden, sel, box) {
+    var v = (hidden.value || '').replace(/\D/g, '');
+    if (!v) return;
+    var opts = Array.prototype.slice.call(sel.options)
+      .map(function (o) { return o.value; })
+      .sort(function (a, b) { return b.length - a.length; });
+    for (var i = 0; i < opts.length; i++) {
+      if (v.indexOf(opts[i]) === 0) { sel.value = opts[i]; box.value = v.slice(opts[i].length); return; }
+    }
+    box.value = v;
+  }
+
+  restore(out, code, local);
+  restore(wOut, wCode, wLoc);
+  if (wOut.value && wOut.value !== out.value) { same.checked = false; wrap.hidden = false; }
+
+  ['input', 'change'].forEach(function (ev) {
+    local.addEventListener(ev, syncPhone);
+    code.addEventListener(ev, syncPhone);
+    wLoc.addEventListener(ev, syncWa);
+    wCode.addEventListener(ev, syncWa);
+  });
+  same.addEventListener('change', function () { wrap.hidden = same.checked; syncWa(); });
+  form.addEventListener('submit', function () { syncPhone(); syncWa(); });
+
+  syncPhone();
+
+  if (form.querySelector('.ad-err, .ad-formerr')) {
+    document.getElementById('enquiry').scrollIntoView({ behavior: 'smooth' });
+  }
+})();
+</script>
+
+{% endblock %}
