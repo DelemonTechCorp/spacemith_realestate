@@ -53,8 +53,10 @@ class StaticPagesSitemap(Sitemap):
             {'path': '/properties/binghatti-starfall-al-jaddaf/', 'priority': 0.9, 'changefreq': 'weekly'},
             {'path': '/properties/shahrukhz-residences/', 'priority': 0.9, 'changefreq': 'weekly'},
             {'path': '/properties/kore-by-imtiaz/', 'priority': 0.9, 'changefreq': 'weekly'},
-            {'path': '/properties/greenwoods-by-aldar/', 'priority': 0.9, 'changefreq': 'weekly'},
+            # {'path': '/properties/greenwoods-by-aldar/', 'priority': 0.9, 'changefreq': 'weekly'},
             {'path': '/properties/palm-springs-by-nakheel/', 'priority': 0.9, 'changefreq': 'weekly'},
+            {'path': '/properties/the-arts-district-by-binghatti/', 'priority': 0.9, 'changefreq': 'weekly'},
+
 
              
         ]

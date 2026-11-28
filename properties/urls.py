@@ -51,7 +51,7 @@ urlpatterns = [
     path('binghatti-starfall-al-jaddaf/', views.binghatti_starfall, name='binghatti_starfall'),
     path("shahrukhz-residences/", views.shahrukhz, name="shahrukhz"),
     path("kore-by-imtiaz/", views.kure, name="kure"),
-    path('greenwoods-by-aldar/', views.greenwoods, name='greenwoods'),
+    # path('greenwoods-by-aldar/', views.greenwoods, name='greenwoods'),
     path('palm-springs-by-nakheel/', views.palmsprings, name='palmsprings'),
     path('the-arts-district-by-binghatti/', views.artsdistrict, name='artsdistrict'), 
 
